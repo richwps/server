@@ -738,15 +738,31 @@
 			<Property name="Algorithm" active="true">v.vol.rst</Property>
 			<Property name="Algorithm" active="true">v.voronoi</Property>
 		</Repository>
+		<Repository name="RichWpsWdRepository"
+			className="net.disy.richwps.wd.WdRepository"
+			active="true">
+			<Property name="GenericAlgorithm" active="true">net.disy.richwps.wd.WdAlgorithm</Property>
+			<Property name="DeployManager" active="true">net.disy.richwps.wd.WdLocalProcessManager</Property>
+			<Property name="WorkspaceLocationRoot"></Property>
+			<Property name="supportedFormat" active="true">RichWpsWd.xsd</Property>
+			<Property name="DeploymentProfileClass" active="true">net.disy.richwps.wd.WdDeploymentProfile</Property>
+			<SupportedDeploymentProfiles schema=""
+				repositoryName="RichWpsWdRepository" />
+		</Repository>
+		
 		<!-- <Repository name="GeotoolsProcessRepository" className="org.n52.wps.geotools.GeotoolsProcessRepository" 
 			active="false"> </Repository> -->
-		<!-- <Repository name="OracleBPELRepository" className="org.n52.wps.transactional.service.DefaultTransactionalProcessRepository" 
-			active="true"> <Property name="GenericAlgorithm" active="true">org.n52.wps.transactional.algorithm.DefaultTransactionalAlgorithm</Property> 
-			<Property name="DeployManager" active="true">org.n52.wps.transactional.deploy.bpel.oracle.OracleBPELManager</Property> 
-			<Property name="WorkspaceLocationRoot"></Property> <Property name="supportedFormat" 
-			active="true">whatever.xsd</Property> <Property name="DeploymentProfileClass" 
-			active="true">org.n52.wps.transactional.deploymentprofiles.BPELDeploymentProfile</Property> 
-			this should be created <SupportedDeploymentProfiles schema="" repositoyName="OracleBPELRepository"> -->
+		<!-- <Repository name="ApacheBPELRepository"
+			className="org.n52.wps.transactional.service.GenericTransactionalProcessRepository"
+			active="true">
+			<Property name="GenericAlgorithm" active="true">org.n52.wps.transactional.algorithm.GenericTransactionalAlgorithm</Property>
+			<Property name="DeployManager" active="true">org.n52.wps.transactional.deploy.bpel.apache.ApacheBPELManager</Property>
+			<Property name="WorkspaceLocationRoot"></Property>
+			<Property name="supportedFormat" active="true">BPELProfile.xsd</Property>
+			<Property name="DeploymentProfileClass" active="true">org.n52.wps.transactional.deploymentprofiles.BPELDeploymentProfile</Property>
+			<SupportedDeploymentProfiles schema=""
+				repositoryName="ApacheBPELRepository" />
+		</Repository> -->
 		<!-- <Repository name="AGSProcessRepository" className="org.n52.wps.ags.AGSProcessRepository" 
 			active="true"> <Property name="IP" active="true">**</Property> <Property 
 			name="DOMAIN" active="true">**</Property> <Property name="USER" active="true">**</Property> 
