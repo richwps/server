@@ -263,6 +263,18 @@
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>
 		</dependency>
+		<dependency>
+		<groupId>org.eclipse.xtend</groupId>
+		<artifactId>org.eclipse.xtend.standalone</artifactId>
+	    </dependency>
+		<dependency>
+			<groupId>net.disy.richwps</groupId>
+			<artifactId>richwps-wd</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>de.hsos.richwps</groupId>
+			<artifactId>wd.worksequenceapi</artifactId>
+		</dependency>
 	</dependencies>
 
 	<properties>

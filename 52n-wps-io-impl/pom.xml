@@ -148,6 +148,10 @@
 			<artifactId>mapscript</artifactId>
 		</dependency>
 		<dependency>
+        	<groupId>org.eclipse.xtend</groupId>
+        	<artifactId>org.eclipse.xtend.standalone</artifactId>
+        </dependency>
+		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-simple</artifactId>
             <scope>test</scope>

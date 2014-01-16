@@ -11,6 +11,8 @@ import org.n52.wps.io.data.IData;
 import org.n52.wps.server.AbstractTransactionalAlgorithm;
 import org.n52.wps.server.ExceptionReport;
 
+
+// TODO mk braucht man wirklich einen eigenen WdAlgorithm??? Oder reicht hierfür der GenericAlgorithm?
 public class WdAlgorithm extends AbstractTransactionalAlgorithm {
 
 	public WdAlgorithm(String algorithmID) {

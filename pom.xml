@@ -257,6 +257,10 @@
 						<artifactId>xml-apis</artifactId>
 						<groupId>xml-apis</groupId>
 					</exclusion>
+					<exclusion>
+						<artifactId>ecore</artifactId>
+						<groupId>org.eclipse.emf</groupId>
+					</exclusion>
 				</exclusions>
 			</dependency>
 			<dependency>
@@ -268,6 +272,12 @@
 				<groupId>org.geotools</groupId>
 				<artifactId>gt-xml</artifactId>
 				<version>${geotools.version}</version>
+				<exclusions>
+					<exclusion>
+						<artifactId>ecore</artifactId>
+						<groupId>org.eclipse.emf</groupId>
+					</exclusion>
+				</exclusions>
 			</dependency>
 			<dependency>
 				<groupId>org.geotools</groupId>
@@ -791,6 +801,26 @@
 				<version>0.6-8</version>
 			</dependency>
 			<!-- END R dependencies -->
+		<dependency>
+			<groupId>net.disy.richwps</groupId>
+			<artifactId>richwps-wd</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>de.hsos.richwps</groupId>
+			<artifactId>wd.worksequenceapi</artifactId>
+			<version>1.0-SNAPSHOT</version>
+		</dependency>
+	<dependency>
+		<groupId>org.eclipse.xtend</groupId>
+		<artifactId>org.eclipse.xtend.standalone</artifactId>
+		<version>2.4.3</version>
+	</dependency>
+	<!-- <dependency>
+		<groupId>org.eclipse.emf</groupId>
+		<artifactId>ecore</artifactId>
+		<version>2.4.2</version>
+	</dependency>-->
 		</dependencies>
 	</dependencyManagement>
 	<reporting>

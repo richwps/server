@@ -739,7 +739,7 @@
 			<Property name="Algorithm" active="true">v.voronoi</Property>
 		</Repository>
 		<Repository name="RichWpsWdRepository"
-			className="net.disy.richwps.wd.WdRepository"
+			className="org.n52.wps.transactional.service.GenericTransactionalProcessRepository"
 			active="true">
 			<Property name="GenericAlgorithm" active="true">net.disy.richwps.wd.WdAlgorithm</Property>
 			<Property name="DeployManager" active="true">net.disy.richwps.wd.WdLocalProcessManager</Property>
