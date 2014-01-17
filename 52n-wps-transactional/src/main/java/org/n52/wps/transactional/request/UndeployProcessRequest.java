@@ -43,7 +43,7 @@ public class UndeployProcessRequest implements ITransactionalRequest {
 	public UndeployProcessRequest(Document request) throws ExceptionReport {
 		try {
 			processID = XPathAPI.selectSingleNode(request,
-					"/UnDeployProcessRequest/Process/Identifier/text()").getNodeValue().trim();
+					"/UnDeployProcess/Process/Identifier/text()").getNodeValue().trim();
 		} catch (DOMException e) {
 			throw new ExceptionReport("Error. Malformed undeploy request",
 					ExceptionReport.NO_APPLICABLE_CODE, e);

@@ -10,12 +10,18 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.management.RuntimeErrorException;
+
 import net.opengis.wps.x100.ProcessDescriptionType;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.tools.ant.taskdefs.Mkdir;
+import org.eclipse.xtext.util.ReflectionUtil;
 import org.n52.wps.PropertyDocument.Property;
 import org.n52.wps.commons.WPSConfig;
+import org.n52.wps.server.AbstractAlgorithm;
+import org.n52.wps.server.AbstractTransactionalAlgorithm;
 import org.n52.wps.server.IAlgorithm;
 import org.n52.wps.server.ITransactionalAlgorithmRepository;
 import org.n52.wps.server.request.ExecuteRequest;
@@ -24,6 +30,8 @@ import org.n52.wps.transactional.deploy.AbstractProcessManager;
 import org.n52.wps.transactional.deploy.IProcessManager;
 import org.n52.wps.transactional.request.DeployProcessRequest;
 import org.n52.wps.transactional.request.UndeployProcessRequest;
+
+import com.google.common.reflect.Reflection;
 
 
 
@@ -34,14 +42,28 @@ public class GenericTransactionalProcessRepository implements ITransactionalAlgo
 	
 	protected IProcessManager deployManager;
 	
+	protected Class<?> algorithmClass;
+	
 	
 	public GenericTransactionalProcessRepository(String format){
 		Property[] properties = WPSConfig.getInstance().getPropertiesForRepositoryClass(this.getClass().getName());
 		//TODO think of multiple instance of this class registered (yet not possible since singleton)
+		Property genericAlgorithmXML = WPSConfig.getInstance().getPropertyForKey(properties, "GenericAlgorithm");
+		String genericAlgorithmClassName = genericAlgorithmXML.getStringValue();
+		try {
+			this.algorithmClass = Class.forName(genericAlgorithmClassName);
+		} catch (ClassNotFoundException e1) {
+			e1.printStackTrace();
+			throw new RuntimeException("Error. Could not load GenericAlgorithm class " + genericAlgorithmClassName);
+		}
+		if (!AbstractTransactionalAlgorithm.class.isAssignableFrom(this.algorithmClass)) {
+			throw new RuntimeException("Only subclasses of " + AbstractTransactionalAlgorithm.class.getSimpleName() + " are supported.");
+		}
 		Property deployManagerXML = WPSConfig.getInstance().getPropertyForKey(properties, "DeployManager");
 		if(deployManagerXML==null){
 			throw new RuntimeException("Error. Could not find matching DeployManager");
 		}
+		
 		processDescriptionMap = new HashMap<String, ProcessDescriptionType>();
 		String className = deployManagerXML.getStringValue();
 		try {
@@ -108,8 +130,16 @@ public class GenericTransactionalProcessRepository implements ITransactionalAlgo
 	}
 
 	public IAlgorithm getAlgorithm(String processID) {
-		return new GenericTransactionalAlgorithm(processID, this.getClass());
-		
+		return createAlgorithm(processID);
+	}
+	
+	private IAlgorithm createAlgorithm(String processId) {
+		try {
+			Constructor<?> constructor = this.algorithmClass.getConstructor(String.class);
+			return (AbstractTransactionalAlgorithm) constructor.newInstance(processId);
+		} catch (Exception e) {
+			throw new RuntimeException("Could not instantiate algorithm.", e);
+		}
 	}
 
 	public Collection<String> getAlgorithmNames() {

@@ -90,7 +90,7 @@ public class TransactionalRequestHandler {
 			DeployProcessRequest request) throws ExceptionReport {
 		
 		//storeDescribeProcess
-		storeDescribeProcess(request);
+		saveProcessDescription(request);
 		
 		try {
 			ITransactionalAlgorithmRepository repository = TransactionalHelper
@@ -114,7 +114,7 @@ public class TransactionalRequestHandler {
 		}
 	}
 
-	private void storeDescribeProcess(DeployProcessRequest request) {
+	private void saveProcessDescription(DeployProcessRequest request) {
 		 String processName ="";
           try{
              processName = XPathAPI.selectSingleNode(request.getProcessDescription(), "/DeployProcess/ProcessDescriptions/ProcessDescription/Identifier/text()").getNodeValue().trim();
@@ -132,21 +132,7 @@ public class TransactionalRequestHandler {
 			e.printStackTrace();
 		}
 			
-			String fullPath =  GenericTransactionalAlgorithm.class.getProtectionDomain().getCodeSource().getLocation().toString();
-			int searchIndex= fullPath.indexOf("WEB-INF");
-			String subPath = fullPath.substring(0, searchIndex);
-			subPath = subPath.replaceFirst("file:", "");
-			if(subPath.startsWith("/")){
-				subPath = subPath.substring(1);
-			}
-			
-			File directory = new File(subPath+"WEB-INF/ProcessDescriptions/");
-			if(!directory.exists()){
-				directory.mkdirs();
-			}
-
-			String path = subPath+"WEB-INF/ProcessDescriptions/"+processName+".xml";
-			
+			String path = generateProcessDescriptionFilePath(processName);
 		
 			try {
 				writeXmlFile(describeProcess, path);
@@ -183,6 +169,7 @@ public class TransactionalRequestHandler {
 					throw new ExceptionReport("Could not undeploy process",
 							ExceptionReport.NO_APPLICABLE_CODE);
 				} else {
+					deleteProcessDescription(request.getProcessID());
 					return new TransactionalResponse(
 							"Process successfully undeployed");
 				}
@@ -199,6 +186,32 @@ public class TransactionalRequestHandler {
 
 	}
 	
+	public static String generateProcessDescriptionFilePath(String processId) {
+		String fullPath =  GenericTransactionalAlgorithm.class.getProtectionDomain().getCodeSource().getLocation().toString();
+		int searchIndex= fullPath.indexOf("WEB-INF");
+		String subPath = fullPath.substring(0, searchIndex);
+		subPath = subPath.replaceFirst("file:", "");
+		if(subPath.startsWith("/")){
+			subPath = subPath.substring(1);
+		}
+		
+		File directory = new File(subPath+"WEB-INF/ProcessDescriptions/");
+		if(!directory.exists()){
+			directory.mkdirs();
+		}
+
+		return subPath+"WEB-INF/ProcessDescriptions/"+processId+".xml";
+		
+	}
+	
+	private static void deleteProcessDescription(String processId) {
+		String path = generateProcessDescriptionFilePath(processId);
+		File file = new File(path);
+		if (file.exists()) {
+			file.delete();
+		}
+	}
+
 	protected void writeXmlFile(Node node, String filename) throws IOException, TransformerFactoryConfigurationError, TransformerException, ParserConfigurationException {
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder documentBuilder = factory.newDocumentBuilder();
@@ -220,8 +233,6 @@ public class TransactionalRequestHandler {
         // Write the DOM document to the file
         Transformer xformer = TransformerFactory.newInstance().newTransformer();
         xformer.transform(source, result);
-    
-	
-	
+        fileOutput.close();
 	}
 }
