@@ -4,6 +4,10 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -53,8 +57,8 @@ public class WdLocalProcessManager extends AbstractProcessManager {
 	
 	private Collection<String> getAllProcessesFromWdDirectory() {
 		final Collection<String> processIds = new ArrayList<String>();
-		String wdDirectoryPath = getWorksequenceDescriptionDirectoryPath();
-		File directory = new File(wdDirectoryPath);
+		URI wdDirectory = getWorksequenceDescriptionDirectory();
+		File directory = new File(wdDirectory);
 		Collection<File> files = FileUtils.listFiles(directory, new String[]{"wd"}, false);
 		for (File file : files) {
 			processIds.add(FilenameUtils.getBaseName(file.getAbsolutePath()));
@@ -87,8 +91,8 @@ public class WdLocalProcessManager extends AbstractProcessManager {
 	private File saveWorksequenceDescription(String processId, String worksequenceDescription) {
 		File wdFile = null;
 		try {
-			String path = generateWorksequenceDescriptionFilePath(processId);
-			wdFile = new File(path);
+			URI fileUri = generateWorksequenceDescriptionFileUri(processId);
+			wdFile = new File(fileUri);
 			BufferedWriter writer = new BufferedWriter(new FileWriter(wdFile));
 			writer.write(worksequenceDescription);
 			writer.close();
@@ -100,34 +104,45 @@ public class WdLocalProcessManager extends AbstractProcessManager {
 	}
 	
 	private void deleteWorksequenceDescription(String processId) {
-		String path = generateWorksequenceDescriptionFilePath(processId);
-		File file = new File(path);
+		URI fileUri = generateWorksequenceDescriptionFileUri(processId);
+		File file = new File(fileUri);
 		if (file.exists()) {
 			file.delete();
 		}
 	}
 	
-	private String generateWorksequenceDescriptionFilePath(String processId) {
-		return getWorksequenceDescriptionDirectoryPath() + processId + ".wd";
-		
+	private URI generateWorksequenceDescriptionFileUri(String processId) {
+		try {
+			return new URI(getWorksequenceDescriptionDirectory().toString() + processId + ".wd");
+		} catch (URISyntaxException e) {
+			throw new RuntimeException(e);
+		}
 	}
 	
-	private String getWorksequenceDescriptionDirectoryPath() {
-		String fullPath = getClass().getProtectionDomain().getCodeSource().getLocation().toString();
-		int searchIndex= fullPath.indexOf("WEB-INF");
+	private URI getWorksequenceDescriptionDirectory() {
+		String fullPath = getClass().getProtectionDomain().getCodeSource()
+				.getLocation().toString();
+		int searchIndex = fullPath.indexOf("WEB-INF");
 		String subPath = fullPath.substring(0, searchIndex);
-		subPath = subPath.replaceFirst("file:", "");
-		if(subPath.startsWith("/")){
-			subPath = subPath.substring(1);
-		}
-		
-		File directory = new File(subPath+"WEB-INF/WorksequenceDescriptions/");
-		if(!directory.exists()){
-			directory.mkdirs();
+
+		URI directoryUri;
+		try {
+			directoryUri = new URL(subPath
+					+ "WEB-INF/WorksequenceDescriptions/").toURI();
+
+			File directory = new File(directoryUri);
+			if (!directory.exists()) {
+				directory.mkdirs();
+			}
+
+			return directoryUri;
+
+		} catch (MalformedURLException e) {
+			throw new RuntimeException(e);
+		} catch (URISyntaxException e) {
+			throw new RuntimeException(e);
 		}
 
-		return subPath+"WEB-INF/WorksequenceDescriptions/";		
-		
 	}
 
 }

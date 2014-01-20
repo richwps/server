@@ -34,6 +34,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -131,11 +135,11 @@ public class TransactionalRequestHandler {
 			e.printStackTrace();
 		}
 			
-			String path = generateProcessDescriptionFilePath(processName);
+			URI fileUri = generateProcessDescriptionFileUri(processName);
 		
 			try {
 				
-				writeXmlFile(describeProcess, path);
+				writeXmlFile(describeProcess, fileUri);
 				
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
@@ -187,33 +191,37 @@ public class TransactionalRequestHandler {
 
 	}
 	
-	public static String generateProcessDescriptionFilePath(String processId) {
+	public static URI generateProcessDescriptionFileUri(String processId) {
 		String fullPath =  GenericTransactionalAlgorithm.class.getProtectionDomain().getCodeSource().getLocation().toString();
 		int searchIndex= fullPath.indexOf("WEB-INF");
 		String subPath = fullPath.substring(0, searchIndex);
-		subPath = subPath.replaceFirst("file:", "");
-		if(subPath.startsWith("/")){
-			subPath = subPath.substring(1);
-		}
 		
-		File directory = new File(subPath+"WEB-INF/ProcessDescriptions/");
+		URI directoryUri;
+		try {
+			directoryUri = new URL(subPath+"WEB-INF/ProcessDescriptions/").toURI();
+		File directory = new File(directoryUri);
 		if(!directory.exists()){
 			directory.mkdirs();
 		}
 
-		return subPath+"WEB-INF/ProcessDescriptions/"+processId+".xml";
+		return new URI(directoryUri.toString() + "/" + processId + ".xml");
+		} catch (MalformedURLException e) {
+			throw new RuntimeException(e);
+		} catch (URISyntaxException e) {
+			throw new RuntimeException(e);
+		}
 		
 	}
 	
 	private static void deleteProcessDescription(String processId) {
-		String path = generateProcessDescriptionFilePath(processId);
-		File file = new File(path);
+		URI fileUri = generateProcessDescriptionFileUri(processId);
+		File file = new File(fileUri);
 		if (file.exists()) {
 			file.delete();
 		}
 	}
 
-	protected void writeXmlFile(Node node, String filename) throws IOException, TransformerFactoryConfigurationError, TransformerException, ParserConfigurationException {
+	protected void writeXmlFile(Node node, URI fileUri) throws IOException, TransformerFactoryConfigurationError, TransformerException, ParserConfigurationException {
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		factory.setNamespaceAware(true);
 		DocumentBuilder documentBuilder = factory.newDocumentBuilder();
@@ -230,7 +238,7 @@ public class TransactionalRequestHandler {
         Source source = new DOMSource(tempDocument);
 
         // Prepare the output file
-        File file = new File(filename);
+        File file = new File(fileUri);
         String parent = file.getParent();
         File directory = new File(parent);
         directory.mkdirs();

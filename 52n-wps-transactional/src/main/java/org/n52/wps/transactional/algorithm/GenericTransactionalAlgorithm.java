@@ -33,6 +33,9 @@ package org.n52.wps.transactional.algorithm;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -55,8 +58,6 @@ import net.opengis.wps.x100.OutputDescriptionType;
 import net.opengis.wps.x100.ProcessDescriptionType;
 import net.opengis.wps.x100.ProcessDescriptionsDocument;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.xmlbeans.XmlException;
 import org.apache.xmlbeans.XmlOptions;
 import org.apache.xpath.XPathAPI;
@@ -74,6 +75,8 @@ import org.n52.wps.io.data.binding.literal.LiteralStringBinding;
 import org.n52.wps.server.AbstractTransactionalAlgorithm;
 import org.n52.wps.transactional.deploy.IProcessManager;
 import org.n52.wps.transactional.service.TransactionalHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
@@ -195,15 +198,15 @@ public class GenericTransactionalAlgorithm extends AbstractTransactionalAlgorith
 		String fullPath =  GenericTransactionalAlgorithm.class.getProtectionDomain().getCodeSource().getLocation().toString();
 		int searchIndex= fullPath.indexOf("WEB-INF");
 		String subPath = fullPath.substring(0, searchIndex);
-		subPath = subPath.replaceFirst("file:/", "");
-                String processID = getAlgorithmID();
-                //sanitize processID: strip version number and namespace if passed in
-                if (processID.contains("-"))
-                    processID = processID.split("-")[0];
-                if (processID.contains("}"))
-                    processID = processID.split("}")[1];
+		String processID = getAlgorithmID();
+		// sanitize processID: strip version number and namespace if passed in
+		if (processID.contains("-"))
+			processID = processID.split("-")[0];
+		if (processID.contains("}"))
+			processID = processID.split("}")[1];
 		try {
-			File xmlDesc = new File(subPath+File.separator+"WEB-INF"+File.separator+"ProcessDescriptions"+File.separator+processID+".xml");
+			URI fileUri = new URL(subPath+File.separator+"WEB-INF"+File.separator+"ProcessDescriptions"+File.separator+processID+".xml").toURI();
+			File xmlDesc = new File(fileUri);
 			XmlOptions option = new XmlOptions();
 			option.setLoadTrimTextBuffer();
 			ProcessDescriptionsDocument doc = ProcessDescriptionsDocument.Factory.parse(xmlDesc, option);
@@ -221,6 +224,8 @@ public class GenericTransactionalAlgorithm extends AbstractTransactionalAlgorith
 			LOGGER.warn("Could not initialize algorithm, parsing error: " + getAlgorithmID(), e);
 		}
 		catch(XmlException e) {
+			LOGGER.warn("Could not initialize algorithm, parsing error: " +getAlgorithmID(), e);
+		} catch (URISyntaxException e) {
 			LOGGER.warn("Could not initialize algorithm, parsing error: " +getAlgorithmID(), e);
 		}
 		return null;
