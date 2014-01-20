@@ -73,14 +73,14 @@ public class ZipCreator {
       zip_out_stream.write(outputStream.toByteArray());
       zip_out_stream.closeEntry();
 
-      String bpelname = XPathAPI.selectSingleNode(workflow,"@name").getTextContent();
+      String bpelname = XPathAPI.selectSingleNode(workflow,"@name").getNodeValue();
       outputStream = nodeToString(workflow);
 //      outputStream = createOutputStreamFromNode(workflow);
       zip_out_stream.putNextEntry (new ZipEntry (bpelname + ".bpel"));
       zip_out_stream.write(outputStream.toByteArray());
       zip_out_stream.closeEntry();
 
-      String wsdlname = XPathAPI.selectSingleNode(clientWSDL,"@name").getTextContent();
+      String wsdlname = XPathAPI.selectSingleNode(clientWSDL,"@name").getNodeValue();
       outputStream = nodeToString(clientWSDL);
       zip_out_stream.putNextEntry (new ZipEntry (wsdlname + ".wsdl"));
       zip_out_stream.write(outputStream.toByteArray());

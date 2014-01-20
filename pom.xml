@@ -261,6 +261,10 @@
 						<artifactId>ecore</artifactId>
 						<groupId>org.eclipse.emf</groupId>
 					</exclusion>
+					<exclusion>
+						<artifactId>common</artifactId>
+						<groupId>org.eclipse.emf</groupId>
+					</exclusion>
 				</exclusions>
 			</dependency>
 			<dependency>
@@ -275,6 +279,10 @@
 				<exclusions>
 					<exclusion>
 						<artifactId>ecore</artifactId>
+						<groupId>org.eclipse.emf</groupId>
+					</exclusion>
+					<exclusion>
+						<artifactId>common</artifactId>
 						<groupId>org.eclipse.emf</groupId>
 					</exclusion>
 				</exclusions>

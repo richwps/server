@@ -18,6 +18,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 
+import de.hsos.richwps.wd.Interpreter;
+import de.hsos.richwps.wd.elements.Worksequence;
+
 public class WdLocalProcessManager extends AbstractProcessManager {
 	
 	private static Logger LOGGER = LoggerFactory.getLogger(WdLocalProcessManager.class);
@@ -60,16 +63,11 @@ public class WdLocalProcessManager extends AbstractProcessManager {
 			throw new IllegalArgumentException(WdLocalProcessManager.class.getSimpleName() + " only supports " + WdDeploymentProfile.class.getSimpleName());
 		}
 		final WdDeploymentProfile wdDeploymentProfile = (WdDeploymentProfile) deploymentProfile;
-		saveWorksequenceDescription(wdDeploymentProfile.getProcessID(), wdDeploymentProfile.getWorksequenceDescription());
-		
-//		File wdFile = File.createTempFile("RichWPSWDTempFile", ".wd");
-//		BufferedWriter writer = new BufferedWriter(new FileWriter(wdFile));
-//		writer.write(worksequenceDescription);
-//		writer.close();
-//		Interpreter wdInterpreter = new Interpreter();
-//		wdInterpreter.load(wdFile.getAbsolutePath());
-//		Worksequence worksequence = wdInterpreter.getWorksequence();
-//		LOGGER.warn("countExecutes: " + worksequence.countExecutes());
+		File wdFile = saveWorksequenceDescription(wdDeploymentProfile.getProcessID(), wdDeploymentProfile.getWorksequenceDescription());
+		Interpreter wdInterpreter = new Interpreter();
+		wdInterpreter.load(wdFile.getAbsolutePath());
+		Worksequence worksequence = wdInterpreter.getWorksequence();
+		LOGGER.warn("countExecutes: " + worksequence.countExecutes());
 		return true;
 	}
 	
@@ -110,7 +108,7 @@ public class WdLocalProcessManager extends AbstractProcessManager {
 			directory.mkdirs();
 		}
 
-		return subPath+"WEB-INF/WorksequenceDescriptions/"+processId+".wd";		
+		return subPath+"WEB-INF/WorksequenceDescriptions/"+processId+".wd";
 		
 	}
 
