@@ -89,7 +89,6 @@ public class TransactionalRequestHandler {
 	private TransactionalResponse handleDeploy(
 			DeployProcessRequest request) throws ExceptionReport {
 		
-		//storeDescribeProcess
 		saveProcessDescription(request);
 		
 		try {
@@ -135,7 +134,9 @@ public class TransactionalRequestHandler {
 			String path = generateProcessDescriptionFilePath(processName);
 		
 			try {
+				
 				writeXmlFile(describeProcess, path);
+				
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -214,10 +215,17 @@ public class TransactionalRequestHandler {
 
 	protected void writeXmlFile(Node node, String filename) throws IOException, TransformerFactoryConfigurationError, TransformerException, ParserConfigurationException {
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		factory.setNamespaceAware(true);
 		DocumentBuilder documentBuilder = factory.newDocumentBuilder();
 		Document tempDocument = documentBuilder.newDocument();
 		Node importedNode = tempDocument.importNode(node, true);
 		tempDocument.appendChild(importedNode);
+		tempDocument.getDocumentElement().setAttribute(
+			    "xmlns:wps",
+			    "http://www.opengis.net/wps/1.0.0");
+		tempDocument.getDocumentElement().setAttribute(
+			    "xmlns:ows",
+			    "http://www.opengis.net/ows/1.1");
         // Prepare the DOM document for writing
         Source source = new DOMSource(tempDocument);
 

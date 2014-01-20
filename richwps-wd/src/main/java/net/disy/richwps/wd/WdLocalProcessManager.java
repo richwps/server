@@ -4,11 +4,13 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
 
 import net.opengis.wps.x100.ExecuteDocument;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.n52.wps.server.ITransactionalAlgorithmRepository;
 import org.n52.wps.transactional.deploy.AbstractProcessManager;
 import org.n52.wps.transactional.deploymentprofiles.DeploymentProfile;
@@ -45,8 +47,19 @@ public class WdLocalProcessManager extends AbstractProcessManager {
 
 	@Override
 	public Collection<String> getAllProcesses() throws Exception {
-		// TODO wie ist das drüben implementiert? woher weiß er an dieser stelle, welche seine eigenen prozesse sind? oder gehts dort nur weil die info über den bpelclient kommt?
-		return Arrays.asList("sampleWdProcess");
+		// Iterate over all WD files and take their prefix as the processId (convention used in this implementation)
+		return getAllProcessesFromWdDirectory();
+	}
+	
+	private Collection<String> getAllProcessesFromWdDirectory() {
+		final Collection<String> processIds = new ArrayList<String>();
+		String wdDirectoryPath = getWorksequenceDescriptionDirectoryPath();
+		File directory = new File(wdDirectoryPath);
+		Collection<File> files = FileUtils.listFiles(directory, new String[]{"wd"}, false);
+		for (File file : files) {
+			processIds.add(FilenameUtils.getBaseName(file.getAbsolutePath()));
+		}
+		return processIds; 
 	}
 
 	@Override
@@ -95,6 +108,11 @@ public class WdLocalProcessManager extends AbstractProcessManager {
 	}
 	
 	private String generateWorksequenceDescriptionFilePath(String processId) {
+		return getWorksequenceDescriptionDirectoryPath() + processId + ".wd";
+		
+	}
+	
+	private String getWorksequenceDescriptionDirectoryPath() {
 		String fullPath = getClass().getProtectionDomain().getCodeSource().getLocation().toString();
 		int searchIndex= fullPath.indexOf("WEB-INF");
 		String subPath = fullPath.substring(0, searchIndex);
@@ -108,7 +126,7 @@ public class WdLocalProcessManager extends AbstractProcessManager {
 			directory.mkdirs();
 		}
 
-		return subPath+"WEB-INF/WorksequenceDescriptions/"+processId+".wd";
+		return subPath+"WEB-INF/WorksequenceDescriptions/";		
 		
 	}
 
