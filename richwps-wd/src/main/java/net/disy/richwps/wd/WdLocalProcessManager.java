@@ -11,6 +11,8 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import net.disy.richwps.wd.processor.IWorksequenceProcessor;
+import net.disy.richwps.wd.processor.WorksequenceProcessor;
 import net.opengis.wps.x100.ExecuteDocument;
 
 import org.apache.commons.io.FileUtils;
@@ -69,8 +71,18 @@ public class WdLocalProcessManager extends AbstractProcessManager {
 	@Override
 	public Document invoke(ExecuteDocument payload, String algorithmID)
 			throws Exception {
-		// TODO Lade die WD Datei basierend auf der processID aus WEB-INF/WorksequenceDescriptions/ und führe interpreter aus
-		return null;
+		Worksequence worksequence = getWorksequenceById(algorithmID);
+		IWorksequenceProcessor worksequenceProcessor = new WorksequenceProcessor();
+		return worksequenceProcessor.process(payload, worksequence);
+	}
+
+	private Worksequence getWorksequenceById(String algorithmID) throws Exception {
+		URI fileUri = buildWorksequenceDescriptionFileUri(algorithmID);
+		File wdFile = new File(fileUri);
+		Interpreter wdInterpreter = new Interpreter();
+		wdInterpreter.load(wdFile.getAbsolutePath());
+		wdInterpreter.inspect();
+		return wdInterpreter.getWorksequence();
 	}
 
 	@Override
@@ -81,17 +93,13 @@ public class WdLocalProcessManager extends AbstractProcessManager {
 		}
 		final WdDeploymentProfile wdDeploymentProfile = (WdDeploymentProfile) deploymentProfile;
 		File wdFile = saveWorksequenceDescription(wdDeploymentProfile.getProcessID(), wdDeploymentProfile.getWorksequenceDescription());
-		Interpreter wdInterpreter = new Interpreter();
-		wdInterpreter.load(wdFile.getAbsolutePath());
-		Worksequence worksequence = wdInterpreter.getWorksequence();
-		LOGGER.warn("countExecutes: " + worksequence.countExecutes());
 		return true;
 	}
 	
 	private File saveWorksequenceDescription(String processId, String worksequenceDescription) {
 		File wdFile = null;
 		try {
-			URI fileUri = generateWorksequenceDescriptionFileUri(processId);
+			URI fileUri = buildWorksequenceDescriptionFileUri(processId);
 			wdFile = new File(fileUri);
 			BufferedWriter writer = new BufferedWriter(new FileWriter(wdFile));
 			writer.write(worksequenceDescription);
@@ -104,14 +112,14 @@ public class WdLocalProcessManager extends AbstractProcessManager {
 	}
 	
 	private void deleteWorksequenceDescription(String processId) {
-		URI fileUri = generateWorksequenceDescriptionFileUri(processId);
+		URI fileUri = buildWorksequenceDescriptionFileUri(processId);
 		File file = new File(fileUri);
 		if (file.exists()) {
 			file.delete();
 		}
 	}
 	
-	private URI generateWorksequenceDescriptionFileUri(String processId) {
+	private URI buildWorksequenceDescriptionFileUri(String processId) {
 		try {
 			return new URI(getWorksequenceDescriptionDirectory().toString() + processId + ".wd");
 		} catch (URISyntaxException e) {

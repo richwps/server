@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -16,11 +16,15 @@ import net.opengis.wps.x100.ProcessDescriptionsDocument;
 import org.apache.xmlbeans.XmlException;
 import org.apache.xmlbeans.XmlOptions;
 import org.n52.wps.io.data.IData;
+import org.n52.wps.io.data.binding.literal.LiteralStringBinding;
 import org.n52.wps.server.AbstractTransactionalAlgorithm;
 import org.n52.wps.server.ExceptionReport;
 import org.n52.wps.transactional.algorithm.GenericTransactionalAlgorithm;
+import org.n52.wps.transactional.deploy.IProcessManager;
+import org.n52.wps.transactional.service.TransactionalHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
 
 
 public class WdAlgorithm extends AbstractTransactionalAlgorithm {
@@ -110,8 +114,18 @@ public class WdAlgorithm extends AbstractTransactionalAlgorithm {
 
 	@Override
 	public Map<String, IData> run(ExecuteDocument document) {
-		// TODO Auto-generated method stub
-		return Collections.emptyMap();
+		// TODO was ist der unterschied zur anderen run()-Methode?
+		Map<String,IData> resultMap = new HashMap<String,IData>();
+		
+		try {
+			IProcessManager deployManager = TransactionalHelper.getProcessManagerForSchema("RichWpsWd.xsd");
+			Document responseDocument = deployManager.invoke(document, getAlgorithmID());
+			resultMap.put("result", new LiteralStringBinding("meinresult"));
+			
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+		return resultMap;
 	}
 
 }
