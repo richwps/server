@@ -1,6 +1,7 @@
 package net.disy.richwps.wd.processor;
 
-import de.hsos.richwps.wd.elements.IOperation;
+import de.hsos.richwps.dsl.api.elements.IOperation;
+
 
 public interface IOperationHandler {
 	

@@ -273,7 +273,7 @@
 		</dependency>
 		<dependency>
 			<groupId>de.hsos.richwps</groupId>
-			<artifactId>wd.worksequenceapi</artifactId>
+			<artifactId>dsl.api</artifactId>
 		</dependency>
 	</dependencies>
 

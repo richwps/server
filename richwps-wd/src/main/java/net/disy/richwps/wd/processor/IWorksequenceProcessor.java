@@ -4,7 +4,8 @@ import net.opengis.wps.x100.ExecuteDocument;
 
 import org.w3c.dom.Document;
 
-import de.hsos.richwps.wd.elements.Worksequence;
+import de.hsos.richwps.dsl.api.elements.Worksequence;
+
 
 public interface IWorksequenceProcessor {
 

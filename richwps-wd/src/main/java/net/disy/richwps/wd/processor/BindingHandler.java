@@ -1,7 +1,8 @@
 package net.disy.richwps.wd.processor;
 
-import de.hsos.richwps.wd.elements.Binding;
-import de.hsos.richwps.wd.elements.IOperation;
+import de.hsos.richwps.dsl.api.elements.Binding;
+import de.hsos.richwps.dsl.api.elements.IOperation;
+
 
 public class BindingHandler implements IOperationHandler {
 

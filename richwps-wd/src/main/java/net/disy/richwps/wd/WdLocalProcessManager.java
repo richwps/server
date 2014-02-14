@@ -26,8 +26,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 
-import de.hsos.richwps.wd.Interpreter;
-import de.hsos.richwps.wd.elements.Worksequence;
+import de.hsos.richwps.dsl.api.Reader;
+import de.hsos.richwps.dsl.api.elements.Worksequence;
 
 public class WdLocalProcessManager extends AbstractProcessManager {
 	
@@ -79,10 +79,10 @@ public class WdLocalProcessManager extends AbstractProcessManager {
 	private Worksequence getWorksequenceById(String algorithmID) throws Exception {
 		URI fileUri = buildWorksequenceDescriptionFileUri(algorithmID);
 		File wdFile = new File(fileUri);
-		Interpreter wdInterpreter = new Interpreter();
-		wdInterpreter.load(wdFile.getAbsolutePath());
-		wdInterpreter.inspect();
-		return wdInterpreter.getWorksequence();
+		Reader dslReader = new Reader();
+		dslReader.load(wdFile.getAbsolutePath());
+		dslReader.inspect();
+		return dslReader.getWorksequence();
 	}
 
 	@Override
@@ -121,7 +121,7 @@ public class WdLocalProcessManager extends AbstractProcessManager {
 	
 	private URI buildWorksequenceDescriptionFileUri(String processId) {
 		try {
-			return new URI(getWorksequenceDescriptionDirectory().toString() + processId + ".wd");
+			return new URI(getWorksequenceDescriptionDirectory().toString() + processId + ".dsl");
 		} catch (URISyntaxException e) {
 			throw new RuntimeException(e);
 		}

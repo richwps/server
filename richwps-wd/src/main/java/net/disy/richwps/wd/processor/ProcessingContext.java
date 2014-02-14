@@ -3,9 +3,10 @@ package net.disy.richwps.wd.processor;
 import java.util.ArrayList;
 import java.util.List;
 
-import de.hsos.richwps.wd.elements.Assignment;
-import de.hsos.richwps.wd.elements.Binding;
-import de.hsos.richwps.wd.elements.Execute;
+import de.hsos.richwps.dsl.api.elements.Assignment;
+import de.hsos.richwps.dsl.api.elements.Binding;
+import de.hsos.richwps.dsl.api.elements.Execute;
+
 
 public class ProcessingContext {
 	

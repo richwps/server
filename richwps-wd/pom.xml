@@ -13,7 +13,7 @@
 		</dependency>
 		<dependency>
 			<groupId>de.hsos.richwps</groupId>
-			<artifactId>wd.worksequenceapi</artifactId>
+			<artifactId>dsl.api</artifactId>
 			<version>1.0-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
