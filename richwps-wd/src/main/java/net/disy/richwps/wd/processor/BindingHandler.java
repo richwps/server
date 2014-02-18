@@ -14,7 +14,7 @@ public class BindingHandler implements IOperationHandler {
 	@Override
 	public void handleOperation(IOperation operation, ProcessingContext context) {
 		Binding binding = (Binding) operation;
-		context.getBindings().add(binding);
+		context.getBindings().put(binding.getHandle(), binding);
 	}
 
 }

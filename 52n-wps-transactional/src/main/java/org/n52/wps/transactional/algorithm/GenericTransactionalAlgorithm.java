@@ -41,7 +41,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
@@ -60,10 +59,8 @@ import net.opengis.wps.x100.ProcessDescriptionsDocument;
 
 import org.apache.xmlbeans.XmlException;
 import org.apache.xmlbeans.XmlOptions;
-import org.apache.xpath.XPathAPI;
 import org.n52.wps.PropertyDocument.Property;
 import org.n52.wps.commons.WPSConfig;
-import org.n52.wps.io.data.GenericFileData;
 import org.n52.wps.io.data.IData;
 import org.n52.wps.io.data.binding.complex.GTRasterDataBinding;
 import org.n52.wps.io.data.binding.complex.GTVectorDataBinding;
@@ -113,33 +110,33 @@ public class GenericTransactionalAlgorithm extends AbstractTransactionalAlgorith
 			//TODO get deploy manager class from config
 			IProcessManager deployManager = TransactionalHelper.getProcessManagerForSchema("BPELProfile.xsd");
                         
-			responseDocument = deployManager.invoke(payload, getAlgorithmID());
-			
-			//1.parse results;
-			
-			//TODO make temporaryfile
-		
-			//writeXmlFile(responseDocument,workspace+"\\BPEL\\serverside.xml");
-			File tempFile = File.createTempFile("wpsbpelresult", ".xml", null);
-			
-			File tempFile2 = File.createTempFile("wpsbpelresult", ".xml", null);
-			//
-            writeXmlFile(responseDocument,tempFile2);
-
-            Document d = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(tempFile2);
-            
-			GenericFileData data = new GenericFileData(tempFile, "text/xml");
-			
-			Node gml = XPathAPI.selectSingleNode(d, "//Output/Data/ComplexData/FeatureCollection");
-			
-			String identifier = XPathAPI.selectSingleNode(d, "//Output/Identifier").getFirstChild().getNodeValue().trim();
-			
-			writeXmlFile(gml, tempFile);
-			
-			GenericFileDataBinding binding = new GenericFileDataBinding(data);
-			
-			resultHash.put(identifier, binding);
-			
+//			responseDocument = deployManager.invoke(payload, getAlgorithmID());
+//			
+//			//1.parse results;
+//			
+//			//TODO make temporaryfile
+//		
+//			//writeXmlFile(responseDocument,workspace+"\\BPEL\\serverside.xml");
+//			File tempFile = File.createTempFile("wpsbpelresult", ".xml", null);
+//			
+//			File tempFile2 = File.createTempFile("wpsbpelresult", ".xml", null);
+//			//
+//            writeXmlFile(responseDocument,tempFile2);
+//
+//            Document d = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(tempFile2);
+//            
+//			GenericFileData data = new GenericFileData(tempFile, "text/xml");
+//			
+//			Node gml = XPathAPI.selectSingleNode(d, "//Output/Data/ComplexData/FeatureCollection");
+//			
+//			String identifier = XPathAPI.selectSingleNode(d, "//Output/Identifier").getFirstChild().getNodeValue().trim();
+//			
+//			writeXmlFile(gml, tempFile);
+//			
+//			GenericFileDataBinding binding = new GenericFileDataBinding(data);
+//			
+//			resultHash.put(identifier, binding);
+//			
 			//ExecuteResponseDocument executeResponseDocument = ExecuteResponseDocument.Factory.parse(new File(workspace+"\\BPEL\\serverside.xml"));
 //            ExecuteResponseDocument executeResponseDocument = ExecuteResponseDocument.Factory.parse(tempFile);
 //			

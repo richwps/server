@@ -10,6 +10,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
 
 import net.disy.richwps.wd.processor.IWorksequenceProcessor;
 import net.disy.richwps.wd.processor.WorksequenceProcessor;
@@ -17,6 +18,7 @@ import net.opengis.wps.x100.ExecuteDocument;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.n52.wps.io.data.IData;
 import org.n52.wps.server.ITransactionalAlgorithmRepository;
 import org.n52.wps.transactional.deploy.AbstractProcessManager;
 import org.n52.wps.transactional.deploymentprofiles.DeploymentProfile;
@@ -24,7 +26,6 @@ import org.n52.wps.transactional.request.DeployProcessRequest;
 import org.n52.wps.transactional.request.UndeployProcessRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
 
 import de.hsos.richwps.dsl.api.Reader;
 import de.hsos.richwps.dsl.api.elements.Worksequence;
@@ -69,7 +70,7 @@ public class WdLocalProcessManager extends AbstractProcessManager {
 	}
 
 	@Override
-	public Document invoke(ExecuteDocument payload, String algorithmID)
+	public Map<String, IData> invoke(ExecuteDocument payload, String algorithmID)
 			throws Exception {
 		Worksequence worksequence = getWorksequenceById(algorithmID);
 		IWorksequenceProcessor worksequenceProcessor = new WorksequenceProcessor();

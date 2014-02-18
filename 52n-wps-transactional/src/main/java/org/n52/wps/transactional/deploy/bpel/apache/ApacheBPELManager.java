@@ -52,6 +52,7 @@ import org.apache.axis2.context.MessageContext;
 import org.apache.axis2.saaj.util.SAAJUtil;
 import org.n52.wps.PropertyDocument.Property;
 import org.n52.wps.commons.WPSConfig;
+import org.n52.wps.io.data.IData;
 import org.n52.wps.server.ITransactionalAlgorithmRepository;
 import org.n52.wps.transactional.deploy.AbstractProcessManager;
 import org.n52.wps.transactional.deploymentprofiles.BPELDeploymentProfile;
@@ -181,7 +182,7 @@ public class ApacheBPELManager extends AbstractProcessManager {
         return true;
 	}
     
-    public Document invoke(ExecuteDocument doc, String algorithmID) throws Exception {
+    public Map<String, IData> invoke(ExecuteDocument doc, String algorithmID) throws Exception {
         
         Node domNode = doc.getDomNode();
 
@@ -257,7 +258,7 @@ public class ApacheBPELManager extends AbstractProcessManager {
         //Document result = builder.parse((InputStream)response.getXMLStreamReader());
 
         //System.out.print(result.toString());
-        return result;
+        return null;
         //throw new UnsupportedOperationException("Not supported yet.");
 
         
