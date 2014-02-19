@@ -1,16 +1,17 @@
 package net.disy.richwps.wd.processor;
 
 import java.text.MessageFormat;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import net.opengis.wps.x100.InputType;
+
 import org.n52.wps.io.data.IData;
-import org.n52.wps.io.data.binding.literal.LiteralStringBinding;
 import org.n52.wps.server.ExceptionReport;
 import org.n52.wps.server.IAlgorithm;
 import org.n52.wps.server.RepositoryManager;
+import org.n52.wps.server.request.InputHandler;
 
 import de.hsos.richwps.dsl.api.elements.Binding;
 import de.hsos.richwps.dsl.api.elements.Execute;
@@ -29,44 +30,65 @@ public class ExecuteHandler implements IOperationHandler {
 	public void handleOperation(IOperation operation, ProcessingContext context) {
 		Execute executeOperation = (Execute) operation;
 		
-		// TODO consider previously declared bindings from context. If the execute binding id (=handle) isn't declared in binding list, throw an exception
-		
-		List<Reference> inputReferences = executeOperation.getInputreferences();
-		List<String> inputNames = executeOperation.getInputnames();
-		
-		// TODO build inputs to fit the wps api for invoking the local wps process
-		
-		// TODO execute local wps process (get binding for handle)
 		String processIdToExecute = getProcessIdToExecute(executeOperation, context);
 		if (!RepositoryManager.getInstance().containsAlgorithm(processIdToExecute)) {
 			throw new IllegalArgumentException(MessageFormat.format("Local process id {0} does not exist.", processIdToExecute));
 		}
+		
+		// Get the input data for the WD WPS process and change the input names according to the target process later on
+		InputType[] outerProcessInputs = context.getExecuteDocument().getExecute().getDataInputs().getInputArray();
+		Map<String, List<IData>> outerProcessInputData = null;
+		try {
+			InputHandler outerProcessInputHandler = new InputHandler.Builder(outerProcessInputs, context.getExecuteDocument().getExecute().getIdentifier().getStringValue()).build();
+			outerProcessInputData = outerProcessInputHandler.getParsedInputData();
+		} catch (ExceptionReport e1) {
+			throw new RuntimeException("Could not parse inputs", e1);
+		}
+
+		Map<String, Reference> inputReferenceMapping = createReferenceMapping(executeOperation.getInputnames(), executeOperation.getInputreferences());
+		Map<String, List<IData>> innerProcessInputData = new HashMap<String, List<IData>>();
+		for (Map.Entry<String, Reference> inputReferenceMappingEntry : inputReferenceMapping.entrySet()) {
+			List<IData> dataForInputReference = outerProcessInputData.get(inputReferenceMappingEntry.getValue().getId());
+			if (dataForInputReference == null) {
+				throw new RuntimeException("No input data found for input reference " + inputReferenceMappingEntry.getKey());
+			}
+			innerProcessInputData.put(inputReferenceMappingEntry.getKey(), dataForInputReference);
+		}
+		
 		IAlgorithm algorithm = RepositoryManager.getInstance().getAlgorithm(processIdToExecute);
-		Map<String, List<IData>> inputData = new HashMap<String, List<IData>>();
 		
-		// TODO need of a sub-context per process invocation?
-		
-		// TODO make generic according to the input definitions
-		inputData.put("LiteralInputData", Arrays.<IData>asList(new LiteralStringBinding("teststring")));
-		
-		Map<String, IData> localProcessResult = new HashMap<String, IData>();
+		Map<String, IData> innerProcessResultData = new HashMap<String, IData>();
 		try {
 			System.out.println("Executing local process with id " + processIdToExecute);
-			localProcessResult = algorithm.run(inputData);
+			innerProcessResultData = algorithm.run(innerProcessInputData);
 		} catch (ExceptionReport e) {
 			throw new RuntimeException(e);
 		}
 		
-		List<Reference> outputReferences = executeOperation.getOutputreferences();
-		List<String> outputNames = executeOperation.getOutputnames();
 		// TODO handle the case that the output gets saved in variables (var prefix) or a final output (out prefix)
-		if (localProcessResult != null) {
-			for (Reference outputReference : outputReferences) {
-				context.getResults().put(outputReference.getId(), localProcessResult.values().iterator().next());	
+		
+		if (innerProcessResultData == null) {
+			throw new RuntimeException("The inner process " + processIdToExecute + " returned no result.");
+		}
+		
+		Map<String, Reference> outputReferenceMapping = createReferenceMapping(executeOperation.getOutputnames(), executeOperation.getOutputreferences());
+		for (Map.Entry<String, Reference> outputReferenceMappingEntry : outputReferenceMapping.entrySet()) {
+			if (!innerProcessResultData.containsKey(outputReferenceMappingEntry.getKey())) {
+				throw new RuntimeException("No result data found for output identifier " + outputReferenceMappingEntry.getKey());
 			}
-			
+			IData dataForOutputReference = innerProcessResultData.get(outputReferenceMappingEntry.getKey());
+			context.getResults().put(outputReferenceMappingEntry.getValue().getId(), dataForOutputReference);
 		}
         
+	}
+
+	private Map<String, Reference> createReferenceMapping(List<String> inputnames,
+			List<Reference> inputreferences) {
+		Map<String, Reference> references = new HashMap<String, Reference>();
+		for (int i = 0; i < inputnames.size(); i++) {
+			references.put(inputnames.get(i), inputreferences.get(i));
+		}
+		return references;
 	}
 
 	private String getProcessIdToExecute(Execute executeOperation, ProcessingContext context) {
