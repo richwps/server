@@ -13,7 +13,10 @@ public class BindingHandler implements IOperationHandler {
 
 	@Override
 	public void handleOperation(IOperation operation, ProcessingContext context) {
-		Binding binding = (Binding) operation;
+		if (!canHandle(operation)) {
+			throw new IllegalArgumentException("Could not handle operation as it is not of type " + Binding.class.getName());
+		}
+		Binding binding = (Binding) operation; // TODO check if binding already exists
 		context.getBindings().put(binding.getHandle(), binding);
 	}
 

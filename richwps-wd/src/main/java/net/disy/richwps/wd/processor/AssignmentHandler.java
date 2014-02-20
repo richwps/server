@@ -13,6 +13,9 @@ public class AssignmentHandler implements IOperationHandler {
 
 	@Override
 	public void handleOperation(IOperation operation, ProcessingContext context) {
+		if (!canHandle(operation)) {
+			throw new IllegalArgumentException("Could not handle operation as it is not of type " + Assignment.class.getName());
+		}
 		Assignment assignmentOperation = (Assignment) operation;
 		context.getAssignments().add(assignmentOperation);
 	}

@@ -114,8 +114,6 @@ public class WdAlgorithm extends AbstractTransactionalAlgorithm {
 		try {
 			IProcessManager deployManager = TransactionalHelper.getProcessManagerForSchema("RichWpsWd.xsd");
 			return deployManager.invoke(document, getAlgorithmID());
-			// resultMap.put("result", new LiteralStringBinding("meinresult"));
-
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
