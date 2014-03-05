@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.disy.richwps.wpsclient.IProcessBinding;
+import net.disy.richwps.process.binding.IProcessBinding;
 import net.opengis.wps.x100.ExecuteDocument;
 
 import org.apache.commons.lang.Validate;

@@ -1,8 +1,8 @@
 package net.disy.richwps.wd.processor;
 
-import net.disy.richwps.wpsclient.IProcessBinding;
-import net.disy.richwps.wpsclient.LocalProcessBinding;
-import net.disy.richwps.wpsclient.RemoteProcessBinding;
+import net.disy.richwps.process.binding.IProcessBinding;
+import net.disy.richwps.process.binding.LocalProcessBinding;
+import net.disy.richwps.process.binding.RemoteProcessBinding;
 import de.hsos.richwps.dsl.api.elements.Binding;
 import de.hsos.richwps.dsl.api.elements.IOperation;
 

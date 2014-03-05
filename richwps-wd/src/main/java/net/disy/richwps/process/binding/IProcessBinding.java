@@ -1,4 +1,4 @@
-package net.disy.richwps.wpsclient;
+package net.disy.richwps.process.binding;
 
 import java.util.List;
 import java.util.Map;

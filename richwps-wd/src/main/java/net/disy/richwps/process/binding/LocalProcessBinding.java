@@ -1,4 +1,4 @@
-package net.disy.richwps.wpsclient;
+package net.disy.richwps.process.binding;
 
 import java.text.MessageFormat;
 import java.util.List;
@@ -24,16 +24,12 @@ public class LocalProcessBinding implements IProcessBinding {
 		if (!RepositoryManager.getInstance().containsAlgorithm(processId)) {
 			throw new IllegalArgumentException(MessageFormat.format("Local process id '{0}' does not exist.", processId));
 		}
-		IAlgorithm algorithm = getAlgorithm();
+		IAlgorithm algorithm = RepositoryManager.getInstance().getAlgorithm(processId);
 		try {
 			return algorithm.run(inputData);
 		} catch (ExceptionReport e) {
 			throw new RuntimeException(e);
 		}
-	}
-	
-	private IAlgorithm getAlgorithm() {
-		return RepositoryManager.getInstance().getAlgorithm(processId);
 	}
 
 }
