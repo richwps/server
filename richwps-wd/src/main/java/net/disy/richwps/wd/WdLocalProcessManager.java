@@ -62,7 +62,7 @@ public class WdLocalProcessManager extends AbstractProcessManager {
 		final Collection<String> processIds = new ArrayList<String>();
 		URI wdDirectory = getWorksequenceDescriptionDirectory();
 		File directory = new File(wdDirectory);
-		Collection<File> files = FileUtils.listFiles(directory, new String[]{"wd"}, false);
+		Collection<File> files = FileUtils.listFiles(directory, new String[]{"dsl"}, false);
 		for (File file : files) {
 			processIds.add(FilenameUtils.getBaseName(file.getAbsolutePath()));
 		}
