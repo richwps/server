@@ -18,6 +18,7 @@ public class AssignmentHandler implements IOperationHandler {
 		}
 		Assignment assignmentOperation = (Assignment) operation;
 		context.getAssignments().add(assignmentOperation);
+		// TODO assignments are not yet evaluated
 	}
 
 }

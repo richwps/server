@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import net.disy.richwps.wpsclient.IProcessBinding;
 import net.opengis.wps.x100.ExecuteDocument;
 
 import org.apache.commons.lang.Validate;
@@ -18,7 +19,8 @@ public class ProcessingContext {
 	
 	private Map<String, Binding> bindings = new HashMap<String, Binding>();
 	
-	// TODO do we need the assignments explicitly here?
+	private Map<String, IProcessBinding> processBindings = new HashMap<String, IProcessBinding>();
+	
 	private List<Assignment> assignments = new ArrayList<Assignment>();
 
 	private final ExecuteDocument executeDocument;
@@ -26,10 +28,6 @@ public class ProcessingContext {
 	private final Map<String, IData> variables = new HashMap<String, IData>();
 	
 	private final Map<String, List<IData>> inputData = new HashMap<String, List<IData>>();
-	
-	// TODO we need the distinction if the last input comes from the in or a var namespace	
-	// TODO we need the distinction if the last result is saved to out or var namespace
-	
 	
 	private final Map<String, IData> outputData = new HashMap<String, IData>();	
 	
@@ -41,6 +39,10 @@ public class ProcessingContext {
 
 	public Map<String, Binding> getBindings() {
 		return bindings;
+	}
+
+	public Map<String, IProcessBinding> getProcessBindings() {
+		return processBindings;
 	}
 
 	public List<Assignment> getAssignments() {

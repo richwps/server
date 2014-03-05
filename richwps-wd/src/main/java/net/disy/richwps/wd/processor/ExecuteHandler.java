@@ -1,15 +1,15 @@
 package net.disy.richwps.wd.processor;
 
-import java.text.MessageFormat;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import net.disy.richwps.wpsclient.IProcessBinding;
+
 import org.n52.wps.io.data.IData;
-import org.n52.wps.server.ExceptionReport;
-import org.n52.wps.server.IAlgorithm;
-import org.n52.wps.server.RepositoryManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.hsos.richwps.dsl.api.elements.Binding;
 import de.hsos.richwps.dsl.api.elements.Execute;
@@ -22,6 +22,8 @@ import de.hsos.richwps.dsl.api.elements.VarReference;
 
 public class ExecuteHandler implements IOperationHandler {
 
+	private static Logger LOGGER = LoggerFactory.getLogger(ExecuteHandler.class);
+	
 	@Override
 	public boolean canHandle(IOperation operation) {
 		return operation instanceof Execute;
@@ -35,9 +37,6 @@ public class ExecuteHandler implements IOperationHandler {
 		Execute executeOperation = (Execute) operation;
 		
 		String processIdToExecute = getProcessIdToExecute(executeOperation, context);
-		if (!RepositoryManager.getInstance().containsAlgorithm(processIdToExecute)) {
-			throw new IllegalArgumentException(MessageFormat.format("Local process id {0} does not exist.", processIdToExecute));
-		}
 		
 		Map<String, Reference> inputReferenceMapping = createReferenceMapping(executeOperation.getInputnames(), executeOperation.getInputreferences());
 		Map<String, List<IData>> innerProcessInputData = new HashMap<String, List<IData>>();
@@ -46,17 +45,13 @@ public class ExecuteHandler implements IOperationHandler {
 			innerProcessInputData.put(inputReferenceMappingEntry.getKey(), dataForInputReference);
 		}
 		
-		IAlgorithm algorithm = RepositoryManager.getInstance().getAlgorithm(processIdToExecute);
+		IProcessBinding processBinding = getProcessBindingForHandle(executeOperation.getHandle(), context);
 		
 		// TODO validate algorithm.getProcessDescription() if the bindings have valid data types or if they're incompatible
 		
 		Map<String, IData> innerProcessResultData = new HashMap<String, IData>();
-		try {
-			System.out.println("Executing local process with id " + processIdToExecute);
-			innerProcessResultData = algorithm.run(innerProcessInputData);
-		} catch (ExceptionReport e) {
-			throw new RuntimeException(e);
-		}
+		LOGGER.debug("Executing local process with id " + processIdToExecute);
+		innerProcessResultData = processBinding.executeProcess(innerProcessInputData);
 		
 		if (innerProcessResultData == null) {
 			throw new RuntimeException("The inner process " + processIdToExecute + " returned no result.");
@@ -71,6 +66,10 @@ public class ExecuteHandler implements IOperationHandler {
 			addOutputReferenceValueToContext(outputReferenceMappingEntry.getValue(), dataForOutputReference, context);
 		}
         
+	}
+
+	private IProcessBinding getProcessBindingForHandle(String handle, ProcessingContext context) {
+		return context.getProcessBindings().get(handle);
 	}
 
 	private List<IData> getInputReferenceValueFromContext(Reference reference,
@@ -117,11 +116,16 @@ public class ExecuteHandler implements IOperationHandler {
 	}
 
 	private String getProcessIdToExecute(Execute executeOperation, ProcessingContext context) {
+		return getBinding(executeOperation, context).getProcessId();
+	}
+
+	private Binding getBinding(Execute executeOperation,
+			ProcessingContext context) {
 		Binding binding = context.getBindings().get(executeOperation.getHandle());
 		if (binding == null) {
 			throw new IllegalStateException("Could not find binding for handle " + executeOperation.getHandle() + ". Maybe the binding declaration is missing for this handle.");
 		}
-		return binding.getProcessId();
+		return binding;
 	}
 
 }
