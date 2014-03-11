@@ -2,28 +2,34 @@ package net.disy.richwps.process.binding;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import net.disy.richwps.wpsclient.WpsClient;
+
 import org.apache.commons.lang.Validate;
 import org.n52.wps.io.data.IData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.hsos.richwps.dsl.api.elements.Binding;
 import de.hsos.richwps.dsl.api.elements.Endpoint;
 
 public class RemoteProcessBinding implements IProcessBinding {
 	
+	private static Logger LOGGER = LoggerFactory.getLogger(RemoteProcessBinding.class);
+	
 	private final String processId;
 	
-	private final String wpsUrl;
+	private WpsClient wpsClient;
 	
 	public RemoteProcessBinding(Binding binding) {
 		Validate.notNull(binding);
 		Validate.isTrue(!binding.isLocal() && binding.getEndpoint() != null,
 				"Incorrect remote binding given.");
 		this.processId = binding.getProcessId();
-		this.wpsUrl = buildWpsUrlFromBinding(binding);
+		final String wpsUrl = buildWpsUrlFromBinding(binding);
+		this.wpsClient = new WpsClient(wpsUrl);
 	}
 
 	private String buildWpsUrlFromBinding(Binding binding) {
@@ -38,11 +44,9 @@ public class RemoteProcessBinding implements IProcessBinding {
 	}
 
 	@Override
-	public Map<String, IData> executeProcess(Map<String, List<IData>> inputData) {
-		// TODO impl
-		System.out.println("Using remote WPS Service with url " + wpsUrl);
-		System.out.println("Executing remote WPS process with id " + processId);
-		return new HashMap<String, IData>();
+	public Map<String, IData> executeProcess(Map<String, List<IData>> inputData, List<String> outputNames) {
+		LOGGER.debug("Executing remote WPS process with id " + processId);
+		return wpsClient.executeProcess(processId, inputData, outputNames);
 	}
 
 }

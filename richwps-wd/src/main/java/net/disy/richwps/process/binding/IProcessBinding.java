@@ -7,6 +7,6 @@ import org.n52.wps.io.data.IData;
 
 public interface IProcessBinding {
 
-	Map<String, IData> executeProcess(Map<String, List<IData>> inputData);
+	Map<String, IData> executeProcess(Map<String, List<IData>> inputData, List<String> outputNames);
 	
 }

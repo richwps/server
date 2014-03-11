@@ -12,6 +12,11 @@
 			<version>3.3.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
+			<groupId>org.n52.wps</groupId>
+			<artifactId>52n-wps-client-lib</artifactId>
+			<version>3.3.0-SNAPSHOT</version>
+		</dependency>
+		<dependency>
 			<groupId>de.hsos.richwps</groupId>
 			<artifactId>dsl.api</artifactId>
 			<version>1.0-SNAPSHOT</version>

@@ -38,6 +38,7 @@ import net.opengis.wps.x100.ComplexDataDescriptionType;
 import net.opengis.wps.x100.ComplexDataType;
 import net.opengis.wps.x100.DocumentOutputDefinitionType;
 import net.opengis.wps.x100.ExecuteDocument;
+import net.opengis.wps.x100.ExecuteDocument.Execute;
 import net.opengis.wps.x100.InputDescriptionType;
 import net.opengis.wps.x100.InputReferenceType;
 import net.opengis.wps.x100.InputType;
@@ -45,16 +46,16 @@ import net.opengis.wps.x100.LiteralDataType;
 import net.opengis.wps.x100.OutputDefinitionType;
 import net.opengis.wps.x100.OutputDescriptionType;
 import net.opengis.wps.x100.ProcessDescriptionType;
-import net.opengis.wps.x100.ExecuteDocument.Execute;
+import net.opengis.wps.x100.ResponseFormType;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.xmlbeans.XmlException;
 import org.apache.xmlbeans.XmlObject;
 import org.n52.wps.io.GeneratorFactory;
 import org.n52.wps.io.IGenerator;
 import org.n52.wps.io.IOHandler;
 import org.n52.wps.io.data.IData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author foerster
@@ -272,12 +273,8 @@ public class ExecuteRequestBuilder {
 			execute.getExecute().getResponseForm().addNewResponseDocument();
 		}
 		OutputDescriptionType outputDesc = getOutputDescription(outputName);
-		DocumentOutputDefinitionType outputDef = getOutputDefinition(outputName);
-		if (outputDef == null) {
-			outputDef = execute.getExecute().getResponseForm()
-					.getResponseDocument().addNewOutput();
-			outputDef.setIdentifier(outputDesc.getIdentifier());
-		}
+		DocumentOutputDefinitionType outputDef = getOutputDefinition(outputName,
+				outputDesc);
 		String defaultSchema = outputDesc.getComplexOutput().getDefault()
 				.getFormat().getSchema();
 		if ((defaultSchema != null && defaultSchema.equals(schema))
@@ -299,6 +296,33 @@ public class ExecuteRequestBuilder {
 		return false;
 	}
 
+	public void addOutput(String outputName) {
+		OutputDescriptionType outputDesc = getOutputDescription(outputName);
+		addOutputIdentifier(outputDesc);
+	}
+	
+	private DocumentOutputDefinitionType getOutputDefinition(String outputName,
+			OutputDescriptionType outputDesc) {
+		DocumentOutputDefinitionType outputDef = getOutputDefinition(outputName);
+		if (outputDef == null) {
+			outputDef = addOutputIdentifier(outputDesc);
+		}
+		return outputDef;
+	}
+
+	private DocumentOutputDefinitionType addOutputIdentifier(
+			OutputDescriptionType outputDesc) {
+		DocumentOutputDefinitionType outputDef;
+		ResponseFormType responseForm = execute.getExecute().getResponseForm();
+		if (responseForm == null) {
+			responseForm = execute.getExecute().addNewResponseForm();
+			responseForm.addNewResponseDocument();
+		}
+		outputDef = responseForm.getResponseDocument().addNewOutput();
+		outputDef.setIdentifier(outputDesc.getIdentifier());
+		return outputDef;
+	}
+
 	/**
 	 * sets the desired mimetype of the output. if not set, the default mimetype will be used as stated in the process description
 	 * @param mimeType the name of the mimetype as announced in the processdescription
@@ -313,12 +337,8 @@ public class ExecuteRequestBuilder {
 			execute.getExecute().getResponseForm().addNewResponseDocument();
 		}
 		OutputDescriptionType outputDesc = getOutputDescription(outputName);
-		DocumentOutputDefinitionType outputDef = getOutputDefinition(outputName);
-		if (outputDef == null) {
-			outputDef = execute.getExecute().getResponseForm()
-					.getResponseDocument().addNewOutput();
-			outputDef.setIdentifier(outputDesc.getIdentifier());
-		}
+		DocumentOutputDefinitionType outputDef = getOutputDefinition(outputName,
+				outputDesc);
 
 		String defaultMimeType = outputDesc.getComplexOutput().getDefault()
 				.getFormat().getMimeType();
@@ -356,12 +376,8 @@ public class ExecuteRequestBuilder {
 			execute.getExecute().getResponseForm().addNewResponseDocument();
 		}
 		OutputDescriptionType outputDesc = getOutputDescription(outputName);
-		DocumentOutputDefinitionType outputDef = getOutputDefinition(outputName);
-		if (outputDef == null) {
-			outputDef = execute.getExecute().getResponseForm()
-					.getResponseDocument().addNewOutput();
-			outputDef.setIdentifier(outputDesc.getIdentifier());
-		}
+		DocumentOutputDefinitionType outputDef = getOutputDefinition(outputName,
+				outputDesc);
 
 		String defaultEncoding = outputDesc.getComplexOutput().getDefault()
 				.getFormat().getEncoding();

@@ -20,7 +20,8 @@ public class LocalProcessBinding implements IProcessBinding {
 	}
 
 	@Override
-	public Map<String, IData> executeProcess(Map<String, List<IData>> inputData) {
+	public Map<String, IData> executeProcess(
+			Map<String, List<IData>> inputData, List<String> outputNames) {
 		if (!RepositoryManager.getInstance().containsAlgorithm(processId)) {
 			throw new IllegalArgumentException(MessageFormat.format("Local process id '{0}' does not exist.", processId));
 		}

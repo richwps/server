@@ -51,7 +51,7 @@ public class ExecuteHandler implements IOperationHandler {
 		
 		Map<String, IData> innerProcessResultData = new HashMap<String, IData>();
 		LOGGER.debug("Executing local process with id " + processIdToExecute);
-		innerProcessResultData = processBinding.executeProcess(innerProcessInputData);
+		innerProcessResultData = processBinding.executeProcess(innerProcessInputData, executeOperation.getOutputnames());
 		
 		if (innerProcessResultData == null) {
 			throw new RuntimeException("The inner process " + processIdToExecute + " returned no result.");
@@ -106,13 +106,13 @@ public class ExecuteHandler implements IOperationHandler {
 		throw new IllegalArgumentException("Unsupported output reference type");
 	}
 	
-	private Map<String, Reference> createReferenceMapping(List<String> inputnames,
-			List<Reference> inputreferences) {
-		Map<String, Reference> references = new HashMap<String, Reference>();
-		for (int i = 0; i < inputnames.size(); i++) {
-			references.put(inputnames.get(i), inputreferences.get(i));
+	private Map<String, Reference> createReferenceMapping(List<String> names,
+			List<Reference> references) {
+		Map<String, Reference> referenceMapping = new HashMap<String, Reference>();
+		for (int i = 0; i < names.size(); i++) {
+			referenceMapping.put(names.get(i), references.get(i));
 		}
-		return references;
+		return referenceMapping;
 	}
 
 	private String getProcessIdToExecute(Execute executeOperation, ProcessingContext context) {
