@@ -15,7 +15,6 @@ import org.apache.commons.lang.Validate;
 import org.n52.wps.client.WPSClientException;
 import org.n52.wps.client.WPSClientSession;
 import org.n52.wps.io.data.IData;
-import org.n52.wps.io.data.binding.literal.LiteralStringBinding;
 import org.n52.wps.server.ExceptionReport;
 import org.n52.wps.transactional.algorithm.OutputParser;
 
@@ -29,6 +28,7 @@ public class WpsClient {
 	}
 	
 	public Map<String, IData> executeProcess(String processId, Map<String, List<IData>> inputData, List<String> outputNames) {
+		// Converting the sub-list of IData elements to take the first one and conform to the API of the WPS client  
 		final Map<String, IData> inputs = new HashMap<String, IData>();
 		for (Map.Entry<String, List<IData>> entry : inputData.entrySet()) {
 			inputs.put(entry.getKey(), entry.getValue().get(0));
@@ -43,19 +43,29 @@ public class WpsClient {
 	
 	private ProcessDescriptionType getProcessDescription(String processId) {
 		WPSClientSession wpsClient = WPSClientSession.getInstance();
-
-		ProcessDescriptionType processDescription;
 		try {
-			processDescription = wpsClient.getProcessDescription(wpsUrl, processId);
+			return wpsClient.getProcessDescription(wpsUrl, processId);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-		return processDescription;
 	}
 
 	private Map<String, IData> executeProcess(String processID,
 			ProcessDescriptionType processDescription,
 			Map<String, IData> inputs, List<String> outputNames) throws WPSClientException, ExceptionReport {
+		ExecuteDocument executeDocument = buildExecuteDocument(processDescription, inputs,
+				outputNames);
+		WPSClientSession wpsClient = WPSClientSession.getInstance();
+		Object responseObject = wpsClient.execute(wpsUrl, executeDocument);
+		if (responseObject instanceof ExecuteResponseDocument) {
+			return getOutputDataFromResponse((ExecuteResponseDocument) responseObject);
+		}
+		throw new RuntimeException("Exception: " + responseObject);
+	}
+
+	private ExecuteDocument buildExecuteDocument(
+			ProcessDescriptionType processDescription,
+			Map<String, IData> inputs, List<String> outputNames) {
 		org.n52.wps.client.ExecuteRequestBuilder executeBuilder = new org.n52.wps.client.ExecuteRequestBuilder(
 				processDescription);
 
@@ -71,10 +81,12 @@ public class WpsClient {
 				continue;
 			}
 			if (input.getLiteralData() != null) {
-				executeBuilder.addLiteralData(inputName, ((LiteralStringBinding) inputValue).getPayload());
+				
+				executeBuilder.addLiteralData(inputName, String.valueOf(inputValue.getPayload()));
+				
 			} else if (input.getComplexData() != null) {
 				// TODO determine schema and other params from the matching binding
-				executeBuilder.addComplexData(inputName, inputValue, null, "UTF-8", "text/xml");
+				//executeBuilder.addComplexData(inputName, inputValue, null, "UTF-8", "text/xml");
 				// Complexdata by value
 /*				if (inputValue instanceof FeatureCollection) {
 					IData data = new GTVectorDataBinding(
@@ -111,51 +123,46 @@ public class WpsClient {
 		for (String outputName : outputNames) {
 			executeBuilder.addOutput(outputName);	
 		}
-		
-		ExecuteDocument execute = executeBuilder.getExecute();
-		execute.getExecute().setService("WPS");
-		WPSClientSession wpsClient = WPSClientSession.getInstance();
-		Object responseObject = wpsClient.execute(wpsUrl, execute);
+		ExecuteDocument executeDocument = executeBuilder.getExecute();
+		executeDocument.getExecute().setService("WPS");
+		return executeDocument;
+	}
+
+	private Map<String, IData> getOutputDataFromResponse(ExecuteResponseDocument response)
+			throws ExceptionReport {
 		// Improvement: Maybe we can improve the ExecuteResponseAnalyser to support all data types
 		// because now it doesn't support literal data, that's why I took the code here from the draft in
 		// GenericTransactionalAlgorithm.
 		Map<String, IData> resultData = new HashMap<String, IData>();
-		if (responseObject instanceof ExecuteResponseDocument) {
-			ExecuteResponseDocument response = (ExecuteResponseDocument) responseObject;
-			OutputDataType[] resultValues = response.getExecuteResponse().getProcessOutputs().getOutputArray();
-			
-			for (OutputDataType resultValue : resultValues) {
-				//3.get the identifier as key
-				String key = resultValue.getIdentifier().getStringValue();
-				//4.the the literal value as String
-				if(resultValue.getData().getLiteralData()!=null){
-					resultData.put(key, OutputParser.handleLiteralValue(resultValue));
-				}
-				//5.parse the complex value
-				if(resultValue.getData().getComplexData()!=null){
-					
-					// TODO gather outputdescription for handling the complex value
-					//resultData.put(key, OutputParser.handleComplexValue(resultValue, getDescription()));
-					
-				}
-				//6.parse the complex value reference
-				if(resultValue.getReference()!=null){
-					//TODO handle this
-					//download the data, parse it and put it in the hashmap
-					//resultHash.put(key, OutputParser.handleComplexValueReference(ioElement));
-				}
-				
-				//7.parse Bounding Box value
-				if(resultValue.getData().getBoundingBoxData()!=null){
-					resultData.put(key, OutputParser.handleBBoxValue(resultValue));
-				}	
-			
+		OutputDataType[] resultValues = response.getExecuteResponse().getProcessOutputs().getOutputArray();
+		
+		for (OutputDataType resultValue : resultValues) {
+			//3.get the identifier as key
+			String key = resultValue.getIdentifier().getStringValue();
+			//4.the the literal value as String
+			if(resultValue.getData().getLiteralData()!=null){
+				resultData.put(key, OutputParser.handleLiteralValue(resultValue));
 			}
-			return resultData;
-
+			//5.parse the complex value
+			if(resultValue.getData().getComplexData()!=null){
+				
+				// TODO gather outputdescription for handling the complex value
+				//resultData.put(key, OutputParser.handleComplexValue(resultValue, getDescription()));
+				
+			}
+			//6.parse the complex value reference
+			if(resultValue.getReference()!=null){
+				//TODO handle this
+				//download the data, parse it and put it in the hashmap
+				//resultData.put(key, OutputParser.handleComplexValueReference(resultValue));
+			}
+			
+			//7.parse Bounding Box value
+			if(resultValue.getData().getBoundingBoxData()!=null){
+				resultData.put(key, OutputParser.handleBBoxValue(resultValue));
+			}	
+		
 		}
-		throw new RuntimeException("Exception: " + responseObject);
+		return resultData;
 	}
-	
-
 }
