@@ -26,40 +26,42 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
  * Public License for more details.
  */
-package org.n52.wps.io.data.binding.complex;
+package org.n52.wps.io.datahandler.generator;
 
-import org.apache.commons.io.FileUtils;
-import org.n52.wps.io.data.GenericFileData;
-import org.n52.wps.io.data.IComplexData;
+import java.io.IOException;
+import java.io.InputStream;
 
+import org.n52.wps.io.data.IData;
+import org.n52.wps.io.data.GenericFileDataWithGT;
+import org.n52.wps.io.data.binding.complex.GenericFileDataWithGTBinding;
 
 /**
  * @author Matthias Mueller, TU Dresden
  *
  */
-public class GenericFileDataBinding implements IComplexData {
+public class GenericFileDataWithGTGenerator extends AbstractGenerator {
+	
+	public GenericFileDataWithGTGenerator (){
+		super();
+		supportedIDataTypes.add(GenericFileDataWithGTBinding.class);
+	}
+	
+	public InputStream generateStream(IData data, String mimeType, String schema) throws IOException {
+		
+		InputStream theStream = ((GenericFileDataWithGTBinding)data).getPayload().getDataStream();
+		return theStream;
+	}
+	
 	/**
+	 * conversion method to support translation of output formats
+	 * TODO: implement logic
 	 * 
+	 * @param inputFile
+	 * @return  
 	 */
-	private static final long serialVersionUID = 625383192227478620L;
-	protected GenericFileData payload; 
-	
-	public GenericFileDataBinding(GenericFileData fileData){
-		this.payload = fileData;
+	private GenericFileDataWithGT convertFile (GenericFileDataWithGT inputFile){
+		//not implemented
+		return null;
 	}
 	
-	public GenericFileData getPayload() {
-		return payload;
-	}
-
-	public Class getSupportedClass() {
-		return GenericFileData.class;
-	}
-    
-    @Override
-	public void dispose(){
-                //FIXME (MH) The command bellow is flawed because getBaseFile(...) *writes* files from an inputstream into the wps temp directory. 
-                   // If the given input stream is closed, the method throws *RuntimeExceptions* that let the process crash.
-		//FileUtils.deleteQuietly(payload.getBaseFile(false));
-	}
 }

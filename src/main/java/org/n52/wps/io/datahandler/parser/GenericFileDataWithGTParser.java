@@ -26,42 +26,36 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
  * Public License for more details.
  */
-package org.n52.wps.io.datahandler.generator;
+package org.n52.wps.io.datahandler.parser;
 
-import java.io.IOException;
 import java.io.InputStream;
 
-import org.n52.wps.io.data.IData;
-import org.n52.wps.io.data.GenericFileData;
-import org.n52.wps.io.data.binding.complex.GenericFileDataBinding;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.n52.wps.io.data.GenericFileDataWithGT;
+import org.n52.wps.io.data.binding.complex.GenericFileDataWithGTBinding;
+
 
 /**
  * @author Matthias Mueller, TU Dresden
  *
  */
-public class GenericFileGenerator extends AbstractGenerator {
+public class GenericFileDataWithGTParser extends AbstractParser{
 	
-	public GenericFileGenerator (){
+	private static Logger LOGGER = LoggerFactory.getLogger(GenericFileDataWithGTParser.class);
+	
+	public GenericFileDataWithGTParser() {
 		super();
-		supportedIDataTypes.add(GenericFileDataBinding.class);
+		supportedIDataTypes.add(GenericFileDataWithGTBinding.class);
 	}
 	
-	public InputStream generateStream(IData data, String mimeType, String schema) throws IOException {
+	@Override
+	public GenericFileDataWithGTBinding parse(InputStream input, String mimeType, String schema) {
 		
-		InputStream theStream = ((GenericFileDataBinding)data).getPayload().getDataStream();
-		return theStream;
+		GenericFileDataWithGT theData = new GenericFileDataWithGT(input, mimeType);
+		LOGGER.info("Found File Input " + mimeType);
+		
+		return new GenericFileDataWithGTBinding(theData);
 	}
-	
-	/**
-	 * conversion method to support translation of output formats
-	 * TODO: implement logic
-	 * 
-	 * @param inputFile
-	 * @return  
-	 */
-	private GenericFileData convertFile (GenericFileData inputFile){
-		//not implemented
-		return null;
-	}
-	
+
 }

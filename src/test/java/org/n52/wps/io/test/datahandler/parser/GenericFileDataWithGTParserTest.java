@@ -26,36 +26,59 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
  * Public License for more details.
  */
-package org.n52.wps.io.datahandler.parser;
+package org.n52.wps.io.test.datahandler.parser;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.n52.wps.io.data.GenericFileData;
-import org.n52.wps.io.data.binding.complex.GenericFileDataBinding;
+import org.n52.wps.io.data.binding.complex.GenericFileDataWithGTBinding;
+import org.n52.wps.io.datahandler.parser.GenericFileDataWithGTParser;
+import org.n52.wps.io.test.datahandler.AbstractTestCase;
+
+public class GenericFileDataWithGTParserTest extends AbstractTestCase<GenericFileDataWithGTParser> {
 
 
-/**
- * @author Matthias Mueller, TU Dresden
- *
- */
-public class GenericFileParser extends AbstractParser{
-	
-	private static Logger LOGGER = LoggerFactory.getLogger(GenericFileParser.class);
-	
-	public GenericFileParser() {
-		super();
-		supportedIDataTypes.add(GenericFileDataBinding.class);
+	public void testParser(){
+
+		if(!isDataHandlerActive()){
+			return;
+		}
+
+		String testFilePath = projectRoot + "/52n-wps-io-geotools/src/test/resources/testfile";
+
+		try {
+			testFilePath = URLDecoder.decode(testFilePath, "UTF-8");
+		} catch (UnsupportedEncodingException e1) {
+			fail(e1.getMessage());
+		}
+
+		String[] mimetypes = dataHandler.getSupportedFormats();
+
+		InputStream input = null;
+
+		for (String mimetype : mimetypes) {
+
+			try {
+				input = new FileInputStream(new File(testFilePath));
+			} catch (FileNotFoundException e) {
+				fail(e.getMessage());
+			}
+
+			GenericFileDataWithGTBinding theBinding = dataHandler.parse(input, mimetype, "");
+
+			assertTrue(theBinding.getPayload().getBaseFile(true).exists());
+
+		}
+
 	}
-	
+
 	@Override
-	public GenericFileDataBinding parse(InputStream input, String mimeType, String schema) {
-		
-		GenericFileData theData = new GenericFileData(input, mimeType);
-		LOGGER.info("Found File Input " + mimeType);
-		
-		return new GenericFileDataBinding(theData);
+	protected void initializeDataHandler() {
+		dataHandler = new GenericFileDataWithGTParser();
 	}
 
 }

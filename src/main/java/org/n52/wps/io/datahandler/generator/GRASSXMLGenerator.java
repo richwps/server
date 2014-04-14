@@ -34,7 +34,7 @@ import java.io.InputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.n52.wps.io.data.IData;
-import org.n52.wps.io.data.binding.complex.GenericFileDataBinding;
+import org.n52.wps.io.data.binding.complex.GenericFileDataWithGTBinding;
 
 /**
  * @author Benjamin Pross(bpross-52n)
@@ -54,12 +54,12 @@ public class GRASSXMLGenerator extends AbstractGenerator {
 	
 	public GRASSXMLGenerator(){
 		super();
-		supportedIDataTypes.add(GenericFileDataBinding.class);
+		supportedIDataTypes.add(GenericFileDataWithGTBinding.class);
 	}
 	
 	public InputStream generateStream(IData data, String mimeType, String schema) throws IOException {
 		
-		InputStream theStream = ((GenericFileDataBinding)data).getPayload().getDataStream();
+		InputStream theStream = ((GenericFileDataWithGTBinding)data).getPayload().getDataStream();
 		
 		return theStream;
 	}
