@@ -29,13 +29,13 @@ package org.n52.wps.client;
 
 import org.n52.wps.GeneratorDocument.Generator;
 import org.n52.wps.ParserDocument.Parser;
-import org.n52.wps.commons.WPSConfig;
 import org.n52.wps.io.GeneratorFactory;
 import org.n52.wps.io.ParserFactory;
 
 /*
  * Initializes the Factories for Generators and Parsers, based on static information.
  * @author foerster
+ * @author woessner
  *
  */
 public class StaticDataHandlerRepository {
@@ -45,20 +45,18 @@ public class StaticDataHandlerRepository {
 	
 	public static GeneratorFactory getGeneratorFactory() {
 		if(genFactory == null) {
-			Generator[] generators = WPSConfig.getInstance().getActiveRegisteredGenerator();		
+			Generator[] generators = WPSClientConfig.getInstance().getActiveRegisteredGenerator();		
 			
 			GeneratorFactory.initialize(generators);
 			genFactory = GeneratorFactory.getInstance();
-			
-			
-			
+
 		}
 		return genFactory;
 	}
 	
 	public static ParserFactory getParserFactory() {
 		if(parserFactory == null) {
-			Parser[] parsers = WPSConfig.getInstance().getActiveRegisteredParser();
+			Parser[] parsers = WPSClientConfig.getInstance().getActiveRegisteredParser();
 			ParserFactory.initialize(parsers);
 			
 			parserFactory = ParserFactory.getInstance();

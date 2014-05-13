@@ -37,6 +37,7 @@ import net.opengis.wps.x100.OutputDataType;
 import net.opengis.wps.x100.OutputDescriptionType;
 import net.opengis.wps.x100.ProcessDescriptionType;
 
+import org.n52.wps.io.BasicXMLTypeFactory;
 import org.n52.wps.io.IOHandler;
 import org.n52.wps.io.IParser;
 import org.n52.wps.io.ParserFactory;
@@ -48,7 +49,6 @@ import org.n52.wps.io.data.binding.literal.LiteralDoubleBinding;
 import org.n52.wps.io.data.binding.literal.LiteralIntBinding;
 import org.n52.wps.io.data.binding.literal.LiteralStringBinding;
 import org.n52.wps.server.ExceptionReport;
-import org.n52.wps.io.BasicXMLTypeFactory;
 
 
 public class OutputParser {
@@ -60,7 +60,7 @@ public class OutputParser {
 	 * @param input The client input
 	 * @throws ExceptionReport If the input (as url) is invalid, or there is an error while parsing the XML.
 	 */
-	protected  static String handleComplexValueReference(OutputDataType output) throws ExceptionReport{
+	public static String handleComplexValueReference(OutputDataType output) throws ExceptionReport{
 		return output.getReference().getHref();
 		
 	}
@@ -72,7 +72,7 @@ public class OutputParser {
 	 * @param input The client input
 	 * @throws ExceptionReport If error occured while parsing XML
 	 */
-	protected static IData handleComplexValue(OutputDataType output, ProcessDescriptionType processDescription) throws ExceptionReport{
+	public static IData handleComplexValue(OutputDataType output, ProcessDescriptionType processDescription) throws ExceptionReport{
 		String outputID = output.getIdentifier().getStringValue();
 		String complexValue = output.getData().getComplexData().toString();
 		OutputDescriptionType outputDesc = null;
@@ -159,7 +159,7 @@ public class OutputParser {
 		throw new RuntimeException("Could not determie internal inputDataType");
 	}
 
-	protected static IData handleLiteralValue(OutputDataType output) throws ExceptionReport {
+	public static IData handleLiteralValue(OutputDataType output) throws ExceptionReport {
 		
 		String parameter = output.getData().getLiteralData().getStringValue();
 		String xmlDataType = output.getData().getLiteralData().getDataType();
@@ -183,7 +183,7 @@ public class OutputParser {
 	 * @param input The client input
 	 * @param class1 
 	 */
-	protected static IData handleBBoxValue(OutputDataType input) throws ExceptionReport{
+	public static IData handleBBoxValue(OutputDataType input) throws ExceptionReport{
 		//String inputID = input.getIdentifier().getStringValue();
 		throw new ExceptionReport("BBox is not supported", ExceptionReport.OPERATION_NOT_SUPPORTED);
 	}

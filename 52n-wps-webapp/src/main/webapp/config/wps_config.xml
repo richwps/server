@@ -495,19 +495,24 @@
 		<Repository name="LocalAlgorithmRepository"
 			className="org.n52.wps.server.LocalAlgorithmRepository" active="true">
 			<Property name="Algorithm" active="true">org.n52.wps.server.algorithm.SimpleBufferAlgorithm</Property>
-			<Property name="Algorithm" active="true">org.n52.wps.server.algorithm.JTSConvexHullAlgorithm</Property>
-			<Property name="Algorithm" active="true">org.n52.wps.server.algorithm.coordinatetransform.CoordinateTransformAlgorithm</Property>
-			<Property name="Algorithm" active="true">org.n52.wps.server.algorithm.simplify.DouglasPeuckerAlgorithm</Property>
-			<Property name="Algorithm" active="true">org.n52.wps.server.algorithm.intersection.IntersectionAlgorithm</Property>
-			<Property name="Algorithm" active="true">org.n52.wps.server.algorithm.convexhull.ConvexHullAlgorithm</Property>
-			<Property name="Algorithm" active="true">org.n52.wps.server.algorithm.raster.AddRasterValues</Property>
-			<Property name="Algorithm" active="true">org.n52.wps.server.algorithm.spatialquery.IntersectsAlgorithm</Property>
-			<Property name="Algorithm" active="true">org.n52.wps.server.algorithm.spatialquery.TouchesAlgorithm</Property>
+			<Property name="Algorithm" active="false">org.n52.wps.server.algorithm.JTSConvexHullAlgorithm</Property>
+			<Property name="Algorithm" active="false">org.n52.wps.server.algorithm.coordinatetransform.CoordinateTransformAlgorithm</Property>
+			<Property name="Algorithm" active="false">org.n52.wps.server.algorithm.simplify.DouglasPeuckerAlgorithm</Property>
+			<Property name="Algorithm" active="false">org.n52.wps.server.algorithm.intersection.IntersectionAlgorithm</Property>
+			<Property name="Algorithm" active="false">org.n52.wps.server.algorithm.convexhull.ConvexHullAlgorithm</Property>
+			<Property name="Algorithm" active="false">org.n52.wps.server.algorithm.raster.AddRasterValues</Property>
+			<Property name="Algorithm" active="false">org.n52.wps.server.algorithm.spatialquery.IntersectsAlgorithm</Property>
+			<Property name="Algorithm" active="false">org.n52.wps.server.algorithm.spatialquery.TouchesAlgorithm</Property>
 			<Property name="Algorithm" active="true">org.n52.wps.server.algorithm.test.DummyTestClass</Property>
-			<Property name="Algorithm" active="true">org.n52.wps.server.algorithm.test.LongRunningDummyTestClass</Property>
-			<Property name="Algorithm" active="true">org.n52.wps.server.algorithm.test.MultipleComplexInAndOutputsDummyTestClass</Property>
-			<Property name="Algorithm" active="true">org.n52.wps.server.algorithm.test.MultiReferenceInputAlgorithm</Property>
-			<Property name="Algorithm" active="true">org.n52.wps.server.algorithm.test.MultiReferenceBinaryInputAlgorithm</Property>
+			<Property name="Algorithm" active="false">org.n52.wps.server.algorithm.test.LongRunningDummyTestClass</Property>
+			<Property name="Algorithm" active="false">org.n52.wps.server.algorithm.test.MultipleComplexInAndOutputsDummyTestClass</Property>
+			<Property name="Algorithm" active="false">org.n52.wps.server.algorithm.test.MultiReferenceInputAlgorithm</Property>
+			<Property name="Algorithm" active="false">org.n52.wps.server.algorithm.test.MultiReferenceBinaryInputAlgorithm</Property>
+			
+			<!-- Demo Prozesse -->
+			<Property name="Algorithm" active="true">net.disy.richwps.demoprocess.MultiplicationCalc</Property>
+			<Property name="Algorithm" active="true">net.disy.richwps.demoprocess.MultiplicationString</Property>
+			<Property name="Algorithm" active="true">net.disy.richwps.demoprocess.ConcatStrings</Property>
 		</Repository>
 		<Repository name="UploadedAlgorithmRepository"
 			className="org.n52.wps.server.UploadedAlgorithmRepository" active="false">

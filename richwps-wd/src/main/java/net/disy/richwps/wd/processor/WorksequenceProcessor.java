@@ -47,7 +47,9 @@ public class WorksequenceProcessor implements IWorksequenceProcessor {
 		InputType[] outerProcessInputs = executeDocument.getExecute().getDataInputs().getInputArray();
 		Map<String, List<IData>> outerProcessInputData = null;
 		try {
-			InputHandler outerProcessInputHandler = new InputHandler.Builder(outerProcessInputs, executeDocument.getExecute().getIdentifier().getStringValue()).build();
+			InputHandler outerProcessInputHandler = new InputHandler.Builder(
+					outerProcessInputs, executeDocument.getExecute()
+							.getIdentifier().getStringValue()).build();
 			outerProcessInputData = outerProcessInputHandler.getParsedInputData();
 			context.getInputData().putAll(outerProcessInputData);
 		} catch (ExceptionReport e) {

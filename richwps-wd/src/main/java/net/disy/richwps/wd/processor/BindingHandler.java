@@ -1,5 +1,8 @@
 package net.disy.richwps.wd.processor;
 
+import net.disy.richwps.process.binding.IProcessBinding;
+import net.disy.richwps.process.binding.LocalProcessBinding;
+import net.disy.richwps.process.binding.RemoteProcessBinding;
 import de.hsos.richwps.dsl.api.elements.Binding;
 import de.hsos.richwps.dsl.api.elements.IOperation;
 
@@ -16,8 +19,17 @@ public class BindingHandler implements IOperationHandler {
 		if (!canHandle(operation)) {
 			throw new IllegalArgumentException("Could not handle operation as it is not of type " + Binding.class.getName());
 		}
-		Binding binding = (Binding) operation; // TODO check if binding already exists
+		Binding binding = (Binding) operation;
 		context.getBindings().put(binding.getHandle(), binding);
+		IProcessBinding processBinding = createProcessBinding(binding);
+		context.getProcessBindings().put(binding.getHandle(), processBinding);
+	}
+	
+	private IProcessBinding createProcessBinding(Binding binding) {
+		if (binding.isLocal()) {
+			return new LocalProcessBinding(binding);
+		}
+		return new RemoteProcessBinding(binding);
 	}
 
 }

@@ -48,8 +48,16 @@ public class WdLocalProcessManager extends AbstractProcessManager {
 
 	@Override
 	public boolean containsProcess(String processID) throws Exception {
-		// TODO Auto-generated method stub
-		return true;
+		URI wdDirectory = getWorksequenceDescriptionDirectory();
+		File directory = new File(wdDirectory);
+		Collection<File> files = FileUtils.listFiles(directory, new String[]{"dsl"}, false);
+		for (File file : files) {
+			String baseName = FilenameUtils.getBaseName(file.getAbsolutePath());
+			if (baseName.equals(processID)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override
@@ -62,7 +70,7 @@ public class WdLocalProcessManager extends AbstractProcessManager {
 		final Collection<String> processIds = new ArrayList<String>();
 		URI wdDirectory = getWorksequenceDescriptionDirectory();
 		File directory = new File(wdDirectory);
-		Collection<File> files = FileUtils.listFiles(directory, new String[]{"wd"}, false);
+		Collection<File> files = FileUtils.listFiles(directory, new String[]{"dsl"}, false);
 		for (File file : files) {
 			processIds.add(FilenameUtils.getBaseName(file.getAbsolutePath()));
 		}
@@ -138,20 +146,17 @@ public class WdLocalProcessManager extends AbstractProcessManager {
 		try {
 			directoryUri = new URL(subPath
 					+ "WEB-INF/WorksequenceDescriptions/").toURI();
-
 			File directory = new File(directoryUri);
 			if (!directory.exists()) {
 				directory.mkdirs();
 			}
 
 			return directoryUri;
-
+			
 		} catch (MalformedURLException e) {
 			throw new RuntimeException(e);
 		} catch (URISyntaxException e) {
 			throw new RuntimeException(e);
 		}
-
 	}
-
 }

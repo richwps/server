@@ -1,43 +1,37 @@
-# 52°North Web Processing Service
+# RichWPS Server
 
-The 52°North Web Processing Service (WPS) enables the deployment of geo-processes on the web in
-a standardized way. It features a pluggable architecture for processes and data encodings.
-The implementation is based on the current OpenGIS specification: 05-007r7.
+The RichWPS Server is based on the [52°North Web Processing Service](http://github.com/52north/wps) implementation. It is able to receive and execute workflow models represented in [ROLA](http://github.com/richwps/dsl) scripts within an integrated orchestration engine. The server provides the following interfaces to the RichWPS ModelBuilder:
 
-Its focus was the creation of an extensible framework to provide algorithms for generalization on the web.
+* WPS 1.0.0: OpenGIS specification 05-007r7
+* WPS-T: deploy and undeploy operation
+* WPS-Debug (under development)
+* WPS-Profile (under development)
 
-More information available at the [52°North Geoprocessing Community](http://52north.org/geoprocessing).
+## WPS-T interface
 
-## Features
+The integrated WPS-T interfaces is based on a former 52north implementation by Schäffer. It is extended by a specific ROLA Deployment Profile with the following XML schema description: (under development).
 
-* Java-based Open Source implementation.
-* Supports all features and operations of WPS specification version 1.0.0 (document 05-007r7)
-* Pluggable framework for algorithms and XML data handling and processing frameworks
-* Build up on robust libraries (JTS, geotools, XMLBeans, servlet API, derby)
-* Experimental transactional profile (WPS-T)
-* Web GUI to maintain the service
+Deployment of a ROLA process:
+{code}
 
-## Supported Backends
+Undeployment of a previously deployed ROLA process:
+{code}
 
-The 52°North WPS provides wrappers to well-established (geographical) computation backends.
+## Orchestration engine
 
-* WPS4R - R Backend
-* GRASS out of the box extension
-* 220+ SEXTANTE Processes
-* ArcGIS Server Connector
-* Moving Code backend, including Python support
+The orchestration engine interprets deployed ROLA scripts and executes the contained workflow in order to provide processing results withing the servers WPS 1.0.0 interface.
+
+The interpreter has the following capabilities:
+* keep an actual processing context to interpret references
+* create process bindings according to the appropriate dsl elements
+* do assignments
+* execute local processes
+* execute external processes making use of the RichWPS client API
 
 ## Development
 
 Use git to clone the WPS repository:
 
-`git clone https://github.com/52North/WPS.git`
+git clone https://github.com/richwps/52n-wps.git
 
 Then just run `mvn clean install` on the repositories root directory.
-
-## Integration Testing
-
-The WPS comes with a variety of integration tests which are performed using Jetty.
-In order to execute integration tests in a maven build, activate the dedicated profile
-through `mvn clean install -Pintegration-test`.
-
