@@ -36,7 +36,7 @@ public class RemoteProcessBinding implements IProcessBinding {
 		Endpoint endpoint = binding.getEndpoint();
 		URI uri;
 		try {
-			uri = new URI(endpoint.getProtocol(), null, endpoint.getHost(), endpoint.getPort(), endpoint.getPathToEndPoint(), null, null);
+			uri = new URI(endpoint.getProtocol(), null, endpoint.getHost(), endpoint.getPort(), endpoint.getPath(), null, null);
 		} catch (URISyntaxException e) {
 			throw new RuntimeException("Could not build WPS url from endpoint " + endpoint, e);
 		}
