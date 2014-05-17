@@ -9,12 +9,21 @@ import java.util.List;
 import java.util.Map;
 
 import net.opengis.wps.x100.ExecuteDocument;
+import net.opengis.wps.x100.InputDescriptionType;
+import net.opengis.wps.x100.OutputDescriptionType;
 import net.opengis.wps.x100.ProcessDescriptionType;
 import net.opengis.wps.x100.ProcessDescriptionsDocument;
 
 import org.apache.xmlbeans.XmlException;
 import org.apache.xmlbeans.XmlOptions;
 import org.n52.wps.io.data.IData;
+import org.n52.wps.io.data.binding.complex.GTRasterDataBinding;
+import org.n52.wps.io.data.binding.complex.GTVectorDataBinding;
+import org.n52.wps.io.data.binding.complex.GenericFileDataBinding;
+import org.n52.wps.io.data.binding.literal.LiteralBooleanBinding;
+import org.n52.wps.io.data.binding.literal.LiteralDoubleBinding;
+import org.n52.wps.io.data.binding.literal.LiteralIntBinding;
+import org.n52.wps.io.data.binding.literal.LiteralStringBinding;
 import org.n52.wps.server.AbstractTransactionalAlgorithm;
 import org.n52.wps.server.ExceptionReport;
 import org.n52.wps.transactional.algorithm.GenericTransactionalAlgorithm;
@@ -28,9 +37,11 @@ public class WdAlgorithm extends AbstractTransactionalAlgorithm {
 
 	private static Logger LOGGER = LoggerFactory.getLogger(WdAlgorithm.class);
 	
+	private ProcessDescriptionType processDescription;
+	
 	public WdAlgorithm(String algorithmID) {
 		super(algorithmID);
-		// TODO Auto-generated constructor stub
+		processDescription = initializeDescription();
 	}
 
 	@Override
@@ -47,7 +58,101 @@ public class WdAlgorithm extends AbstractTransactionalAlgorithm {
 	}
 
 	@Override
+	public String getWellKnownName() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	@Override
 	public ProcessDescriptionType getDescription() {
+		return processDescription;
+	}
+
+	@Override
+	public boolean processDescriptionIsValid() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public Class<?> getInputDataType(String id) {
+		InputDescriptionType[] inputs = processDescription.getDataInputs().getInputArray();
+		for(InputDescriptionType input : inputs){
+			if(input.getIdentifier().getStringValue().equals(id)){
+				if(input.isSetLiteralData()){
+					String datatype = input.getLiteralData().getDataType().getStringValue();
+					if(datatype.contains("tring")){
+							return LiteralStringBinding.class;
+					}
+					if(datatype.contains("ollean")){
+						return LiteralBooleanBinding.class;
+					}
+					if(datatype.contains("loat") || datatype.contains("ouble")){
+						return LiteralDoubleBinding.class;
+					}
+					if(datatype.contains("nt")){
+						return LiteralIntBinding.class;
+					}
+				}
+				if(input.isSetComplexData()){
+					//TODO: be careful here!
+					 String mimeType = input.getComplexData().getDefault().getFormat().getMimeType();
+					 if(mimeType.contains("xml") || (mimeType.contains("xml"))){
+						 return GTVectorDataBinding.class;
+					 }else{
+						 return GTRasterDataBinding.class;
+					 }
+				}
+			}
+		}
+		throw new RuntimeException("Could not determie internal inputDataType");
+	}
+
+	@Override
+	public Class<?> getOutputDataType(String id) {
+OutputDescriptionType[] outputs = processDescription.getProcessOutputs().getOutputArray();
+		
+		for(OutputDescriptionType output : outputs){
+			
+			if(output.isSetLiteralOutput()){
+				String datatype = output.getLiteralOutput().getDataType().getStringValue();
+				if(datatype.contains("tring")){
+					return LiteralStringBinding.class;
+				}
+				if(datatype.contains("ollean")){
+					return LiteralBooleanBinding.class;
+				}
+				if(datatype.contains("loat") || datatype.contains("ouble")){
+					return LiteralDoubleBinding.class;
+				}
+				if(datatype.contains("nt")){
+					return LiteralIntBinding.class;
+				}
+			}
+			if(output.isSetComplexOutput()){
+				//TODO: be careful here!
+				String mimeType = output.getComplexOutput().getDefault().getFormat().getMimeType();
+				if(mimeType.contains("xml") || (mimeType.contains("XML"))){
+					return GenericFileDataBinding.class;
+				}else{
+					return GenericFileDataBinding.class;
+				}
+			}
+		}
+		throw new RuntimeException("Could not determie internal inputDataType");
+	}
+
+	@Override
+	public Map<String, IData> run(ExecuteDocument document) {
+		try {
+			IProcessManager deployManager = TransactionalHelper.getProcessManagerForSchema("RichWpsWd.xsd");
+			return deployManager.invoke(document, getAlgorithmID());
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public ProcessDescriptionType initializeDescription() {
 		// TODO use generate method from transactionalrequesthandler
 		String fullPath =  GenericTransactionalAlgorithm.class.getProtectionDomain().getCodeSource().getLocation().toString();
 		int searchIndex= fullPath.indexOf("WEB-INF");
@@ -83,40 +188,6 @@ public class WdAlgorithm extends AbstractTransactionalAlgorithm {
 			LOGGER.warn("Could not initialize algorithm, parsing error: " +getAlgorithmID(), e);
 		}
 		return null;
-	}
-
-	@Override
-	public String getWellKnownName() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public boolean processDescriptionIsValid() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public Class<?> getInputDataType(String id) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Class<?> getOutputDataType(String id) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Map<String, IData> run(ExecuteDocument document) {
-		try {
-			IProcessManager deployManager = TransactionalHelper.getProcessManagerForSchema("RichWpsWd.xsd");
-			return deployManager.invoke(document, getAlgorithmID());
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
 	}
 
 }
