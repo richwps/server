@@ -68,27 +68,27 @@ public class ApacheBPELManager extends AbstractProcessManager {
     private OMFactory _factory;
     private String deploymentEndpoint;
     private String processManagerEndpoint;
-    
+
     public ApacheBPELManager(ITransactionalAlgorithmRepository repository) {
         super(repository);
 
-    	Property[] properties = WPSConfig.getInstance().getPropertiesForRepositoryClass(repository.getClass().getName());
+        Property[] properties = WPSConfig.getInstance().getPropertiesForRepositoryClass(repository.getClass().getName());
         //TODO think of multiple instance of this class registered (yet not possible since singleton)
         Property deployEndpointProperty = WPSConfig.getInstance().getPropertyForKey(properties, "ODE-Engine_DeploymentEndpoint");
-        if(deployEndpointProperty==null){
-                throw new RuntimeException("Error. Could not find ODE-Engine_DeploymentEndpoint");
+        if (deployEndpointProperty == null) {
+            throw new RuntimeException("Error. Could not find ODE-Engine_DeploymentEndpoint");
         }
         deploymentEndpoint = deployEndpointProperty.getStringValue();
         Property processManagerEndpointProperty = WPSConfig.getInstance().getPropertyForKey(properties, "ODE-Engine_ProcessManagerEndpoint");
-        if(processManagerEndpointProperty==null){
-                throw new RuntimeException("Error. Could not find ODE-Engine_ProcessManagerEndpoint");
+        if (processManagerEndpointProperty == null) {
+            throw new RuntimeException("Error. Could not find ODE-Engine_ProcessManagerEndpoint");
         }
         processManagerEndpoint = processManagerEndpointProperty.getStringValue();
 
-         try{
+        try {
             _factory = OMAbstractFactory.getOMFactory();
             _client = new ODEServiceClient();
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -98,10 +98,10 @@ public class ApacheBPELManager extends AbstractProcessManager {
         boolean blnresult = false;
         // WPS-T preparation
         DeploymentProfile profile = request.getDeploymentProfile();
-        if(! (profile instanceof BPELDeploymentProfile)){
-                throw new Exception("Requested Deployment Profile not supported");
+        if (!(profile instanceof BPELDeploymentProfile)) {
+            throw new Exception("Requested Deployment Profile not supported");
         }
-        BPELDeploymentProfile deploymentProfile = (BPELDeploymentProfile) profile; 
+        BPELDeploymentProfile deploymentProfile = (BPELDeploymentProfile) profile;
         String processID = deploymentProfile.getProcessID();
         Node suitcase = deploymentProfile.getSuitCase();
         System.out.println(nodeToString(suitcase));
@@ -113,7 +113,7 @@ public class ApacheBPELManager extends AbstractProcessManager {
 
         //ODE preparation
         OMElement result = null;
-        try{
+        try {
             OMNamespace pmapi = _factory.createOMNamespace("http://www.apache.org/ode/pmapi", "pmapi");
             OMElement root = _factory.createOMElement("deploy", null); // qualified operation name
             OMElement namePart = _factory.createOMElement("name", null);
@@ -127,11 +127,11 @@ public class ApacheBPELManager extends AbstractProcessManager {
             File zipFile = File.createTempFile("wpsbpel", ".zip", null);
 
             int res = ZipCreator.makeZIP(processID, suitcase, workflow, clientWSDL, wsdlList, zipFile);
-             try{
+            try {
                 InputStream is = new BufferedInputStream(new FileInputStream(zipFile));
 
                 ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-                try{
+                try {
                     for (int b = is.read(); b >= 0; b = is.read()) {
                         outputStream.write((byte) b);
                     }
@@ -142,27 +142,27 @@ public class ApacheBPELManager extends AbstractProcessManager {
                     zipPart.addChild(zipElmt);
                     zipElmt.addChild(zipContent);
 
-                    
-                }catch (Exception e){
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
-            }catch(FileNotFoundException e){
+            } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
 
             // Deploy
-            try{
+            try {
                 result = sendToDeployment(root);
-            }catch(Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
                 blnresult = false;
             }
-        }catch(NullPointerException npe){
+        } catch (NullPointerException npe) {
             npe.printStackTrace();
         }
         //if (result != null){
-            if (result.toString().contains("response"))
-                blnresult = true;
+        if (result.toString().contains("response")) {
+            blnresult = true;
+        }
         //}
         return blnresult;
         //throw new UnsupportedOperationException("Not supported yet.");
@@ -180,16 +180,14 @@ public class ApacheBPELManager extends AbstractProcessManager {
         sendToDeployment(root);
 
         return true;
-	}
-    
-    public Map<String, IData> invoke(ExecuteDocument doc, String algorithmID) throws Exception {
-        
-        Node domNode = doc.getDomNode();
+    }
 
+    public Map<String, IData> invoke(ExecuteDocument doc, String algorithmID) throws Exception {
+
+        Node domNode = doc.getDomNode();
 
         //doc.save(new File("d:\\tmp\\execdoc.xml"));
         //String serializedXML = writeXMLToStream(new DOMSource(domNode)).toString();
-        
 //      serializedXML = serializedXML.replace("<?xml version=\"1.0\" encoding=\"UTF-8\"?>","");
 //	serializedXML = serializedXML.replace("<Execute xmlns=\"http://www.opengis.net/wps/1.0.0\">","<Execute xmlns=\"http://www.opengis.net/wps/1.0.0\" version=\"1.0.0\" service=\"WPS\">");
 //	serializedXML = serializedXML.replace(" href"," xmlns:xlin=\"http://www.w3.org/1999/xlink\" xlin:href");
@@ -197,17 +195,16 @@ public class ApacheBPELManager extends AbstractProcessManager {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder = factory.newDocumentBuilder();
         SOAPEnvelope response = null;
-        try{
+        try {
             client = new ServiceClient();
             OperationClient operationClient = client.createClient(ServiceClient.ANON_OUT_IN_OP);
             //creating message context
             MessageContext outMsgCtx = new MessageContext();
-            //assigning message context’s option object into instance variable
+            //assigning message context's option object into instance variable
             Options opts = outMsgCtx.getOptions();
             //setting properties into option
 
             //TODO is this correct?
-
             opts.setTo(new EndpointReference(deploymentEndpoint.replace("DeploymentService", algorithmID)));
             opts.setAction("");
             outMsgCtx.setEnvelope(createSOAPEnvelope(doc));
@@ -216,10 +213,9 @@ public class ApacheBPELManager extends AbstractProcessManager {
             MessageContext inMsgtCtx = operationClient.getMessageContext("In");
             response = inMsgtCtx.getEnvelope();
 
-            
-        }catch(AxisFault af){
+        } catch (AxisFault af) {
 
-        }finally{
+        } finally {
 //            if (client != null){
 //                try{
 //                    client.cleanupTransport();
@@ -235,86 +231,80 @@ public class ApacheBPELManager extends AbstractProcessManager {
 //            }
         }
 
-
         //TODO: Parse SoapEnvelope to DOM Document
+        Document result = SAAJUtil.getDocumentFromSOAPEnvelope(response);
 
-       Document result = SAAJUtil.getDocumentFromSOAPEnvelope(response);
-           
-		if (client != null) {
-			try {
-				client.cleanupTransport();
+        if (client != null) {
+            try {
+                client.cleanupTransport();
 
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-			try {
-				client.cleanup();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-       
-       
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            try {
+                client.cleanup();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
         //Document result = builder.parse((InputStream)response.getXMLStreamReader());
-
         //System.out.print(result.toString());
         return null;
         //throw new UnsupportedOperationException("Not supported yet.");
 
-        
     }
 
     public Collection<String> getAllProcesses() throws Exception {
-       try{
-    	   List<String> allProcesses = new ArrayList<String>();
+        try {
+            List<String> allProcesses = new ArrayList<String>();
 
            //ServiceClient sc = new ServiceClient(null, null);
+            OMElement listRoot = _client.buildMessage("listAllProcesses", new String[]{}, new String[]{});
 
+            OMElement result = sendToPM(listRoot);
+            Iterator<OMElement> pi = result.getFirstElement().getChildrenWithName(
+                    new QName("http://www.apache.org/ode/pmapi/types/2006/08/02/", "process-info"));
 
-    	   OMElement listRoot = _client.buildMessage("listAllProcesses", new String[] {}, new String[] {});
-                
-    	   OMElement result = sendToPM(listRoot);
-    	   Iterator<OMElement> pi = result.getFirstElement().getChildrenWithName(
-                       new QName("http://www.apache.org/ode/pmapi/types/2006/08/02/","process-info"));
-        
-    	   while (pi.hasNext()) {
-    		   OMElement omPID = pi.next();
-    		   
-    		   String fullName = omPID.getFirstChildWithName(
-                       new QName("http://www.apache.org/ode/pmapi/types/2006/08/02/","pid")).getText();
-    		   
-    		   /*just take the name as defined by the user...
-    		    * whats returned originally was something like
-    		    * {http://xy.z}ProcessName-XXX (-XXX is attached due to the ODE-versioning)
-    		    * this lead to problems with the processdescription, which
-    		    * has the name "ProcessName"
-    		    */
-    		   allProcesses.add(fullName.substring(fullName.indexOf("}") + 1, fullName.indexOf("-")));
-    	   }
-    	   return allProcesses;
-       }catch(Exception e){
-    	   return new ArrayList<String>();
-       }
-      
-        
+            while (pi.hasNext()) {
+                OMElement omPID = pi.next();
+
+                String fullName = omPID.getFirstChildWithName(
+                        new QName("http://www.apache.org/ode/pmapi/types/2006/08/02/", "pid")).getText();
+
+                /*just take the name as defined by the user...
+                 * whats returned originally was something like
+                 * {http://xy.z}ProcessName-XXX (-XXX is attached due to the ODE-versioning)
+                 * this lead to problems with the processdescription, which
+                 * has the name "ProcessName"
+                 */
+                allProcesses.add(fullName.substring(fullName.indexOf("}") + 1, fullName.indexOf("-")));
+            }
+            return allProcesses;
+        } catch (Exception e) {
+            return new ArrayList<String>();
+        }
+
     }
 
     public boolean containsProcess(String processID) throws Exception {
         boolean containsProcess = false;
         //need to filter out the namespace if it is passed in.
-        if (processID.contains("}"))
+        if (processID.contains("}")) {
             processID = processID.split("}")[1];
-        try{
-            OMElement listRoot = _client.buildMessage("listProcesses", new String[] {"filter", "orderKeys"},
-                new String[] {"name="+processID+"", ""});
+        }
+        try {
+            OMElement listRoot = _client.buildMessage("listProcesses", new String[]{"filter", "orderKeys"},
+                    new String[]{"name=" + processID + "", ""});
             OMElement result = sendToPM(listRoot);
 
-            if (result.toString().contains(processID))
+            if (result.toString().contains(processID)) {
                 containsProcess = true;
-        }catch(AxisFault af){
+            }
+        } catch (AxisFault af) {
             containsProcess = false;
             af.printStackTrace();
-        }catch(Exception e){
+        } catch (Exception e) {
             containsProcess = false;
             e.printStackTrace();
         }
@@ -325,64 +315,63 @@ public class ApacheBPELManager extends AbstractProcessManager {
 
     public boolean unDeployProcess(UndeployProcessRequest request) throws Exception {
         //unDeployProcess(String processID) is implemented though...
-        return unDeployProcess((String)request.getProcessID());
+        return unDeployProcess((String) request.getProcessID());
         //return false;
         //throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    
-     private OMElement sendToPM(OMElement msg) throws AxisFault {
-    	return _client.send(msg,this.processManagerEndpoint);
+    private OMElement sendToPM(OMElement msg) throws AxisFault {
+        return _client.send(msg, this.processManagerEndpoint);
         //return _PMclient.send(msg, this.processManagerEndpoint,10000);
     }
 
     private OMElement sendToDeployment(OMElement msg) throws AxisFault {
-        return _client.send(msg,this.deploymentEndpoint);
+        return _client.send(msg, this.deploymentEndpoint);
 
         //return _DEPclient.send(msg,this.deploymentEndpoint,10000);
     }
 
     private ByteArrayOutputStream writeXMLToStream(Source source) throws TransformerException {
 //		 Prepare the DOM document for writing
-       
+
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         // Prepare the output file
-       
+
         Result result = new StreamResult(out);
         //System.etProperty("javax.xml.transform.TransformerFactory","com.sun.org.apache.xalan.internal.xsltc.trax.TransformerFactoryImpl");
         // Write the DOM document to the file
         TransformerFactory x = TransformerFactory.newInstance();
         Transformer xformer = x.newTransformer();
         xformer.transform(source, result);
-        
+
         return out;
-	}
-    
-	private String nodeToString(Node node) throws TransformerFactoryConfigurationError, TransformerException {
-		StringWriter stringWriter = new StringWriter();
-		Transformer transformer = TransformerFactory.newInstance().newTransformer();
-		transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-		transformer.transform(new DOMSource(node), new StreamResult(stringWriter));
-		
-		return stringWriter.toString();
-	}
-    
-    
-    public  SOAPEnvelope createSOAPEnvelope(Node domNode) {
+    }
+
+    private String nodeToString(Node node) throws TransformerFactoryConfigurationError, TransformerException {
+        StringWriter stringWriter = new StringWriter();
+        Transformer transformer = TransformerFactory.newInstance().newTransformer();
+        transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+        transformer.transform(new DOMSource(node), new StreamResult(stringWriter));
+
+        return stringWriter.toString();
+    }
+
+    public SOAPEnvelope createSOAPEnvelope(Node domNode) {
         SOAPFactory fac = OMAbstractFactory.getSOAP11Factory();
         SOAPEnvelope envelope = fac.getDefaultEnvelope();
 
-         NamespaceContext ctx = new NamespaceContext() {
+        NamespaceContext ctx = new NamespaceContext() {
 
             public String getNamespaceURI(String prefix) {
                 String uri;
-                          if (prefix.equals("wps"))
-                              uri = "http://www.opengis.net/wps/1.0.0";
-                          else if (prefix.equals("ows"))
-                              uri = "http://www.opengis.net/ows/1.1";
-                          else
-                              uri = null;
-                          return uri;
+                if (prefix.equals("wps")) {
+                    uri = "http://www.opengis.net/wps/1.0.0";
+                } else if (prefix.equals("ows")) {
+                    uri = "http://www.opengis.net/ows/1.1";
+                } else {
+                    uri = null;
+                }
+                return uri;
             }
 
             public String getPrefix(String namespaceURI) {
@@ -394,8 +383,8 @@ public class ApacheBPELManager extends AbstractProcessManager {
             }
         };
 
-        XPathFactory xpathFact =
-                      XPathFactory.newInstance();
+        XPathFactory xpathFact
+                = XPathFactory.newInstance();
         XPath xpath = xpathFact.newXPath();
         xpath.setNamespaceContext(ctx);
 
@@ -404,16 +393,16 @@ public class ApacheBPELManager extends AbstractProcessManager {
         String xpathidentifier = "//ows:Identifier";
         String xpathinput = "//wps:DataInputs/wps:Input/wps:Data/wps:LiteralData";
 
-        try{
-           identifier = xpath.evaluate(xpathidentifier, domNode);
-           input =  xpath.evaluate(xpathinput, domNode);
-        }catch(Exception e){
+        try {
+            identifier = xpath.evaluate(xpathidentifier, domNode);
+            input = xpath.evaluate(xpathinput, domNode);
+        } catch (Exception e) {
             e.printStackTrace();
         }
         //OMNamespace wpsNs = fac.createOMNamespace("http://scenz.lcr.co.nz/wpsHelloWorld", "wps");
-        OMNamespace wpsNs = fac.createOMNamespace("http://scenz.lcr.co.nz/"+ identifier, "wps");
+        OMNamespace wpsNs = fac.createOMNamespace("http://scenz.lcr.co.nz/" + identifier, "wps");
         // creating the payload
-        
+
         //TODO: parse the domNode to a request doc
         //OMElement method = fac.createOMElement("wpsHelloWorldRequest", wpsNs);
         OMElement method = fac.createOMElement(identifier + "Request", wpsNs);
@@ -424,119 +413,120 @@ public class ApacheBPELManager extends AbstractProcessManager {
         envelope.getBody().addChild(method);
         return envelope;
     }
-    
-	@SuppressWarnings("unchecked")
-	private SOAPEnvelope createSOAPEnvelope(ExecuteDocument execDoc) {
 
-		SOAPFactory fac = OMAbstractFactory.getSOAP11Factory();
-		SOAPEnvelope envelope = fac.getDefaultEnvelope();
+    @SuppressWarnings("unchecked")
+    private SOAPEnvelope createSOAPEnvelope(ExecuteDocument execDoc) {
 
-		NamespaceContext ctx = new NamespaceContext() {
+        SOAPFactory fac = OMAbstractFactory.getSOAP11Factory();
+        SOAPEnvelope envelope = fac.getDefaultEnvelope();
 
-			public String getNamespaceURI(String prefix) {
-				String uri;
-				if (prefix.equals("wps"))
-					uri = "http://www.opengis.net/wps/1.0.0";
-				else if (prefix.equals("ows"))
-					uri = "http://www.opengis.net/ows/1.1";
-				else
-					uri = null;
-				return uri;
-			}
+        NamespaceContext ctx = new NamespaceContext() {
 
-			public String getPrefix(String namespaceURI) {
-				return null;
-			}
+            public String getNamespaceURI(String prefix) {
+                String uri;
+                if (prefix.equals("wps")) {
+                    uri = "http://www.opengis.net/wps/1.0.0";
+                } else if (prefix.equals("ows")) {
+                    uri = "http://www.opengis.net/ows/1.1";
+                } else {
+                    uri = null;
+                }
+                return uri;
+            }
 
-			public Iterator getPrefixes(String namespaceURI) {
-				return null;
-			}
-		};
+            public String getPrefix(String namespaceURI) {
+                return null;
+            }
 
-		_client = new ODEServiceClient();
-		HashMap<String, String> allProcesses = new HashMap<String, String>();
+            public Iterator getPrefixes(String namespaceURI) {
+                return null;
+            }
+        };
 
-		OMElement listRoot = _client.buildMessage("listAllProcesses",
-				new String[] {}, new String[] {});
+        _client = new ODEServiceClient();
+        HashMap<String, String> allProcesses = new HashMap<String, String>();
 
-		OMElement result = null;
-		try {
-			result = sendToPM(listRoot);
-		} catch (AxisFault e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		Iterator<OMElement> pi = result.getFirstElement().getChildrenWithName(
-				new QName("http://www.apache.org/ode/pmapi/types/2006/08/02/",
-						"process-info"));
+        OMElement listRoot = _client.buildMessage("listAllProcesses",
+                new String[]{}, new String[]{});
 
-		while (pi.hasNext()) {
-			OMElement omPID = pi.next();
+        OMElement result = null;
+        try {
+            result = sendToPM(listRoot);
+        } catch (AxisFault e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        Iterator<OMElement> pi = result.getFirstElement().getChildrenWithName(
+                new QName("http://www.apache.org/ode/pmapi/types/2006/08/02/",
+                        "process-info"));
 
-			String fullName = omPID
-					.getFirstChildWithName(
-							new QName(
-									"http://www.apache.org/ode/pmapi/types/2006/08/02/",
-									"pid")).getText();
-			allProcesses.put(
-					fullName.substring(fullName.indexOf("}") + 1,
-							fullName.indexOf("-")),
-					fullName.substring(1, fullName.indexOf("}")));
+        while (pi.hasNext()) {
+            OMElement omPID = pi.next();
 
-		}
+            String fullName = omPID
+                    .getFirstChildWithName(
+                            new QName(
+                                    "http://www.apache.org/ode/pmapi/types/2006/08/02/",
+                                    "pid")).getText();
+            allProcesses.put(
+                    fullName.substring(fullName.indexOf("}") + 1,
+                            fullName.indexOf("-")),
+                    fullName.substring(1, fullName.indexOf("}")));
 
-		String identifier = execDoc.getExecute().getIdentifier()
-				.getStringValue();
+        }
 
-		OMNamespace wpsNs = null;
+        String identifier = execDoc.getExecute().getIdentifier()
+                .getStringValue();
 
-		for (String string : allProcesses.keySet()) {
+        OMNamespace wpsNs = null;
 
-			if (string.equals(identifier)) {
-				wpsNs = fac.createOMNamespace(allProcesses.get(string), "nas");
-				break;
-			}
+        for (String string : allProcesses.keySet()) {
 
-		}
+            if (string.equals(identifier)) {
+                wpsNs = fac.createOMNamespace(allProcesses.get(string), "nas");
+                break;
+            }
+
+        }
 		// creating the payload
 
 		// TODO: parse the domNode to a request doc
-		// OMElement method = fac.createOMElement("wpsHelloWorldRequest",
-		// wpsNs);
-		OMElement method = fac.createOMElement(identifier + "Request", wpsNs);
-		envelope.getBody().addChild(method);
+        // OMElement method = fac.createOMElement("wpsHelloWorldRequest",
+        // wpsNs);
+        OMElement method = fac.createOMElement(identifier + "Request", wpsNs);
+        envelope.getBody().addChild(method);
 
-		DataInputsType datainputs = execDoc.getExecute().getDataInputs();
+        DataInputsType datainputs = execDoc.getExecute().getDataInputs();
 
-		for (InputType input1 : datainputs.getInputArray()) {
+        for (InputType input1 : datainputs.getInputArray()) {
 
-			String inputIdentifier = input1.getIdentifier().getStringValue();
-			OMElement value = fac.createOMElement(inputIdentifier, "", "");
-			if (input1.getData() != null
-					&& input1.getData().getLiteralData() != null) {
-				value.setText(input1.getData().getLiteralData()
-						.getStringValue());
-			} else {
+            String inputIdentifier = input1.getIdentifier().getStringValue();
+            OMElement value = fac.createOMElement(inputIdentifier, "", "");
+            if (input1.getData() != null
+                    && input1.getData().getLiteralData() != null) {
+                value.setText(input1.getData().getLiteralData()
+                        .getStringValue());
+            } else {
 				// Node no =
-				// input1.getData().getComplexData().getDomNode().getChildNodes().item(1);
-				// value.setText("<![CDATA[" + nodeToString(no) + "]>");
-				// value.addChild(no);
-				OMElement reference = fac.createOMElement("Reference",
-						"http://www.opengis.net/wps/1.0.0", "wps");
-				OMNamespace xlin = fac.createOMNamespace(
-						"http://www.w3.org/1999/xlink", "xlin");
+                // input1.getData().getComplexData().getDomNode().getChildNodes().item(1);
+                // value.setText("<![CDATA[" + nodeToString(no) + "]>");
+                // value.addChild(no);
+                OMElement reference = fac.createOMElement("Reference",
+                        "http://www.opengis.net/wps/1.0.0", "wps");
+                OMNamespace xlin = fac.createOMNamespace(
+                        "http://www.w3.org/1999/xlink", "xlin");
 
-				OMAttribute attr = fac.createOMAttribute("href", xlin, input1
-						.getReference().getHref());
-				reference.addAttribute(attr);
-				reference.addAttribute("schema", input1.getReference()
-						.getSchema(), fac.createOMNamespace("", ""));
-				value.addChild(reference);
-			}
-			method.addChild(value);
-		}
+                OMAttribute attr = fac.createOMAttribute("href", xlin, input1
+                        .getReference().getHref());
+                reference.addAttribute(attr);
+                reference.addAttribute("schema", input1.getReference()
+                        .getSchema(), fac.createOMNamespace("", ""));
+                value.addChild(reference);
+            }
+            method.addChild(value);
+        }
 
-		return envelope;
+        return envelope;
 
-	}
+    }
 }

@@ -11,7 +11,7 @@
     <packaging>jar</packaging>
     <name>52North WPS Transactional Service</name>
     <description>Implementation of the transactional interface for processes</description>
-	<dependencies>
+    <dependencies>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -25,26 +25,26 @@
             <artifactId>52n-wps-server</artifactId>
         </dependency>
         <dependency>
-			<groupId>org.n52.wps</groupId>
-  			<artifactId>52n-wps-commons</artifactId>
-  		</dependency>
-		<dependency>
-		    <groupId>javax.servlet</groupId>
-		    <artifactId>servlet-api</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>xalan</groupId>
-			<artifactId>xalan</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.ode</groupId>
-			<artifactId>ode-axis2</artifactId>
-		</dependency>
+            <groupId>org.n52.wps</groupId>
+            <artifactId>52n-wps-commons</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>xalan</groupId>
+            <artifactId>xalan</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ode</groupId>
+            <artifactId>ode-axis2</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.apache.ode</groupId>
             <artifactId>ode-utils</artifactId>
         </dependency>
-		<dependency>
+        <dependency>
             <groupId>org.apache.ws.commons.axiom</groupId>
             <artifactId>axiom-api</artifactId>
         </dependency>
@@ -64,7 +64,7 @@
             <groupId>org.apache.woden</groupId>
             <artifactId>woden-api</artifactId>
         </dependency>
-		<dependency>
+        <dependency>
             <groupId>org.apache.axis2</groupId>
             <artifactId>axis2</artifactId>
         </dependency>
@@ -76,11 +76,11 @@
             <groupId>org.apache.axis2</groupId>
             <artifactId>axis2-transport-http</artifactId>
         </dependency>
-		<dependency>
-			<groupId>org.apache.axis2</groupId>
-			<artifactId>axis2-saaj</artifactId>
-		</dependency>
-		<dependency>
+        <dependency>
+            <groupId>org.apache.axis2</groupId>
+            <artifactId>axis2-saaj</artifactId>
+        </dependency>
+        <dependency>
             <groupId>wsdl4j</groupId>
             <artifactId>wsdl4j</artifactId>
         </dependency>
@@ -92,5 +92,22 @@
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
         </dependency>
+        <!-- dal: additional dependencies -->
+        <dependency>
+            <groupId>org.eclipse.xtend</groupId>
+            <artifactId>org.eclipse.xtend.standalone</artifactId>
+        </dependency>
+        <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>52n-wps-io</artifactId>
+         </dependency>
+         <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>52n-wps-io-impl</artifactId>
+         </dependency>
+         <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>52n-wps-io-geotools</artifactId>
+         </dependency>
     </dependencies>
 </project>
