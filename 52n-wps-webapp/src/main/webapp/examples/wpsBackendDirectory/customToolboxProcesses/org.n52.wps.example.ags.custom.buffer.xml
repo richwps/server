@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xml" href="org.n52.wps.example.ags.custom.buffer.xslt" ?>
+<wps:ProcessDescriptions xmlns:wps="http://www.opengis.net/wps/1.0.0" xmlns:ows="http://www.opengis.net/ows/1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengis.net/wps/1.0.0
+http://schemas.opengis.net/wps/1.0.0/wpsDescribeProcess_response.xsd" xml:lang="en-US" service="WPS" version="1.0.0">
+	<ProcessDescription wps:processVersion="2" statusSupported="true" storeSupported="true">
+	
+	
+		<ows:Identifier>org.n52.wps.example.ags.custom.buffer</ows:Identifier><!-- ParameterCount=3 -->
+		<ows:Title>Buffer computation</ows:Title>
+		<ows:Abstract>This process offers buffer computation executed via the ESRI ArcGIS tool inside a custom toolbox.</ows:Abstract>
+		<DataInputs>
+		
+			<Input minOccurs="1" maxOccurs="1">
+				<ows:Identifier>inputfeatures</ows:Identifier><!-- 0 -->
+				<ows:Title>The input features</ows:Title>
+				<ows:Abstract>The feature layer or feature class containing the features that will be buffered</ows:Abstract>
+				<ComplexData>
+					<Default>
+						<Format>
+							<MimeType>application/x-zipped-shp</MimeType>
+							<Encoding>UTF-8</Encoding>
+						</Format>
+					</Default>
+					<Supported>
+						<Format>
+							<MimeType>application/x-zipped-shp</MimeType>
+							<Encoding>base64</Encoding>
+						</Format>
+					</Supported>
+				</ComplexData>
+			</Input>
+			
+			<Input minOccurs="1" maxOccurs="1">
+				<ows:Identifier>distance</ows:Identifier><!-- 2 -->
+				<ows:Title>The buffer distance</ows:Title>
+				<ows:Abstract>The distance around the features that will be the buffer</ows:Abstract>
+				<LiteralData>
+					<ows:DataType ows:reference="xs:string"></ows:DataType>
+					<ows:AnyValue/>
+				</LiteralData>
+			</Input>
+			
+			
+		</DataInputs>
+		<ProcessOutputs>
+			<Output>
+				<ows:Identifier>buffers</ows:Identifier><!-- 1 -->
+				<ows:Title>Output buffer features</ows:Title>	
+				<ows:Abstract>The feature class that will be created and to which the resulting buffers will be written.</ows:Abstract>
+				<ComplexOutput>
+					<Default>
+						<Format>
+							<MimeType>application/x-zipped-shp</MimeType>
+							<Encoding>UTF-8</Encoding>
+						</Format>
+					</Default>
+					<Supported>
+						<Format>
+							<MimeType>application/x-zipped-shp</MimeType>
+							<Encoding>base64</Encoding>
+						</Format>
+					</Supported>
+				</ComplexOutput>
+			</Output>
+		</ProcessOutputs>
+	</ProcessDescription>
+</wps:ProcessDescriptions>
+									
+	
