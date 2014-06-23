@@ -93,10 +93,11 @@
             <artifactId>commons-codec</artifactId>
         </dependency>
         <!-- dal: additional dependencies -->
-        <dependency>
+        <!--<dependency>
             <groupId>org.eclipse.xtend</groupId>
             <artifactId>org.eclipse.xtend.standalone</artifactId>
         </dependency>
+        -->
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>52n-wps-io</artifactId>

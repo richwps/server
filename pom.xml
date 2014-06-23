@@ -1,7 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    <!-- modified -->
-    <!-- no modules, but snapshot-dependencies-->
-    <!-- rola dependencies -->
+    <!-- dal: modified
+    - no modules, but snapshot-dependencies
+    - rola dependencies -->
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.n52.wps</groupId>
     <artifactId>52n-wps-parent</artifactId>
@@ -34,18 +34,11 @@
     </scm>
     <repositories>
         <repository>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-            <id>geotools</id>
-            <name>Geotools Repo</name>
-            <url>http://download.osgeo.org/webdav/geotools</url>
+            <id>Apache</id>
+            <name>Apache repository</name>
+            <url>http://repo1.maven.org/maven2</url>
         </repository>
-        
-        <repository>
+        <!--<repository>
             <id>n52-releases</id>
             <name>52n Releases</name>
             <url>http://52north.org/maven/repo/releases</url>
@@ -55,7 +48,24 @@
             <snapshots>
                 <enabled>false</enabled>
             </snapshots>
+        </repository>-->
+        <repository>
+            <id>geotools</id>
+            <name>Geotools Repo</name>
+            <url>http://download.osgeo.org/webdav/geotools</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
         </repository>
+        <repository>
+            <id>OpenGEO</id>
+            <name>opengeo repository</name>
+            <url>http://repo.opengeo.org</url>
+        </repository>
+                
         <!-- dal: adding the n52-snapshot repository -->
         <repository>
             <id>n52-snapshots</id>
@@ -68,19 +78,8 @@
                 <enabled>true</enabled>
             </snapshots>
         </repository>
-        <repository>
-            <id>Apache</id>
-            <name>Apache repository</name>
-            <url>http://repo1.maven.org/maven2</url>
-        </repository>
-        <repository>
-            <id>OpenGEO</id>
-            <name>opengeo repository</name>
-            <url>http://repo.opengeo.org</url>
-        </repository>    
     </repositories>
-    
-    
+        
     <build>
         <pluginManagement>
             <plugins>
@@ -143,8 +142,7 @@
                     <revisionOnScmFailure>0</revisionOnScmFailure>
                 </configuration>
             </plugin>
-            <!--
-            dal: disabled due to integration problems.
+            <!-- dal: disabled because of old 52n-wps-transactional
                 <plugin>
                 <groupId>com.mycila</groupId>
                 <artifactId>license-maven-plugin</artifactId>
@@ -171,7 +169,8 @@
                     </execution>
                 </executions>
             </plugin>-->
-            <!--<plugin>
+            <!-- dal
+                <plugin>
                 <groupId>org.jasig.maven</groupId>
                 <artifactId>maven-notice-plugin</artifactId>
                 <configuration>
@@ -710,6 +709,11 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
+                <artifactId>52n-wps-client-lib</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>52n-wps-sextante</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -766,7 +770,7 @@
             <dependency>
                 <groupId>org.n52.wps</groupId>
                 <artifactId>52n-xml-wps-v100</artifactId>
-                <version>1.1.0</version> <!--altered -->
+                <version>1.1.0</version>
             </dependency>
             <dependency>
                 <groupId>org.n52.security</groupId>
@@ -859,8 +863,7 @@
                 <artifactId>RserveEngine</artifactId>
                 <version>0.6-8</version>
             </dependency>
-            <!-- END R dependencies -->
-		
+            <!-- dal: -->
             <dependency>
                 <groupId>net.disy.richwps</groupId>
                 <artifactId>richwps-wd</artifactId>
@@ -870,23 +873,19 @@
                 <groupId>de.hsos.richwps</groupId>
                 <artifactId>dsl.api</artifactId>
                 <version>1.0-SNAPSHOT</version>
+                <classifier>jar-with-dependencies</classifier>
             </dependency>
-            <dependency>
+            <!--<dependency>
                 <groupId>org.eclipse.xtend</groupId>
                 <artifactId>org.eclipse.xtend.standalone</artifactId>
                 <version>2.4.3</version>
-            </dependency>
+            </dependency>-->
             <!-- dal: provided by richwps::commons-->
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>52n-wps-client-lib</artifactId>
                 <version>3.3.0-SNAPSHOT</version>
             </dependency>
-            <!-- <dependency>
-                    <groupId>org.eclipse.emf</groupId>
-                    <artifactId>ecore</artifactId>
-                    <version>2.4.2</version>
-            </dependency>-->
         </dependencies>
     </dependencyManagement>
     <reporting>
@@ -905,7 +904,6 @@
             </plugin>
         </plugins>
     </reporting>
-
 
     <profiles>
         <profile>
