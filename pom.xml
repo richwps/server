@@ -38,17 +38,6 @@
             <name>Apache repository</name>
             <url>http://repo1.maven.org/maven2</url>
         </repository>
-        <!--<repository>
-            <id>n52-releases</id>
-            <name>52n Releases</name>
-            <url>http://52north.org/maven/repo/releases</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>-->
         <repository>
             <id>geotools</id>
             <name>Geotools Repo</name>
@@ -60,13 +49,26 @@
                 <enabled>true</enabled>
             </snapshots>
         </repository>
+       
         <repository>
             <id>OpenGEO</id>
             <name>opengeo repository</name>
             <url>http://repo.opengeo.org</url>
         </repository>
+        
+        <repository>
+            <id>n52-releases</id>
+            <name>52n Releases</name>
+            <url>http://52north.org/maven/repo/releases</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
                 
-        <!-- dal: adding the n52-snapshot repository -->
+        <!-- dal: adding the n52-snapshot repository for skipped modules -->
         <repository>
             <id>n52-snapshots</id>
             <name>52n Snapshots</name>
@@ -315,6 +317,15 @@
                         <artifactId>xml-apis</artifactId>
                         <groupId>xml-apis</groupId>
                     </exclusion>
+                    <!-- dal: avoid colision with dsl.emf-->                
+                    <exclusion>
+                        <artifactId>ecore</artifactId>
+                        <groupId>org.eclipse.emf</groupId>
+                    </exclusion>
+                    <exclusion>
+                        <artifactId>common</artifactId>
+                        <groupId>org.eclipse.emf</groupId>
+                    </exclusion>
                 </exclusions>
             </dependency>
             <dependency>
@@ -326,6 +337,17 @@
                 <groupId>org.geotools</groupId>
                 <artifactId>gt-xml</artifactId>
                 <version>${geotools.version}</version>
+                <!-- dal: avoid colision with dsl.emf-->                
+                <exclusions>
+                    <exclusion>
+                        <artifactId>ecore</artifactId>
+                        <groupId>org.eclipse.emf</groupId>
+                    </exclusion>
+                    <exclusion>
+                        <artifactId>common</artifactId>
+                        <groupId>org.eclipse.emf</groupId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.geotools</groupId>
@@ -707,11 +729,11 @@
                 <artifactId>52n-wps-webapp</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <dependency>
+            <!--<dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>52n-wps-client-lib</artifactId>
                 <version>${project.version}</version>
-            </dependency>
+            </dependency>-->
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>52n-wps-sextante</artifactId>
@@ -752,11 +774,7 @@
                 <artifactId>52n-wps-mc</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>52n-wps-config</artifactId>
-                <version>1.1.0</version>
-            </dependency>
+         
             <dependency>
                 <groupId>org.n52.wps</groupId>
                 <artifactId>ogckml2.2</artifactId>
@@ -767,11 +785,7 @@
                 <artifactId>52n-wps-ags-workspace</artifactId>
                 <version>10.0.2</version>
             </dependency>
-            <dependency>
-                <groupId>org.n52.wps</groupId>
-                <artifactId>52n-xml-wps-v100</artifactId>
-                <version>1.1.0</version>
-            </dependency>
+           
             <dependency>
                 <groupId>org.n52.security</groupId>
                 <artifactId>52n-security-config</artifactId>
@@ -863,29 +877,67 @@
                 <artifactId>RserveEngine</artifactId>
                 <version>0.6-8</version>
             </dependency>
-            <!-- dal: -->
+            
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>52n-wps-config</artifactId>
+                <version>1.1.0</version>
+            </dependency>
+            
+            <!-- dal: provided by richwps::commons-->
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>52n-wps-client-config</artifactId>
+                <version>1.0.0-SNAPSHOT</version>
+            </dependency>
+            
+            <!--
+                dal: provided by richwps::commons
+                @see also org.n2.wps below.
+            -->
+            <dependency>
+                <groupId>org.n52.sensorweb</groupId>
+                <artifactId>52n-xml-wps-v100</artifactId>
+                <version>1.1.5</version>
+            </dependency>
+            
+            <dependency>
+                <groupId>org.n52.wps</groupId>
+                <artifactId>52n-xml-wps-v100</artifactId>
+                <version>1.1.0</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>52n-wps-client-lib</artifactId>
+                <version>3.3.0-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>de.hsos.richwps</groupId>
+                <artifactId>dsl.api</artifactId>
+                <version>1.0-SNAPSHOT</version>
+                <!--<classifier>jar-with-dependencies</classifier>-->
+            </dependency>
             <dependency>
                 <groupId>net.disy.richwps</groupId>
                 <artifactId>richwps-wd</artifactId>
                 <version>1.0.0-SNAPSHOT</version>
             </dependency>
             <dependency>
-                <groupId>de.hsos.richwps</groupId>
-                <artifactId>dsl.api</artifactId>
-                <version>1.0-SNAPSHOT</version>
-                <classifier>jar-with-dependencies</classifier>
-            </dependency>
-            <!--<dependency>
                 <groupId>org.eclipse.xtend</groupId>
                 <artifactId>org.eclipse.xtend.standalone</artifactId>
                 <version>2.4.3</version>
-            </dependency>-->
-            <!-- dal: provided by richwps::commons-->
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>52n-wps-client-lib</artifactId>
-                <version>3.3.0-SNAPSHOT</version>
             </dependency>
+            <dependency>
+                <groupId>org.eclipse.xtend</groupId>
+                <artifactId>xtend-maven-plugin</artifactId>
+                <version>2.6.0</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>15.0</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
     <reporting>

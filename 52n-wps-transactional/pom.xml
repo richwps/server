@@ -22,6 +22,10 @@
         </dependency>
         <dependency>
             <groupId>org.n52.wps</groupId>
+            <artifactId>52n-wps-io-geotools</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.n52.wps</groupId>
             <artifactId>52n-wps-server</artifactId>
         </dependency>
         <dependency>
@@ -92,23 +96,36 @@
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
         </dependency>
+        
         <!-- dal: additional dependencies -->
+        <dependency>
+            <groupId>org.eclipse.xtend</groupId>
+            <artifactId>xtend-maven-plugin</artifactId>
+         <!--   <version>2.6.0</version>-->
+        </dependency>
         <!--<dependency>
             <groupId>org.eclipse.xtend</groupId>
             <artifactId>org.eclipse.xtend.standalone</artifactId>
+        </dependency>-->
+        
+        <dependency>
+            <groupId>org.n52.sensorweb</groupId>
+            <artifactId>52n-xml-wps-v100</artifactId>
         </dependency>
-        -->
+        
+        <dependency>
+            <groupId>org.n52.wps</groupId>
+            <artifactId>52n-xml-wps-v100</artifactId>
+        </dependency>
+        
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>52n-wps-io</artifactId>
+            <artifactId>52n-wps-client-config</artifactId>
         </dependency>
+           
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>52n-wps-io-impl</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>52n-wps-io-geotools</artifactId>
+            <artifactId>52n-wps-config</artifactId>
         </dependency>
     </dependencies>
 </project>
