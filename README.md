@@ -30,8 +30,10 @@ The interpreter has the following capabilities:
 
 ## Development
 
+See https://github.com/richwps/commons for shared libraries first.
+
 Use git to clone the WPS repository:
 
 git clone https://github.com/richwps/52n-wps.git
 
-Then just run `mvn clean install` on the repositories root directory.
+Then just run `mvn clean install -P with-geotools -Dwps.config.file=./52n-wps-webapp/src/main/webapp/config/wps_config.xml` on the repositories root directory.

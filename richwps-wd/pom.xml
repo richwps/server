@@ -5,21 +5,27 @@
     <artifactId>richwps-wd</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <name>RichWPS OE</name>
+    
+    <properties>
+        <n52WPS.version>3.3.0</n52WPS.version>
+    </properties>
+    
     <dependencies>
         <dependency>
             <groupId>org.n52.wps</groupId>
             <artifactId>52n-wps-transactional</artifactId>
-            <version>3.3.0-SNAPSHOT</version>
+            <version>${n52WPS.version}</version>
         </dependency>
         <dependency>
             <groupId>org.n52.wps</groupId>
             <artifactId>52n-wps-client-lib</artifactId>
-            <version>3.3.0-SNAPSHOT</version>
+            <version>${n52WPS.version}</version>
         </dependency>
         <dependency>
             <groupId>de.hsos.richwps</groupId>
             <artifactId>dsl.api</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>1.0.0-SNAPSHOT</version>
+            <classifier>jar-with-dependencies</classifier>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
