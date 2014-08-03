@@ -37,3 +37,9 @@ Use git to clone the WPS repository:
 git clone https://github.com/richwps/52n-wps.git
 
 Then just run `mvn clean install -P with-geotools -Dwps.config.file=./52n-wps-webapp/src/main/webapp/config/wps_config.xml` on the repositories root directory.
+
+__Eclipse WTP__
+
+To deploy and run the server within Eclipse WTP refer to the hints at:
+* https://github.com/52North/WPS#geotools
+* https://github.com/52North/WPS#configure-at-runtime
