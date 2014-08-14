@@ -132,10 +132,15 @@ public class WdAlgorithm extends AbstractTransactionalAlgorithm {
             }
             if (output.isSetComplexOutput()) {
                 //TODO: be careful here!
-                String mimeType = output.getComplexOutput().getDefault().getFormat().getMimeType();
-                if (mimeType.contains("xml") || (mimeType.contains("XML")) || (mimeType.contains("json"))) {
+            	String mimeType = output.getComplexOutput().getDefault().getFormat().getMimeType();
+            	String schema = output.getComplexOutput().getDefault().getFormat().getSchema();
+                if(mimeType.equals("text/xml")  && (schema.contains("gml") || schema.contains("GML"))) {
+                	return GTVectorDataBinding.class;
+                }
+                else if (mimeType.contains("xml") || (mimeType.contains("XML")) || (mimeType.contains("json"))) {
                     return GenericFileDataBinding.class;
-                } else {
+                }
+                else {
                     return GenericFileDataBinding.class;
                 }
             }
