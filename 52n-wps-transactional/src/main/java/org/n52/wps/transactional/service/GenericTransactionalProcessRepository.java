@@ -98,9 +98,6 @@ public class GenericTransactionalProcessRepository implements ITransactionalAlgo
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		
-		
 	}
 		
 	public boolean addAlgorithm(Object process) {

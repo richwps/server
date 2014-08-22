@@ -33,6 +33,7 @@ package org.n52.wps.transactional.handler;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -51,7 +52,8 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import org.apache.xpath.XPathAPI;
+import net.opengis.wps.x100.ProcessDescriptionType;
+
 import org.n52.wps.server.ExceptionReport;
 import org.n52.wps.server.IAlgorithmRepository;
 import org.n52.wps.server.ITransactionalAlgorithmRepository;
@@ -62,11 +64,77 @@ import org.n52.wps.transactional.request.ITransactionalRequest;
 import org.n52.wps.transactional.request.UndeployProcessRequest;
 import org.n52.wps.transactional.response.TransactionalResponse;
 import org.n52.wps.transactional.service.TransactionalHelper;
-import org.w3c.dom.DOMException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
+import org.xml.sax.SAXException;
 
 public class TransactionalRequestHandler {
+	
+	private static Logger LOGGER = LoggerFactory.getLogger(TransactionalRequestHandler.class);
+	
+	protected OutputStream os;
+	
+	protected ITransactionalRequest req;
+	
+	public TransactionalRequestHandler(InputStream is, OutputStream os) throws ExceptionReport {
+
+		Document doc;
+		this.os = os;
+		
+		try {
+		DocumentBuilderFactory fac = DocumentBuilderFactory.newInstance();
+		fac.setNamespaceAware(true);//this prevents "xmlns="""
+		fac.setIgnoringElementContentWhitespace(true);
+		
+		DocumentBuilder documentBuilder= fac.newDocumentBuilder();
+		doc = documentBuilder.parse(is);
+				
+		Node child = doc.getFirstChild();
+		
+		while(child.getNodeName().compareTo("#comment")==0) {
+			child = child.getNextSibling();
+		}
+
+		// TODO: check version
+		Node versionNode = child.getAttributes().getNamedItem("version");
+		
+		String requestType = getRequestType(doc.getFirstChild());
+		
+		if (requestType == null) {
+			throw new ExceptionReport("Request not valid",
+					ExceptionReport.OPERATION_NOT_SUPPORTED);
+		} else if (requestType.equals("DeployProcess")) {
+			this.req = new DeployProcessRequest(doc);
+		} else if (requestType.equals("UnDeployProcess")) {
+			this.req = new UndeployProcessRequest(doc);
+		} else {
+			throw new ExceptionReport("Request type unknown ("
+					+ requestType
+					+ ") Must be DeployProcess or UnDeployProcess",
+					ExceptionReport.OPERATION_NOT_SUPPORTED);
+		}
+
+		LOGGER.info("Request type: " + requestType);
+		}
+		catch (SAXException e) {
+			throw new ExceptionReport(
+					"There went something wrong with parsing the POST data: "
+							+ e.getMessage(),
+					ExceptionReport.NO_APPLICABLE_CODE, e);
+		} catch (IOException e) {
+			throw new ExceptionReport(
+					"There went something wrong with the network connection.",
+					ExceptionReport.NO_APPLICABLE_CODE, e);
+		} catch (ParserConfigurationException e) {
+			throw new ExceptionReport(
+					"There is a internal parser configuration error",
+					ExceptionReport.NO_APPLICABLE_CODE, e);
+		}
+		
+	}
+	
 	/**
 	 * Handles the request and returns a transactional response (if succeeded)
 	 * or throws an exception (otherwise)
@@ -78,12 +146,14 @@ public class TransactionalRequestHandler {
 	 * @throws Exception
 	 *             if an error occurs handling the request
 	 */
-	public TransactionalResponse handle(ITransactionalRequest request)
+	public TransactionalResponse handle()
 			throws ExceptionReport {
-		if (request instanceof DeployProcessRequest) {
-			return handleDeploy((DeployProcessRequest) request);
-		} else if (request instanceof UndeployProcessRequest) {
-			return handleUnDeploy((UndeployProcessRequest) request);
+		if (this.req == null)
+			throw new ExceptionReport("Internal Error", "");
+		if (req instanceof DeployProcessRequest) {
+			return handleDeploy((DeployProcessRequest) req);
+		} else if (req instanceof UndeployProcessRequest) {
+			return handleUnDeploy((UndeployProcessRequest) req);
 		} else {
 			throw new ExceptionReport("Error. Could not handle request",
 					ExceptionReport.OPERATION_NOT_SUPPORTED);
@@ -118,29 +188,13 @@ public class TransactionalRequestHandler {
 	}
 
 	private void saveProcessDescription(DeployProcessRequest request) {
-		 String processName ="";
-          try{
-             processName = XPathAPI.selectSingleNode(request.getProcessDescription(), "/DeployProcess/ProcessDescriptions/ProcessDescription/Identifier/text()").getNodeValue().trim();
-         }catch(DOMException de){
-             de.printStackTrace();
-         }catch(Exception e){
-             e.printStackTrace();
-         }
+		String processId = request.getProcessId();
+		ProcessDescriptionType pDescr = request.getProcessDescription();
 		
-		
-		 Node describeProcess = null;
-		try {
-			describeProcess = XPathAPI.selectSingleNode(request.getProcessDescription(), "/DeployProcess/ProcessDescriptions");
-		} catch (TransformerException e) {
-			e.printStackTrace();
-		}
-			
-			URI fileUri = generateProcessDescriptionFileUri(processName);
+		URI fileUri = generateProcessDescriptionFileUri(processId);
 		
 			try {
-				
-				writeXmlFile(describeProcess, fileUri);
-				
+				writeXmlFile(pDescr.getDomNode(), fileUri);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -154,8 +208,6 @@ public class TransactionalRequestHandler {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-
-		
 	}
 
 	private static TransactionalResponse handleUnDeploy(
@@ -188,7 +240,6 @@ public class TransactionalRequestHandler {
 			throw new ExceptionReport("Could not undeploy process",
 					ExceptionReport.NO_APPLICABLE_CODE);
 		}
-
 	}
 	
 	public static URI generateProcessDescriptionFileUri(String processId) {
@@ -251,4 +302,18 @@ public class TransactionalRequestHandler {
         xformer.transform(source, result);
         fileOutput.close();
 	}
+	
+	private String getRequestType(Node node) {
+		String localName = node.getLocalName();
+		if (localName.equalsIgnoreCase("undeployprocess")) {
+			return "UnDeployProcess";
+		}
+		else if (localName.equalsIgnoreCase("deployprocess")) {
+				return "DeployProcess";
+		}
+		else {
+			return null;
+		}
+	}
+	
 }

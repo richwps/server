@@ -12,7 +12,6 @@ import net.opengis.wps.x100.ExecuteDocument;
 import net.opengis.wps.x100.InputDescriptionType;
 import net.opengis.wps.x100.OutputDescriptionType;
 import net.opengis.wps.x100.ProcessDescriptionType;
-import net.opengis.wps.x100.ProcessDescriptionsDocument;
 
 import org.apache.xmlbeans.XmlException;
 import org.apache.xmlbeans.XmlOptions;
@@ -172,19 +171,20 @@ public class WdAlgorithm extends AbstractTransactionalAlgorithm {
             processID = processID.split("}")[1];
         }
         try {
-            URI fileUri = new URL(subPath + File.separator + "WEB-INF" + File.separator + "ProcessDescriptions" + File.separator + processID + ".xml").toURI();
+            URI fileUri = new URL(subPath + "WEB-INF" + File.separator + "ProcessDescriptions" + File.separator + processID + ".xml").toURI();
             File xmlDesc = new File(fileUri);
             XmlOptions option = new XmlOptions();
             option.setLoadTrimTextBuffer();
-            ProcessDescriptionsDocument doc = ProcessDescriptionsDocument.Factory.parse(xmlDesc, option);
-            if (doc.getProcessDescriptions().getProcessDescriptionArray().length == 0) {
-                LOGGER.warn("ProcessDescription does not contain any description");
-                return null;
-            }
+            ProcessDescriptionType doc = ProcessDescriptionType.Factory.parse(xmlDesc, option);
+//            ProcessDescriptionsDocument doc = ProcessDescriptionsDocument.Factory.parse(xmlDesc, option);
+//            if (doc.getProcessDescriptions().getProcessDescriptionArray().length == 0) {
+//                LOGGER.warn("ProcessDescription does not contain any description");
+//                return null;
+//            }
+//            doc.getIdentifier().setStringValue(processID);
 
-            doc.getProcessDescriptions().getProcessDescriptionArray(0).getIdentifier().setStringValue(processID);
-
-            return doc.getProcessDescriptions().getProcessDescriptionArray(0);
+            return doc;
+            
         } catch (IOException e) {
             LOGGER.warn("Could not initialize algorithm, parsing error: " + getAlgorithmID(), e);
         } catch (XmlException e) {

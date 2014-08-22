@@ -30,109 +30,78 @@ is extensible in terms of processes and data handlers.
 
 package org.n52.wps.transactional.request;
 
-import java.io.File;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
+import net.opengis.wps.x100.DeployProcessDocument;
+import net.opengis.wps.x100.ProcessDescriptionType;
 
-import javax.xml.transform.TransformerException;
-
+import org.apache.xmlbeans.SimpleValue;
+import org.apache.xmlbeans.XmlException;
+import org.apache.xmlbeans.XmlOptions;
+import org.n52.wps.server.ExceptionReport;
+import org.n52.wps.transactional.deploymentprofiles.DeploymentProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.xpath.XPathAPI;
-import org.n52.wps.server.ExceptionReport;
-import org.n52.wps.server.RepositoryManager;
-import org.n52.wps.transactional.deploymentprofiles.DeploymentProfile;
-import org.n52.wps.transactional.service.TransactionalHelper;
 import org.w3c.dom.Document;
-import org.w3c.dom.Node;
 
 public class DeployProcessRequest implements ITransactionalRequest {
-	protected Node processDescription;
+	
+	private static Logger LOGGER = LoggerFactory.getLogger(DeployProcessRequest.class);
+	
+	protected DeployProcessDocument deployDoc;
+	protected String processId, schema, executionUnit;
+	protected ProcessDescriptionType processDescription;
 	protected DeploymentProfile deploymentProfile;
-	protected String schema;
 
 	public DeployProcessRequest(Document doc) throws ExceptionReport {
+		
 		try {
-			String processID = XPathAPI.selectSingleNode(
-					doc,
-					"/DeployProcess/ProcessDescriptions/"
-							+ "ProcessDescription/Identifier/text()")
-					.getNodeValue().trim();
-			
-			processDescription = XPathAPI.selectSingleNode(doc,
-					"/DeployProcess/ProcessDescriptions");
-			schema = XPathAPI
-					.selectSingleNode(doc,
-							"/DeployProcess/DeploymentProfile/Schema/attribute::href")
-					.getNodeValue();
-			if (schema == null) {
-				throw new ExceptionReport(
-						"Error. Could not find schema in the deployment profile",
+			XmlOptions option = new XmlOptions();
+			option.setLoadTrimTextBuffer();
+			this.deployDoc = DeployProcessDocument.Factory.parse(doc,option);
+			if (deployDoc == null) {
+				LOGGER.error("DeployProcessDocument is null");
+				throw new ExceptionReport("Error while parsing post data",
 						ExceptionReport.MISSING_PARAMETER_VALUE);
 			}
-			LoggerFactory.getLogger(DeployProcessRequest.class).info(
-					"process ID: " + processID);
-			String deployManagerClass = TransactionalHelper
-					.getDeploymentProfileForSchema(schema);
-			Constructor<?> constructor;
-			constructor = Class.forName(deployManagerClass).getConstructor(
-					Node.class, String.class);
-                        //NH 17-12-09 we're asking for the deployment profile but also need the process request info
-			//deploymentProfile = (DeploymentProfile) constructor.newInstance(
-			//		XPathAPI.selectSingleNode(doc,
-			//				"/DeployProcessRequest/DeploymentProfile"),
-			//		processID);
-                        deploymentProfile = (DeploymentProfile) constructor.newInstance(
-					XPathAPI.selectSingleNode(doc,
-							"/DeployProcess"),
-					processID);
-		} catch (TransformerException e) {
-			throw new ExceptionReport("Error. Malformed DeployProcess request",
-					ExceptionReport.NO_APPLICABLE_CODE, e);
-		} catch (NoSuchMethodException e) {
-			throw new ExceptionReport("An error has occurred while obtaining "
-					+ "the deployment profile",
-					ExceptionReport.NO_APPLICABLE_CODE, e);
-		} catch (ClassNotFoundException e) {
-			throw new ExceptionReport("An error has occurred while obtaining "
-					+ "the deployment profile",
-					ExceptionReport.NO_APPLICABLE_CODE, e);
-		} catch (InstantiationException e) {
-			throw new ExceptionReport("An error has occurred while obtaining "
-					+ "the deployment profile",
-					ExceptionReport.NO_APPLICABLE_CODE, e);
-		} catch (IllegalAccessException e) {
-			throw new ExceptionReport("An error has occurred while obtaining "
-					+ "the deployment profile",
-					ExceptionReport.NO_APPLICABLE_CODE, e);
-		} catch (InvocationTargetException e) {
-			throw new ExceptionReport("An error has occurred while obtaining "
-					+ "the deployment profile",
-					ExceptionReport.NO_APPLICABLE_CODE, e);
 		}
-			
+		catch (XmlException e){
+			throw new ExceptionReport("Error while parsing post data",
+					ExceptionReport.MISSING_PARAMETER_VALUE, e);
+		}
+				
 		
+		processDescription = deployDoc.getDeployProcess().getProcessDescription();
+		processId = processDescription.getIdentifier().getStringValue().trim();
+		executionUnit = clearExecutionUnit(((SimpleValue) deployDoc.getDeployProcess().getExecutionUnit()).getStringValue());
+		// TODO (woessner) Abstimmung mit HSOS
+		//schema = deployDom.getDeployProcess().getSchema().toString();
 		
-		
+		LOGGER.info("DeployProcess: " + processId);
 	}
 
-
-	public Node getProcessDescription() {
+	public String getProcessId() {
+		return processId;
+	}
+	
+	public ProcessDescriptionType getProcessDescription() {
 		return processDescription;
 	}
 
+	public String getExecutionUnit() {
+		return executionUnit;
+	}
 
 	public DeploymentProfile getDeploymentProfile() {
 		return deploymentProfile;
 	}
 	
 	public String getSchema() {
-		return schema;
+		// TODO
+		//deployDom.getDeployProcess().
+		return "RichWpsWd.xsd";
 	}
 	
-	 
-
-	
-	
-
+	private String clearExecutionUnit(String execUnit) {
+		String clearedExecUnit = execUnit.replaceAll("\t", "").trim();
+		return clearedExecUnit;
+	}
 }

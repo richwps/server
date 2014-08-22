@@ -31,29 +31,22 @@ is extensible in terms of processes and data handlers.
 package org.n52.wps.transactional.handler;
 
 import java.io.IOException;
-import java.io.PrintWriter;
+
+import javax.servlet.http.HttpServletResponse;
 
 import org.n52.wps.server.ExceptionReport;
+import org.n52.wps.util.XMLBeansHelper;
 
 public class TransactionalExceptionHandler {
 
-	public static void handleException(PrintWriter writer,
+	public static void handleException(HttpServletResponse res,
 			ExceptionReport exception) {
 		try {
-			exception.getExceptionDocument().save(writer);
+			exception.getExceptionDocument().save(res.getOutputStream(), XMLBeansHelper.getXmlOptions());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-	}
-	
-	public static void handleException(PrintWriter writer, String exception) {
-		writer.write("<Result>");
-		writer.write(exception);
-		writer.write("</Result>");
-		writer.flush();
-		writer.close();
-		
 	}
 
 }

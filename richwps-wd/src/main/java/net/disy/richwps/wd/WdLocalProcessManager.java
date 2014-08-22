@@ -21,7 +21,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.n52.wps.io.data.IData;
 import org.n52.wps.server.ITransactionalAlgorithmRepository;
 import org.n52.wps.transactional.deploy.AbstractProcessManager;
-import org.n52.wps.transactional.deploymentprofiles.DeploymentProfile;
 import org.n52.wps.transactional.request.DeployProcessRequest;
 import org.n52.wps.transactional.request.UndeployProcessRequest;
 import org.slf4j.Logger;
@@ -96,12 +95,12 @@ public class WdLocalProcessManager extends AbstractProcessManager {
 
     @Override
     public boolean deployProcess(DeployProcessRequest request) throws Exception {
-        final DeploymentProfile deploymentProfile = request.getDeploymentProfile();
-        if (!(deploymentProfile instanceof WdDeploymentProfile)) {
-            throw new IllegalArgumentException(WdLocalProcessManager.class.getSimpleName() + " only supports " + WdDeploymentProfile.class.getSimpleName());
-        }
-        final WdDeploymentProfile wdDeploymentProfile = (WdDeploymentProfile) deploymentProfile;
-        File wdFile = saveWorksequenceDescription(wdDeploymentProfile.getProcessID(), wdDeploymentProfile.getWorksequenceDescription());
+//        final DeploymentProfile deploymentProfile = request.getDeploymentProfile();
+//        if (!(deploymentProfile instanceof WdDeploymentProfile)) {
+//            throw new IllegalArgumentException(WdLocalProcessManager.class.getSimpleName() + " only supports " + WdDeploymentProfile.class.getSimpleName());
+//        }
+//        final WdDeploymentProfile wdDeploymentProfile = (WdDeploymentProfile) deploymentProfile;
+        saveWorksequenceDescription(request.getProcessId(), request.getExecutionUnit());
         return true;
     }
 
@@ -145,7 +144,7 @@ public class WdLocalProcessManager extends AbstractProcessManager {
         URI directoryUri;
         try {
             directoryUri = new URL(subPath
-                    + "WEB-INF/WorksequenceDescriptions/").toURI();
+                    + "WEB-INF/ExecutionUnits/").toURI();
             File directory = new File(directoryUri);
             if (!directory.exists()) {
                 directory.mkdirs();
