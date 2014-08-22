@@ -49,7 +49,7 @@ public class DeployProcessRequest implements ITransactionalRequest {
 	protected DeployProcessDocument deployDoc;
 	protected String processId, schema, executionUnit;
 	protected ProcessDescriptionType processDescription;
-	protected DeploymentProfile deploymentProfile;
+	protected String deploymentProfileName;
 
 	public DeployProcessRequest(Document doc) throws ExceptionReport {
 		
@@ -72,10 +72,9 @@ public class DeployProcessRequest implements ITransactionalRequest {
 		processDescription = deployDoc.getDeployProcess().getProcessDescription();
 		processId = processDescription.getIdentifier().getStringValue().trim();
 		executionUnit = clearExecutionUnit(((SimpleValue) deployDoc.getDeployProcess().getExecutionUnit()).getStringValue());
-		// TODO (woessner) Abstimmung mit HSOS
-		//schema = deployDom.getDeployProcess().getSchema().toString();
+		deploymentProfileName = deployDoc.getDeployProcess().getDeploymentProfileName().trim();
 		
-		LOGGER.info("DeployProcess: " + processId);
+		LOGGER.info("Deployment of process with processId: " + processId);
 	}
 
 	public String getProcessId() {
@@ -90,14 +89,13 @@ public class DeployProcessRequest implements ITransactionalRequest {
 		return executionUnit;
 	}
 
-	public DeploymentProfile getDeploymentProfile() {
-		return deploymentProfile;
+	public String getDeploymentProfileName() {
+		return deploymentProfileName;
 	}
 	
-	public String getSchema() {
+	public DeploymentProfile getDeploymentProfile() {
 		// TODO
-		//deployDom.getDeployProcess().
-		return "RichWpsWd.xsd";
+		return null;
 	}
 	
 	private String clearExecutionUnit(String execUnit) {

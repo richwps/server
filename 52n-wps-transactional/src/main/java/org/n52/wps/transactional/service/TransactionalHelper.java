@@ -43,8 +43,8 @@ public class TransactionalHelper {
         return null;
     }
 
-    public static ITransactionalAlgorithmRepository getMatchingTransactionalRepository(String schema) {
-        Repository repository = getMatchingTransactionalRepositoryClassName(schema);
+    public static ITransactionalAlgorithmRepository getMatchingTransactionalRepository(String deploymentProfileName) {
+        Repository repository = getMatchingTransactionalRepositoryClassName(deploymentProfileName);
         String className = repository.getClassName();
         IAlgorithmRepository algorithmRepository = RepositoryManager.getInstance().getRepositoryForClassName(className);
         if (algorithmRepository != null) {

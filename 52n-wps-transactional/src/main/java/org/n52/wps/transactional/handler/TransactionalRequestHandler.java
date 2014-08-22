@@ -167,7 +167,7 @@ public class TransactionalRequestHandler {
 		
 		try {
 			ITransactionalAlgorithmRepository repository = TransactionalHelper
-					.getMatchingTransactionalRepository(request.getSchema());
+					.getMatchingTransactionalRepository(request.getDeploymentProfileName());
 
 			if (repository == null) {
 				throw new ExceptionReport("Could not find matching repository",
