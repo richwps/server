@@ -62,7 +62,9 @@ import org.n52.wps.transactional.algorithm.GenericTransactionalAlgorithm;
 import org.n52.wps.transactional.request.DeployProcessRequest;
 import org.n52.wps.transactional.request.ITransactionalRequest;
 import org.n52.wps.transactional.request.UndeployProcessRequest;
-import org.n52.wps.transactional.response.TransactionalResponse;
+import org.n52.wps.transactional.response.DeployProcessResponse;
+import org.n52.wps.transactional.response.ITransactionalResponse;
+import org.n52.wps.transactional.response.UndeployProcessResponse;
 import org.n52.wps.transactional.service.TransactionalHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -146,7 +148,7 @@ public class TransactionalRequestHandler {
 	 * @throws Exception
 	 *             if an error occurs handling the request
 	 */
-	public TransactionalResponse handle()
+	public ITransactionalResponse handle()
 			throws ExceptionReport {
 		if (this.req == null)
 			throw new ExceptionReport("Internal Error", "");
@@ -160,9 +162,10 @@ public class TransactionalRequestHandler {
 		}
 	}
 
-	private TransactionalResponse handleDeploy(
+	private DeployProcessResponse handleDeploy(
 			DeployProcessRequest request) throws ExceptionReport {
 		
+		DeployProcessResponse response;
 		saveProcessDescription(request);
 		
 		try {
@@ -178,13 +181,16 @@ public class TransactionalRequestHandler {
 				throw new ExceptionReport("Could not deploy process",
 						ExceptionReport.NO_APPLICABLE_CODE);
 			} else {
-				return new TransactionalResponse(
-						"Process successfully deployed");
+				request.updateResponseProcessDescriptions(repository);
+				response = new DeployProcessResponse(request);
+				return response;
 			}
+			
 		} catch (RuntimeException e) {
 			throw new ExceptionReport("Could not deploy process",
 					ExceptionReport.NO_APPLICABLE_CODE);
 		}
+		
 	}
 
 	private void saveProcessDescription(DeployProcessRequest request) {
@@ -210,8 +216,11 @@ public class TransactionalRequestHandler {
 			}
 	}
 
-	private static TransactionalResponse handleUnDeploy(
+	//TODO
+	private static ITransactionalResponse handleUnDeploy(
 			UndeployProcessRequest request) throws ExceptionReport {
+		UndeployProcessResponse response;
+		
 		try {
 			if (RepositoryManager.getInstance().getAlgorithm(
 					request.getProcessID()) == null) {
@@ -227,8 +236,9 @@ public class TransactionalRequestHandler {
 							ExceptionReport.NO_APPLICABLE_CODE);
 				} else {
 					deleteProcessDescription(request.getProcessID());
-					return new TransactionalResponse(
-							"Process successfully undeployed");
+					request.updateResponseProcessDescriptions(transactionalRepository);
+					response = new UndeployProcessResponse(request);
+					return response;
 				}
 			} else {
 				throw new ExceptionReport(

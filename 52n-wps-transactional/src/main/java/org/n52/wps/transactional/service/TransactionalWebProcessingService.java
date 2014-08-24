@@ -5,6 +5,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.StringWriter;
 import java.net.URLDecoder;
 import java.util.Date;
@@ -21,21 +22,24 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.apache.commons.io.IOUtils;
 import org.n52.wps.server.ExceptionReport;
 import org.n52.wps.transactional.handler.TransactionalExceptionHandler;
 import org.n52.wps.transactional.handler.TransactionalRequestHandler;
-import org.n52.wps.transactional.response.TransactionalResponse;
+import org.n52.wps.transactional.response.ITransactionalResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Node;
 
 public class TransactionalWebProcessingService extends HttpServlet{
+	private static final long serialVersionUID = 1L;
 	private static Logger LOGGER = LoggerFactory.getLogger(TransactionalWebProcessingService.class);
 	
 	protected void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
 		
 		LOGGER.info("Inbound HTTP-POST DeployProcess Request. " + new Date());
-		TransactionalResponse response = null;
+		ITransactionalResponse response;
+		
 		try {
 			InputStream is = req.getInputStream();
 			if (req.getParameterMap().containsKey("request")){
@@ -66,6 +70,12 @@ public class TransactionalWebProcessingService extends HttpServlet{
     	   
 			TransactionalRequestHandler handler = new TransactionalRequestHandler(new ByteArrayInputStream(documentString.getBytes("UTF-8")), res.getOutputStream());
 			response = handler.handle();
+			
+			InputStream resIs = response.getAsStream();
+			OutputStream resOs = res.getOutputStream();
+			IOUtils.copy(resIs, resOs);
+			is.close();
+			res.setStatus(HttpServletResponse.SC_OK);
 		} 
 		catch (ExceptionReport exception) {
 			TransactionalExceptionHandler.handleException(res,

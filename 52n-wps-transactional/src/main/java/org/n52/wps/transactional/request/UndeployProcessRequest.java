@@ -30,11 +30,18 @@ is extensible in terms of processes and data handlers.
 
 package org.n52.wps.transactional.request;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
+import net.opengis.wps.x100.ProcessDescriptionType;
 import net.opengis.wps.x100.UndeployProcessDocument;
 
 import org.apache.xmlbeans.XmlException;
 import org.apache.xmlbeans.XmlOptions;
 import org.n52.wps.server.ExceptionReport;
+import org.n52.wps.server.ITransactionalAlgorithmRepository;
+import org.n52.wps.transactional.response.UndeployProcessResponseBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -44,10 +51,15 @@ public class UndeployProcessRequest implements ITransactionalRequest {
 	private static Logger LOGGER = LoggerFactory.getLogger(UndeployProcessRequest.class);
 	
 	protected UndeployProcessDocument undeployDoc;
-	protected String processID;
+	protected String processId;
 	protected boolean keepExecUnit;
+	
+	private UndeployProcessResponseBuilder responseBuilder;
 
 	public UndeployProcessRequest(Document doc) throws ExceptionReport {
+		
+		// Create initial response
+		responseBuilder = new UndeployProcessResponseBuilder(this);
 		
 		try {
 			XmlOptions option = new XmlOptions();
@@ -65,15 +77,35 @@ public class UndeployProcessRequest implements ITransactionalRequest {
 					ExceptionReport.MISSING_PARAMETER_VALUE, e);
 		}
 		
-		processID = undeployDoc.getUndeployProcess().getProcess().getIdentifier().getStringValue().trim();
+		processId = undeployDoc.getUndeployProcess().getProcess().getIdentifier().getStringValue().trim();
 		keepExecUnit = undeployDoc.getUndeployProcess().getProcess().getKeepExecutionUnit();
+		
+		responseBuilder.updateUndeployment(true);
+		
+		LOGGER.info("Deployment of process with processId: " + processId);
 	}
 
 	public String getProcessID() {
-		return processID;
+		return processId;
 	}
 	
 	public boolean getKeepExecutionUnit() {
 		return keepExecUnit;
+	}
+	
+	public void updateResponseProcessDescriptions (ITransactionalAlgorithmRepository repository) {
+		Map<String, ProcessDescriptionType> processDescriptions = new HashMap<String, ProcessDescriptionType>();
+		Collection<String> identifiers = repository.getAlgorithmNames();
+		ProcessDescriptionType processDescr;
+		
+		for (String identifier : identifiers) {
+			processDescr = repository.getProcessDescription(identifier);
+			processDescriptions.put(identifier, processDescr);
+		}
+		this.responseBuilder.updateProcessOfferings(processDescriptions);
+	}
+	
+	public UndeployProcessResponseBuilder getUndeployResponseBuilder() {
+		return this.responseBuilder;
 	}
 }

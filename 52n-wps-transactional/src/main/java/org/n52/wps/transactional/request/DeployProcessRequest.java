@@ -30,6 +30,10 @@ is extensible in terms of processes and data handlers.
 
 package org.n52.wps.transactional.request;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
 import net.opengis.wps.x100.DeployProcessDocument;
 import net.opengis.wps.x100.ProcessDescriptionType;
 
@@ -37,7 +41,9 @@ import org.apache.xmlbeans.SimpleValue;
 import org.apache.xmlbeans.XmlException;
 import org.apache.xmlbeans.XmlOptions;
 import org.n52.wps.server.ExceptionReport;
+import org.n52.wps.server.ITransactionalAlgorithmRepository;
 import org.n52.wps.transactional.deploymentprofiles.DeploymentProfile;
+import org.n52.wps.transactional.response.DeployProcessResponseBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -51,7 +57,12 @@ public class DeployProcessRequest implements ITransactionalRequest {
 	protected ProcessDescriptionType processDescription;
 	protected String deploymentProfileName;
 
+	private DeployProcessResponseBuilder responseBuilder;
+
 	public DeployProcessRequest(Document doc) throws ExceptionReport {
+		
+		// Create initial response
+		responseBuilder = new DeployProcessResponseBuilder(this);
 		
 		try {
 			XmlOptions option = new XmlOptions();
@@ -73,6 +84,8 @@ public class DeployProcessRequest implements ITransactionalRequest {
 		processId = processDescription.getIdentifier().getStringValue().trim();
 		executionUnit = clearExecutionUnit(((SimpleValue) deployDoc.getDeployProcess().getExecutionUnit()).getStringValue());
 		deploymentProfileName = deployDoc.getDeployProcess().getDeploymentProfileName().trim();
+		
+		responseBuilder.updateDeployment(true);
 		
 		LOGGER.info("Deployment of process with processId: " + processId);
 	}
@@ -101,5 +114,21 @@ public class DeployProcessRequest implements ITransactionalRequest {
 	private String clearExecutionUnit(String execUnit) {
 		String clearedExecUnit = execUnit.replaceAll("\t", "").trim();
 		return clearedExecUnit;
+	}
+
+	public void updateResponseProcessDescriptions (ITransactionalAlgorithmRepository repository) {
+		Map<String, ProcessDescriptionType> processDescriptions = new HashMap<String, ProcessDescriptionType>();
+		Collection<String> identifiers = repository.getAlgorithmNames();
+		ProcessDescriptionType processDescr;
+		
+		for (String identifier : identifiers) {
+			processDescr = repository.getProcessDescription(identifier);
+			processDescriptions.put(identifier, processDescr);
+		}
+		this.responseBuilder.updateProcessOfferings(processDescriptions);
+	}
+	
+	public DeployProcessResponseBuilder getDeployResponseBuilder() {
+		return this.responseBuilder;
 	}
 }
