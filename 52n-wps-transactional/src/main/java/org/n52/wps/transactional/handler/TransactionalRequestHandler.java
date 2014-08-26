@@ -103,6 +103,8 @@ public class TransactionalRequestHandler {
 		Node versionNode = child.getAttributes().getNamedItem("version");
 		
 		String requestType = getRequestType(doc.getFirstChild());
+
+		LOGGER.info("Request type: " + requestType);
 		
 		if (requestType == null) {
 			throw new ExceptionReport("Request not valid",
@@ -118,7 +120,6 @@ public class TransactionalRequestHandler {
 					ExceptionReport.OPERATION_NOT_SUPPORTED);
 		}
 
-		LOGGER.info("Request type: " + requestType);
 		}
 		catch (SAXException e) {
 			throw new ExceptionReport(
