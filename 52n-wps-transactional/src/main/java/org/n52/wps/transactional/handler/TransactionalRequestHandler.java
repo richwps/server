@@ -54,6 +54,8 @@ import javax.xml.transform.stream.StreamResult;
 
 import net.opengis.wps.x100.ProcessDescriptionType;
 
+import org.apache.xmlbeans.XmlObject;
+import org.apache.xmlbeans.XmlOptions;
 import org.n52.wps.server.ExceptionReport;
 import org.n52.wps.server.IAlgorithmRepository;
 import org.n52.wps.server.ITransactionalAlgorithmRepository;
@@ -201,17 +203,11 @@ public class TransactionalRequestHandler {
 		URI fileUri = generateProcessDescriptionFileUri(processId);
 		
 			try {
-				writeXmlFile(pDescr.getDomNode(), fileUri);
+				writeXmlFile(pDescr, fileUri);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (TransformerFactoryConfigurationError e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (TransformerException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (ParserConfigurationException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
@@ -282,7 +278,21 @@ public class TransactionalRequestHandler {
 			file.delete();
 		}
 	}
+	
+	protected void writeXmlFile(XmlObject doc, URI fileUri) throws IOException {
+		File file = new File(fileUri);
+        String parent = file.getParent();
+        File directory = new File(parent);
+        directory.mkdirs();
 
+		XmlOptions xmlOptions = new XmlOptions();
+        xmlOptions.setSavePrettyPrint();
+        
+        doc.save(file,xmlOptions);
+
+	}
+	
+	@Deprecated
 	protected void writeXmlFile(Node node, URI fileUri) throws IOException, TransformerFactoryConfigurationError, TransformerException, ParserConfigurationException {
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		factory.setNamespaceAware(true);
