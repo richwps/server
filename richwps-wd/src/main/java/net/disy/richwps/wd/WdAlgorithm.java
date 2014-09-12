@@ -173,9 +173,9 @@ public class WdAlgorithm extends AbstractTransactionalAlgorithm {
         try {
             URI fileUri = new URL(subPath + "WEB-INF" + File.separator + "ProcessDescriptions" + File.separator + processID + ".xml").toURI();
             File xmlDesc = new File(fileUri);
-            XmlOptions option = new XmlOptions();
-            option.setLoadTrimTextBuffer();
-            ProcessDescriptionType doc = ProcessDescriptionType.Factory.parse(xmlDesc, option);
+            XmlOptions options = new XmlOptions();
+            options.setLoadTrimTextBuffer();          
+            ProcessDescriptionType doc = ProcessDescriptionType.Factory.parse(xmlDesc, options);
 //            ProcessDescriptionsDocument doc = ProcessDescriptionsDocument.Factory.parse(xmlDesc, option);
 //            if (doc.getProcessDescriptions().getProcessDescriptionArray().length == 0) {
 //                LOGGER.warn("ProcessDescription does not contain any description");
