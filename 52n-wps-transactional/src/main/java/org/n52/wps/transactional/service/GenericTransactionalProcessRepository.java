@@ -107,6 +107,7 @@ public class GenericTransactionalProcessRepository implements ITransactionalAlgo
 		DeployProcessRequest request = (DeployProcessRequest) process;
 		try {
 			deployManager.deployProcess(request);
+			processDescriptionMap.put(request.getProcessId(), getAlgorithm(request.getProcessId()).getDescription());
 		} catch (Exception e) {
 			LOGGER.warn("Could not instantiate algorithm: " + request);
 			e.printStackTrace();
