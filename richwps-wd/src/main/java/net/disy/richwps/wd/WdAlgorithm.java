@@ -150,7 +150,8 @@ public class WdAlgorithm extends AbstractTransactionalAlgorithm {
     @Override
     public Map<String, IData> run(ExecuteDocument document) {
         try {
-            IProcessManager deployManager = TransactionalHelper.getProcessManagerForSchema("RichWpsWd.xsd");
+            //FIXME switch to app-wide constant.
+            IProcessManager deployManager = TransactionalHelper.getProcessManagerForSchema("rola");
             return deployManager.invoke(document, getAlgorithmID());
         } catch (Exception e) {
             throw new RuntimeException(e);
