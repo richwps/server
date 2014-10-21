@@ -1,4 +1,4 @@
-package net.disy.richwps.wd.processor;
+package net.disy.richwps.oe.processor;
 
 import org.n52.wps.io.data.binding.literal.LiteralIntBinding;
 import org.n52.wps.io.data.binding.literal.LiteralStringBinding;

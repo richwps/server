@@ -1,4 +1,4 @@
-package net.disy.richwps.wd.processor;
+package net.disy.richwps.oe.processor;
 
 import de.hsos.richwps.dsl.api.elements.IOperation;
 

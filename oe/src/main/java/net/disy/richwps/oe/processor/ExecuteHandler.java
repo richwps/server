@@ -1,4 +1,4 @@
-package net.disy.richwps.wd.processor;
+package net.disy.richwps.oe.processor;
 
 import java.util.Collections;
 import java.util.HashMap;

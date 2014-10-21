@@ -1,4 +1,4 @@
-package net.disy.richwps.wd;
+package net.disy.richwps.oe;
 
 import java.io.File;
 import java.io.IOException;

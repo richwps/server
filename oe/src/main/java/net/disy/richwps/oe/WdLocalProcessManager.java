@@ -1,4 +1,4 @@
-package net.disy.richwps.wd;
+package net.disy.richwps.oe;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -12,8 +12,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
-import net.disy.richwps.wd.processor.IWorksequenceProcessor;
-import net.disy.richwps.wd.processor.WorksequenceProcessor;
+import net.disy.richwps.oe.processor.IWorksequenceProcessor;
+import net.disy.richwps.oe.processor.WorksequenceProcessor;
 import net.opengis.wps.x100.ExecuteDocument;
 
 import org.apache.commons.io.FileUtils;

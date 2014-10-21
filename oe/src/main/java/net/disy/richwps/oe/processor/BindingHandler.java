@@ -1,4 +1,4 @@
-package net.disy.richwps.wd.processor;
+package net.disy.richwps.oe.processor;
 
 import net.disy.richwps.process.binding.IProcessBinding;
 import net.disy.richwps.process.binding.LocalProcessBinding;
