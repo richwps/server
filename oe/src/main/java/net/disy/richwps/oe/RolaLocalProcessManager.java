@@ -47,8 +47,8 @@ public class RolaLocalProcessManager extends AbstractProcessManager {
 
     @Override
     public boolean containsProcess(String processID) throws Exception {
-        URI wdDirectory = getWorksequenceDescriptionDirectory();
-        File directory = new File(wdDirectory);
+        URI rolaDirectory = getWorksequenceDescriptionDirectory();
+        File directory = new File(rolaDirectory);
         Collection<File> files = FileUtils.listFiles(directory, new String[]{"dsl"}, false);
         for (File file : files) {
             String baseName = FilenameUtils.getBaseName(file.getAbsolutePath());
