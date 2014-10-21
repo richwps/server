@@ -31,13 +31,13 @@ import org.n52.wps.transactional.service.TransactionalHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class WdAlgorithm extends AbstractTransactionalAlgorithm {
+public class RolaAlgorithm extends AbstractTransactionalAlgorithm {
 
-    private static Logger LOGGER = LoggerFactory.getLogger(WdAlgorithm.class);
+    private static Logger LOGGER = LoggerFactory.getLogger(RolaAlgorithm.class);
 
     private ProcessDescriptionType processDescription;
 
-    public WdAlgorithm(String algorithmID) {
+    public RolaAlgorithm(String algorithmID) {
         super(algorithmID);
         processDescription = initializeDescription();
     }
