@@ -13,7 +13,7 @@ import org.n52.wps.server.ExceptionReport;
 import org.n52.wps.server.request.InputHandler;
 
 import de.hsos.richwps.dsl.api.elements.IOperation;
-import de.hsos.richwps.dsl.api.elements.Worksequence;
+import de.hsos.richwps.dsl.api.elements.Workflow;
 
 public class WorksequenceProcessor implements IWorksequenceProcessor {
 
@@ -30,7 +30,7 @@ public class WorksequenceProcessor implements IWorksequenceProcessor {
     }
 
     @Override
-    public Map<String, IData> process(ExecuteDocument executeDocument, Worksequence worksequence) {
+    public Map<String, IData> process(ExecuteDocument executeDocument, Workflow worksequence) {
         Validate.notNull(executeDocument);
         Validate.notNull(worksequence);
         ProcessingContext context = createProcessingContext(executeDocument);

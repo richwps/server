@@ -27,7 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.hsos.richwps.dsl.api.Reader;
-import de.hsos.richwps.dsl.api.elements.Worksequence;
+import de.hsos.richwps.dsl.api.elements.Workflow;
 
 public class WdLocalProcessManager extends AbstractProcessManager {
 
@@ -79,12 +79,12 @@ public class WdLocalProcessManager extends AbstractProcessManager {
     @Override
     public Map<String, IData> invoke(ExecuteDocument payload, String algorithmID)
             throws Exception {
-        Worksequence worksequence = getWorksequenceById(algorithmID);
+        Workflow worksequence = getWorksequenceById(algorithmID);
         IWorksequenceProcessor worksequenceProcessor = new WorksequenceProcessor();
         return worksequenceProcessor.process(payload, worksequence);
     }
 
-    private Worksequence getWorksequenceById(String algorithmID) throws Exception {
+    private Workflow getWorksequenceById(String algorithmID) throws Exception {
         URI fileUri = buildWorksequenceDescriptionFileUri(algorithmID);
         File wdFile = new File(fileUri);
         Reader dslReader = new Reader();
