@@ -12,8 +12,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
-import net.disy.richwps.oe.processor.IWorksequenceProcessor;
-import net.disy.richwps.oe.processor.WorksequenceProcessor;
+import net.disy.richwps.oe.processor.IWorkflowProcessor;
+import net.disy.richwps.oe.processor.WorkflowProcessor;
 import net.opengis.wps.x100.ExecuteDocument;
 
 import org.apache.commons.io.FileUtils;
@@ -29,11 +29,11 @@ import org.slf4j.LoggerFactory;
 import de.hsos.richwps.dsl.api.Reader;
 import de.hsos.richwps.dsl.api.elements.Workflow;
 
-public class WdLocalProcessManager extends AbstractProcessManager {
+public class RolaLocalProcessManager extends AbstractProcessManager {
 
-    private static Logger LOGGER = LoggerFactory.getLogger(WdLocalProcessManager.class);
+    private static Logger LOGGER = LoggerFactory.getLogger(RolaLocalProcessManager.class);
 
-    public WdLocalProcessManager(
+    public RolaLocalProcessManager(
             ITransactionalAlgorithmRepository parentRepository) {
         super(parentRepository);
     }
@@ -80,7 +80,7 @@ public class WdLocalProcessManager extends AbstractProcessManager {
     public Map<String, IData> invoke(ExecuteDocument payload, String algorithmID)
             throws Exception {
         Workflow worksequence = getWorksequenceById(algorithmID);
-        IWorksequenceProcessor worksequenceProcessor = new WorksequenceProcessor();
+        IWorkflowProcessor worksequenceProcessor = new WorkflowProcessor();
         return worksequenceProcessor.process(payload, worksequence);
     }
 

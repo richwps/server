@@ -8,9 +8,9 @@ import org.n52.wps.transactional.deploymentprofiles.DeploymentProfile;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Node;
 
-public class WdDeploymentProfile extends DeploymentProfile {
+public class RolaDeploymentProfile extends DeploymentProfile {
 
-    public WdDeploymentProfile(Node payload, String processID) {
+    public RolaDeploymentProfile(Node payload, String processID) {
         super(payload, processID);
     }
 

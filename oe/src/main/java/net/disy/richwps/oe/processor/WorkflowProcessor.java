@@ -15,11 +15,11 @@ import org.n52.wps.server.request.InputHandler;
 import de.hsos.richwps.dsl.api.elements.IOperation;
 import de.hsos.richwps.dsl.api.elements.Workflow;
 
-public class WorksequenceProcessor implements IWorksequenceProcessor {
+public class WorkflowProcessor implements IWorkflowProcessor {
 
     private List<IOperationHandler> operationHandlers = new ArrayList<IOperationHandler>();
 
-    public WorksequenceProcessor() {
+    public WorkflowProcessor() {
         initOperationHandlers();
     }
 
