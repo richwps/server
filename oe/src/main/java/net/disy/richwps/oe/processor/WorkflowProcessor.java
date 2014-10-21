@@ -30,12 +30,12 @@ public class WorkflowProcessor implements IWorkflowProcessor {
     }
 
     @Override
-    public Map<String, IData> process(ExecuteDocument executeDocument, Workflow worksequence) {
+    public Map<String, IData> process(ExecuteDocument executeDocument, Workflow workflow) {
         Validate.notNull(executeDocument);
-        Validate.notNull(worksequence);
+        Validate.notNull(workflow);
         ProcessingContext context = createProcessingContext(executeDocument);
 
-        for (IOperation operation : worksequence) {
+        for (IOperation operation : workflow) {
             IOperationHandler handler = getHandlerForOperation(operation);
             handler.handleOperation(operation, context);
         }
