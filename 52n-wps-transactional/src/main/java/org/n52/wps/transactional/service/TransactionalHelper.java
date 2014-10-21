@@ -55,17 +55,6 @@ public class TransactionalHelper {
         return null;
     }
 
-    public static String getDeploymentProfileForSchema(String schema) {
-        Repository repository = getMatchingTransactionalRepositoryClassName(schema);
-        Property[] properties = repository.getPropertyArray();
-        for (Property property : properties) {
-            if (property.getName().equals("DeploymentProfileClass")) {
-                return property.getStringValue();
-            }
-        }
-        return null;
-    }
-
     public static IProcessManager getProcessManagerForSchema(String schema) throws InstantiationException, IllegalAccessException, ClassNotFoundException {
         Repository repository = getMatchingTransactionalRepositoryClassName(schema);
         Property[] properties = repository.getPropertyArray();
