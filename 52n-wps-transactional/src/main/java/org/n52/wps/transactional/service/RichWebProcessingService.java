@@ -31,9 +31,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Node;
 
-public class TransactionalWebProcessingService extends HttpServlet{
+public class RichWebProcessingService extends HttpServlet{
 	private static final long serialVersionUID = 1L;
-	private static Logger LOGGER = LoggerFactory.getLogger(TransactionalWebProcessingService.class);
+	private static Logger LOGGER = LoggerFactory.getLogger(RichWebProcessingService.class);
 	
 	protected void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
 		

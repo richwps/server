@@ -76,8 +76,8 @@
         </init-param>
     </servlet>
     <servlet>
-        <servlet-name>wps-T Servlet</servlet-name>
-        <servlet-class>org.n52.wps.transactional.service.TransactionalWebProcessingService</servlet-class>
+        <servlet-name>RichWPS Servlet</servlet-name>
+        <servlet-class>org.n52.wps.transactional.service.RichWebProcessingService</servlet-class>
         <load-on-startup>0</load-on-startup>
     </servlet>
     <servlet>
@@ -113,8 +113,8 @@
     </servlet-mapping>
       
     <servlet-mapping>
-        <servlet-name>wps-T Servlet</servlet-name>
-        <url-pattern>/WPS-T</url-pattern>
+        <servlet-name>RichWPS Servlet</servlet-name>
+        <url-pattern>/RichWPS</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>
