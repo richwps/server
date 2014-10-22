@@ -60,8 +60,21 @@
 				</ows:HTTP>
 			</ows:DCP>
 		</ows:Operation>
+		<ows:Operation name="DeployProcess">
+			<ows:DCP>
+				<ows:HTTP>
+					<ows:Post xlink:href="http://dynamicallygeneratedURL/GeoPS/GeoPS"/>
+				</ows:HTTP>
+			</ows:DCP>
+		</ows:Operation>
+		<ows:Operation name="UndeployProcess">
+			<ows:DCP>
+				<ows:HTTP>
+					<ows:Post xlink:href="http://dynamicallygeneratedURL/GeoPS/GeoPS"/>
+				</ows:HTTP>
+			</ows:DCP>
+		</ows:Operation>
 	</ows:OperationsMetadata>
-	
 	<wps:Languages>
 		<wps:Default>
 			<ows:Language>en-US</ows:Language>

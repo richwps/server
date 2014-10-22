@@ -38,6 +38,8 @@ import org.xml.sax.SAXException;
  */
 public class RichWebProcessingService extends HttpServlet{
 	
+	public static String SERVLET_PATH = "WebProcessingService";
+
 	private static final String XML_CONTENT_TYPE = "text/xml";
 	
 	public static final String DEPLOYPROCESS_REQUEST = "DeployProcess";

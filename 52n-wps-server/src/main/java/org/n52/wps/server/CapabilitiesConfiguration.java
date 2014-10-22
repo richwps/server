@@ -74,7 +74,9 @@ public class CapabilitiesConfiguration {
 
     private static CapabilitiesSkeletonLoadingStrategy loadingStrategy;
 
-    public static String ENDPOINT_URL;
+    public static String WPS_ENDPOINT_URL;
+    public static String RichWPS_ENDPOINT_URL;
+    
 
     private CapabilitiesConfiguration() {
         /* nothing here */
@@ -239,11 +241,13 @@ public class CapabilitiesConfiguration {
      *         if the local host name can not be obtained
      */
     private static void initSkeleton(CapabilitiesDocument skel) throws UnknownHostException {
-        ENDPOINT_URL = getEndpointURL();
+        WPS_ENDPOINT_URL = getEndpointURL(WebProcessingService.SERVLET_PATH);
+        //TODO: Add depedency to net.disy.wps.richwps and use static var of RichWebProcessingService?
+        RichWPS_ENDPOINT_URL = getEndpointURL("RichWPS");
         if (skel.getCapabilities() == null) {
             skel.addNewCapabilities();
         }
-        initOperationsMetadata(skel, ENDPOINT_URL);
+        initOperationsMetadata(skel, WPS_ENDPOINT_URL, RichWPS_ENDPOINT_URL);
         initProcessOfferings(skel);
     }
 
@@ -286,19 +290,27 @@ public class CapabilitiesConfiguration {
      *        the endpoint URL of the service
      * 
      */
-    private static void initOperationsMetadata(CapabilitiesDocument skel, String endpointUrl) {
+    private static void initOperationsMetadata(CapabilitiesDocument skel, String endpointUrl, String richwpsEndpointUrl) {
         if (skel.getCapabilities().getOperationsMetadata() != null) {
             String endpointUrlGet = endpointUrl + "?";
             for (Operation op : skel.getCapabilities().getOperationsMetadata().getOperationArray()) {
-                for (DCP dcp : op.getDCPArray()) {
-                    for (RequestMethodType get : dcp.getHTTP().getGetArray()) {
-
-                        get.setHref(endpointUrlGet);
-                    }
-                    for (RequestMethodType post : dcp.getHTTP().getPostArray()) {
-                        post.setHref(endpointUrl);
-                    }
-                }
+            	if (op.getName().equals("GetCapabilities") || op.getName().equals("DescribeProcess") || op.getName().equals("Execute")) {
+	            	for (DCP dcp : op.getDCPArray()) {
+	                    for (RequestMethodType get : dcp.getHTTP().getGetArray()) {
+	                        get.setHref(endpointUrlGet);
+	                    }
+	                    for (RequestMethodType post : dcp.getHTTP().getPostArray()) {
+	                        post.setHref(endpointUrl);
+	                    }
+	                }
+            	}
+            	else {
+            		for (DCP dcp : op.getDCPArray()) {
+	                    for (RequestMethodType post : dcp.getHTTP().getPostArray()) {
+	                        post.setHref(richwpsEndpointUrl);
+	                    }
+	                }
+            	}
             }
         }
     }
@@ -311,7 +323,7 @@ public class CapabilitiesConfiguration {
      * @throws UnknownHostException
      *         if the local host name could not be resolved into an address
      */
-    private static String getEndpointURL() throws UnknownHostException {
+    private static String getEndpointURL(String servletPath) throws UnknownHostException {
         WPSConfig config = WPSConfig.getInstance();
         String host = config.getWPSConfig().getServer().getHostname();
         String port = config.getWPSConfig().getServer().getHostport();
@@ -326,7 +338,7 @@ public class CapabilitiesConfiguration {
         if (WebProcessingService.WEBAPP_PATH != null && !WebProcessingService.WEBAPP_PATH.isEmpty()) {
             url.append(WebProcessingService.WEBAPP_PATH).append('/');
         }
-        url.append(WebProcessingService.SERVLET_PATH);
+        url.append(servletPath);
         return url.toString();
     }
 
