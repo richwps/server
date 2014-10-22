@@ -142,7 +142,7 @@ public class OutputDataItemTest {
 				new QName(XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI,
 						"schemaLocation"),
 				"http://www.opengis.net/wps/1.0.0 http://schemas.opengis.net/wps/1.0.0/wpsExecute_response.xsd");
-		responseElem.setServiceInstance(CapabilitiesConfiguration.ENDPOINT_URL
+		responseElem.setServiceInstance(CapabilitiesConfiguration.WPS_ENDPOINT_URL
 				+ "?REQUEST=GetCapabilities&SERVICE=WPS");
 		responseElem.setLang(WebProcessingService.DEFAULT_LANGUAGE);
 		responseElem.setService("WPS");

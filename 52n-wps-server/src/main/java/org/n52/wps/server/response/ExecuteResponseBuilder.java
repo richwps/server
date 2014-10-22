@@ -89,7 +89,7 @@ public class ExecuteResponseBuilder {
 		c.toFirstChild();
 		c.toLastAttribute();
 		c.setAttributeText(new QName(XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI, "schemaLocation"), "http://www.opengis.net/wps/1.0.0 http://schemas.opengis.net/wps/1.0.0/wpsExecute_response.xsd");
-		doc.getExecuteResponse().setServiceInstance(CapabilitiesConfiguration.ENDPOINT_URL+"?REQUEST=GetCapabilities&SERVICE=WPS");
+		doc.getExecuteResponse().setServiceInstance(CapabilitiesConfiguration.WPS_ENDPOINT_URL+"?REQUEST=GetCapabilities&SERVICE=WPS");
 		doc.getExecuteResponse().setLang(WebProcessingService.DEFAULT_LANGUAGE);
 		doc.getExecuteResponse().setService("WPS");
 		doc.getExecuteResponse().setVersion(Request.SUPPORTED_VERSION);
