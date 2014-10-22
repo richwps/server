@@ -77,7 +77,7 @@
     </servlet>
     <servlet>
         <servlet-name>RichWPS Servlet</servlet-name>
-        <servlet-class>org.n52.wps.transactional.service.RichWebProcessingService</servlet-class>
+        <servlet-class>net.disy.wps.richwps.service.RichWebProcessingService</servlet-class>
         <load-on-startup>0</load-on-startup>
     </servlet>
     <servlet>
