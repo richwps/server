@@ -22,7 +22,6 @@ import net.disy.wps.richwps.response.IRichWPSResponse;
 
 import org.apache.commons.io.IOUtils;
 import org.n52.wps.server.ExceptionReport;
-import org.n52.wps.transactional.handler.TransactionalExceptionHandler;
 import org.n52.wps.transactional.handler.TransactionalRequestHandler;
 import org.n52.wps.transactional.response.ITransactionalResponse;
 import org.n52.wps.util.XMLBeansHelper;
@@ -130,6 +129,11 @@ public class RichWebProcessingService extends HttpServlet{
 							ExceptionReport.NO_APPLICABLE_CODE), res);
 		}
 	}
+	
+	protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+		ExceptionReport er = new ExceptionReport("HTTP GET is not supported at this endpoint", ExceptionReport.NO_APPLICABLE_CODE);                    
+        handleException(er, res);
+    }
 		
 	public static String getRequestType(Node node) {
 		String localName = node.getLocalName();
