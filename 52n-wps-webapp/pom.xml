@@ -46,7 +46,7 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>52n-wps-io</artifactId>
         </dependency>
-        <dependency>
+        <!--<dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>52n-wps-server</artifactId>
             <exclusions>
@@ -59,7 +59,7 @@
                     <groupId>stax</groupId>
                 </exclusion>
             </exclusions>
-        </dependency>
+        </dependency>-->
         <!--
         dal: fixme
         <dependency>
