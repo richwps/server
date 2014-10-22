@@ -226,7 +226,7 @@
     <modules>
         <module>52n-wps-webapp</module>
         <module>52n-wps-transactional</module>
-        <module>oe</module>
+        <module>richwps</module>
     </modules>
     
     <properties>
