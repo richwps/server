@@ -32,7 +32,7 @@ public class TransactionalHelper {
             Property[] properties = repository.getPropertyArray();
             for (Property property : properties) {
                 if (property.getName().equals("supportedFormat")) {
-                    if (property.getStringValue().equals(schema)) {
+                    if (property.getStringValue().equalsIgnoreCase(schema)) {
                         return repository;
                     }
 
