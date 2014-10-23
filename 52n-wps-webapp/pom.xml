@@ -46,9 +46,10 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>52n-wps-io</artifactId>
         </dependency>
-        <!--<dependency>
+        <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>52n-wps-server</artifactId>
+            <version>${project.version}</version>
             <exclusions>
                 <exclusion>
                     <artifactId>xml-apis</artifactId>
@@ -59,7 +60,7 @@
                     <groupId>stax</groupId>
                 </exclusion>
             </exclusions>
-        </dependency>-->
+        </dependency>
         <!--
         dal: fixme
         <dependency>
@@ -70,6 +71,7 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>52n-wps-algorithm</artifactId>
+            <version>${project.version}</version>
             <exclusions>
                 <exclusion>
                     <artifactId>stax-api</artifactId>
@@ -172,6 +174,12 @@
         <dependency>
             <groupId>org.eclipse.xtend</groupId>
             <artifactId>xtend-maven-plugin</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>net.disy.wps</groupId>
+            <artifactId>richwps</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
         </dependency>
     </dependencies>
 
@@ -581,6 +589,7 @@
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>52n-wps-transactional</artifactId>
+                    <version>${project.version}</version>
                     <exclusions>
                         <exclusion>
                             <artifactId>xmlParserAPIs</artifactId>
