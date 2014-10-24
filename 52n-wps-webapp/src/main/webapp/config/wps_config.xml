@@ -733,6 +733,12 @@
 			<Property name="Algorithm" active="true">org.n52.wps.server.algorithm.test.MultiReferenceInputAlgorithm</Property>
 			<Property name="Algorithm" active="true">org.n52.wps.server.algorithm.test.MultiReferenceBinaryInputAlgorithm</Property>
 			<Property name="Algorithm" active="true">org.n52.wps.server.algorithm.test.EchoProcess</Property>
+		
+			<!-- Conditionals -->
+			<Property name="Algorithm" active="true">net.disy.wps.richwps.process.conditional.CIntEqInt</Property>
+			<Property name="Algorithm" active="true">net.disy.wps.richwps.process.conditional.CIntGtInt</Property>
+			<Property name="Algorithm" active="true">net.disy.wps.richwps.process.conditional.CIntLtInt</Property>
+		
 		</Repository>
 		<Repository name="UploadedAlgorithmRepository"
 			className="org.n52.wps.server.UploadedAlgorithmRepository" active="false">
