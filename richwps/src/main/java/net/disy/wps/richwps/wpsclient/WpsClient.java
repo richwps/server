@@ -98,16 +98,14 @@ public class WpsClient {
 				// "UTF-8", "text/xml");
 				// following lines are active for testing
 				// Complexdata by value
-				if (inputValue instanceof FeatureCollection) {
-					IData data = new GTVectorDataBinding(
-							(FeatureCollection) inputValue);
+				if (inputValue instanceof GTVectorDataBinding) {
 					try {
 						executeBuilder
 								.addComplexData(
 										inputName,
-										data,
-										"http://schemas.opengis.net/gml/3.1.1/base/gml.xsd",
-										null, "text/xml; subtype=gml/3.1.1");
+										inputValue,
+										"http://schemas.opengis.net/gml/3.1.1/base/feature.xsd",
+										null, "text/xml");
 					} catch (WPSClientException e) {
 						throw new RuntimeException(e);
 					}
