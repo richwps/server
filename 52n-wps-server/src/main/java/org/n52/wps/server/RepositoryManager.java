@@ -212,10 +212,23 @@ public class RepositoryManager {
 	 */
 	public List<String> getAlgorithms(){
 		List<String> allAlgorithmNamesCollection = new ArrayList<String>();
+		List<String> allVisibleAlgorithmNamesCollection = new ArrayList<String>();
+		IAlgorithm algorithm;
+		
 		for(IAlgorithmRepository repository : repositories){
 			allAlgorithmNamesCollection.addAll(repository.getAlgorithmNames());
+			for (String algorithmName : allAlgorithmNamesCollection) {
+				algorithm = repository.getAlgorithm(algorithmName);
+				if (algorithm instanceof IHideableAlgorithm && ((IHideableAlgorithm) algorithm).isHidden()) {
+					continue;
+				}
+				else {
+					allVisibleAlgorithmNamesCollection.add(algorithmName);
+				}
+			}
+			allAlgorithmNamesCollection.clear();
 		}
-		return allAlgorithmNamesCollection;
+		return allVisibleAlgorithmNamesCollection;
 		
 	}
 
