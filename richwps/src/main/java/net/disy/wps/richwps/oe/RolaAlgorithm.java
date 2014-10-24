@@ -84,7 +84,7 @@ public class RolaAlgorithm extends AbstractTransactionalAlgorithm {
                     if (datatype.contains("tring")) {
                         return LiteralStringBinding.class;
                     }
-                    if (datatype.contains("ollean")) {
+                    if (datatype.contains("oolean")) {
                         return LiteralBooleanBinding.class;
                     }
                     if (datatype.contains("loat") || datatype.contains("ouble")) {
@@ -119,7 +119,7 @@ public class RolaAlgorithm extends AbstractTransactionalAlgorithm {
                 if (datatype.contains("tring")) {
                     return LiteralStringBinding.class;
                 }
-                if (datatype.contains("ollean")) {
+                if (datatype.contains("oolean")) {
                     return LiteralBooleanBinding.class;
                 }
                 if (datatype.contains("loat") || datatype.contains("ouble")) {
