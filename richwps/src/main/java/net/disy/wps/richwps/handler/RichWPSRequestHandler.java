@@ -8,11 +8,14 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import net.disy.wps.richwps.request.GetSupportedTypesRequest;
 import net.disy.wps.richwps.request.IRichWPSRequest;
+import net.disy.wps.richwps.response.GetSupportedTypesResponse;
 import net.disy.wps.richwps.response.IRichWPSResponse;
 import net.disy.wps.richwps.service.RichWebProcessingService;
 
 import org.n52.wps.server.ExceptionReport;
+import org.n52.wps.transactional.request.DeployProcessRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -37,7 +40,7 @@ public class RichWPSRequestHandler {
 		
 		DocumentBuilder documentBuilder= fac.newDocumentBuilder();
 		doc = documentBuilder.parse(is);
-				
+
 		Node child = doc.getFirstChild();
 		
 		while(child.getNodeName().compareTo("#comment")==0) {
@@ -55,6 +58,8 @@ public class RichWPSRequestHandler {
 			//this.req = new DeployProcessRequest(doc);
 		} else if (requestType.equals(RichWebProcessingService.PROFILEPROCESS_REQUEST)) {
 			//this.req = new UndeployProcessRequest(doc);
+		} else if (requestType.equals(RichWebProcessingService.GETSUPPORTEDTYPES_REQUEST)) {
+			this.req = new GetSupportedTypesRequest(doc);
 		} else {
 			throw new ExceptionReport("Request type unknown ("
 					+ requestType
@@ -80,8 +85,15 @@ public class RichWPSRequestHandler {
 		
 	}
 	
-	public IRichWPSResponse handle() {
-		// TODO
-		return null;
+	public IRichWPSResponse handle() throws ExceptionReport {
+		if (this.req == null)
+			throw new ExceptionReport("Internal Error", "");
+		if (req instanceof GetSupportedTypesRequest) {
+			return new GetSupportedTypesResponse((GetSupportedTypesRequest) req);
+		}
+		else {
+			throw new ExceptionReport("Error. Could not handle request",
+					ExceptionReport.OPERATION_NOT_SUPPORTED);
+		}
 	}
 }

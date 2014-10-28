@@ -46,6 +46,7 @@ public class RichWebProcessingService extends HttpServlet{
 	public static final String UNDEPLOYPROCESS_REQUEST = "UndeployProcess";
 	public static final String TESTPROCESS_REQUEST = "TestProcess";
 	public static final String PROFILEPROCESS_REQUEST = "ProfileProcess";
+	public static final String GETSUPPORTEDTYPES_REQUEST = "GetSupportedTypes";
 
 	private static final long serialVersionUID = 1L;
 	private static Logger LOGGER = LoggerFactory.getLogger(RichWebProcessingService.class);
@@ -150,6 +151,9 @@ public class RichWebProcessingService extends HttpServlet{
 		}
 		else if (localName.equalsIgnoreCase("profileprocess")) {
 			return RichWebProcessingService.PROFILEPROCESS_REQUEST;
+		}
+		else if (localName.equalsIgnoreCase("getsupportedtypes")) {
+			return RichWebProcessingService.GETSUPPORTEDTYPES_REQUEST;
 		}
 		else {
 			return null;
