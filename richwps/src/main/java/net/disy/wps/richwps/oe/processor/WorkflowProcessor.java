@@ -27,6 +27,7 @@ public class WorkflowProcessor implements IWorkflowProcessor {
         operationHandlers.add(new AssignmentHandler());
         operationHandlers.add(new BindingHandler());
         operationHandlers.add(new ExecuteHandler());
+        operationHandlers.add(new ConditionalHandler());
     }
 
     @Override
