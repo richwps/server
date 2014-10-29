@@ -15,10 +15,23 @@ import net.opengis.wps.x100.SupportedTypesResponseDocument.SupportedTypesRespons
 import net.opengis.wps.x100.SupportedTypesResponseDocument.SupportedTypesResponse.SupportedOutputTypes;
 
 import org.apache.xmlbeans.XmlCursor;
+import org.n52.wps.io.BasicXMLTypeFactory;
 import org.n52.wps.io.GeneratorFactory;
 import org.n52.wps.io.IGenerator;
 import org.n52.wps.io.IParser;
 import org.n52.wps.io.ParserFactory;
+import org.n52.wps.io.data.ILiteralData;
+import org.n52.wps.io.data.binding.literal.LiteralAnyURIBinding;
+import org.n52.wps.io.data.binding.literal.LiteralBase64BinaryBinding;
+import org.n52.wps.io.data.binding.literal.LiteralBooleanBinding;
+import org.n52.wps.io.data.binding.literal.LiteralByteBinding;
+import org.n52.wps.io.data.binding.literal.LiteralDateTimeBinding;
+import org.n52.wps.io.data.binding.literal.LiteralDoubleBinding;
+import org.n52.wps.io.data.binding.literal.LiteralFloatBinding;
+import org.n52.wps.io.data.binding.literal.LiteralIntBinding;
+import org.n52.wps.io.data.binding.literal.LiteralLongBinding;
+import org.n52.wps.io.data.binding.literal.LiteralShortBinding;
+import org.n52.wps.io.data.binding.literal.LiteralStringBinding;
 import org.n52.wps.server.ExceptionReport;
 import org.n52.wps.util.XMLBeansHelper;
 import org.slf4j.Logger;
@@ -38,6 +51,21 @@ public class GetSupportedTypesResponseBuilder implements IRichWPSResponseBuilder
 	
 	private SupportedInputTypes supportedInputTypes;
 	private SupportedOutputTypes supportedOutputTypes;
+	private static Class[] literalBindings = {
+		LiteralFloatBinding.class,
+		LiteralDoubleBinding.class,
+		LiteralLongBinding.class,
+		LiteralIntBinding.class,
+		LiteralShortBinding.class,
+		LiteralByteBinding.class,
+		LiteralBooleanBinding.class,
+		LiteralStringBinding.class,
+		LiteralDateTimeBinding.class,
+		LiteralBase64BinaryBinding.class,
+		LiteralAnyURIBinding.class
+	};
+	
+	private boolean complexTypesOnly;
 
 	public GetSupportedTypesResponseBuilder(GetSupportedTypesRequest req) {
 		XmlCursor c;
@@ -52,17 +80,19 @@ public class GetSupportedTypesResponseBuilder implements IRichWPSResponseBuilder
 				"./wpsGetSupportedTypes_response.xsd");
 		supportedInputTypes = doc.getSupportedTypesResponse().addNewSupportedInputTypes();
 		supportedOutputTypes = doc.getSupportedTypesResponse().addNewSupportedOutputTypes();
+		
+		complexTypesOnly = req.getComplexTypesOnly();
 	}
 
+	@SuppressWarnings("unchecked")
 	public void updateSupportedTypes () {
 
 			List<IParser> allParsers = ParserFactory.getInstance().getAllParsers();
 			List<IGenerator> allGenerators = GeneratorFactory.getInstance().getAllGenerators();
 				
-			// input types
+			// COMPLEX INPUT TYPES
 			ComplexTypesType complexInputTypes = this.supportedInputTypes.addNewComplexTypes();
-			LiteralTypesType literalInputTypes = this.supportedInputTypes.addNewLiteralTypes();
-
+			
 			for (IParser parser : allParsers) {
 				String[] schemas = parser.getSupportedSchemas();
 				String[] mimetypes = parser.getSupportedFormats();
@@ -76,9 +106,8 @@ public class GetSupportedTypesResponseBuilder implements IRichWPSResponseBuilder
 				}
 			}
 			
-			// output types
+			// COMPLEX OUTPUT TYPES
 			ComplexTypesType complexOutputTypes = this.supportedOutputTypes.addNewComplexTypes();
-			LiteralTypesType literalOutputTypes = this.supportedOutputTypes.addNewLiteralTypes();
 			
 			for (IGenerator generators : allGenerators) {
 				String[] schemas = generators.getSupportedSchemas();
@@ -90,6 +119,18 @@ public class GetSupportedTypesResponseBuilder implements IRichWPSResponseBuilder
 					type.setEncoding(encodings[i]);
 					type.setMimeType(mimetypes[i]);
 					type.setSchema(schemas[i]);
+				}
+			}
+			
+			// LITERAL INPUT AND OUTPUT TYPES
+			if (!this.complexTypesOnly) {
+				LiteralTypesType literalInputTypes = this.supportedInputTypes.addNewLiteralTypes();
+				LiteralTypesType literalOutputTypes = this.supportedOutputTypes.addNewLiteralTypes();
+	
+				for (Class<? extends ILiteralData> clazz : literalBindings) {
+					String xmltype = BasicXMLTypeFactory.getXMLDataTypeforBinding(clazz);
+					literalInputTypes.addNewDataType().setReference(xmltype);
+					literalOutputTypes.addNewDataType().setReference(xmltype);
 				}
 			}
 	}

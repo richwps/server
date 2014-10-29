@@ -6,14 +6,13 @@ import net.opengis.wps.x100.GetSupportedTypesDocument;
 import org.apache.xmlbeans.XmlException;
 import org.apache.xmlbeans.XmlOptions;
 import org.n52.wps.server.ExceptionReport;
-import org.n52.wps.transactional.request.DeployProcessRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 
 public class GetSupportedTypesRequest implements IRichWPSRequest {
 
-	private static Logger LOGGER = LoggerFactory.getLogger(DeployProcessRequest.class);
+	private static Logger LOGGER = LoggerFactory.getLogger(GetSupportedTypesRequest.class);
 	
 	private GetSupportedTypesDocument supportedTypesDoc;
 	private boolean complexTypesOnly;
@@ -21,8 +20,6 @@ public class GetSupportedTypesRequest implements IRichWPSRequest {
 	private GetSupportedTypesResponseBuilder responseBuilder;
 	
 	public GetSupportedTypesRequest(Document doc) throws ExceptionReport{
-		
-		responseBuilder = new GetSupportedTypesResponseBuilder(this);
 		
 		try {
 			XmlOptions option = new XmlOptions();
@@ -48,11 +45,12 @@ public class GetSupportedTypesRequest implements IRichWPSRequest {
 			LOGGER.info("GetSupportedTypes for all available types.");
 		}
 		
+		responseBuilder = new GetSupportedTypesResponseBuilder(this);
 		responseBuilder.updateSupportedTypes();
 	}
 	
 	public boolean getComplexTypesOnly() {
-		return this.getComplexTypesOnly();
+		return this.complexTypesOnly;
 	}
 	
 	public GetSupportedTypesResponseBuilder getSupportedTypesResponseBuilder() {

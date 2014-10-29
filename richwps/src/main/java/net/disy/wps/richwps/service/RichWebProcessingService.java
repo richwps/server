@@ -86,9 +86,6 @@ public class RichWebProcessingService extends HttpServlet{
     	    	documentString = writer.toString();
     	    }
 
-    	    /**
-    	     * 
-    	     */
     	    DocumentBuilderFactory fac = DocumentBuilderFactory.newInstance();
     		fac.setNamespaceAware(true);//this prevents "xmlns="""
     		fac.setIgnoringElementContentWhitespace(true);
