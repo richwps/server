@@ -1,23 +1,45 @@
-# RichWPS Server
+# RichWPS Server #
 
-The RichWPS Server is based on the [52°North Web Processing Service](http://github.com/52north/wps) implementation. It is able to receive and execute workflow models represented in [ROLA](http://github.com/richwps/dsl) scripts within an integrated orchestration engine. The server provides the following interfaces to the RichWPS ModelBuilder:
+The RichWPS Server is based on the [52°North Web Processing Service](http://github.com/52north/wps) implementation. It is able to receive and execute workflow models represented in [ROLA](http://github.com/richwps/dsl) scripts within an integrated orchestration engine. The server provides the following HTTP interfaces:
 
-* WPS 1.0.0: OpenGIS specification 05-007r7
-* WPS-T: deploy and undeploy operation
-* WPS-Debug (under development)
-* WPS-Profile (under development)
+* WPS 1.0.0: OpenGIS specification 05-007r7 offering the following operations:
+  * GetCapabilities
+  * DescribeProcess
+  * Execute
+* RichWPS interface, offering the following operations
+  * Deploy ([request](https://github.com/richwps/commons/blob/master/common-xml/52n-ogc-schema/src/main/resources/META-INF/xml/wps/1.0.0/wpsDeployProcess_request.xsd) / [response](https://github.com/richwps/commons/blob/master/common-xml/52n-ogc-schema/src/main/resources/META-INF/xml/wps/1.0.0/wpsDeployProcess_response.xsd))
+  * UnDeploy ([request](https://github.com/richwps/commons/blob/master/common-xml/52n-ogc-schema/src/main/resources/META-INF/xml/wps/1.0.0/wpsUndeployProcess_request.xsd) / [response](https://github.com/richwps/commons/blob/master/common-xml/52n-ogc-schema/src/main/resources/META-INF/xml/wps/1.0.0/wpsUndeployProcess_response.xsd))
+  * GetSupportedTypes ([request](https://github.com/richwps/commons/blob/master/common-xml/52n-ogc-schema/src/main/resources/META-INF/xml/wps/1.0.0/wpsGetSupportedTypes_request.xsd) / [response](https://github.com/richwps/commons/blob/master/common-xml/52n-ogc-schema/src/main/resources/META-INF/xml/wps/1.0.0/wpsGetSupportedTypes_response.xsd))
+  * TestProcess ([request](https://github.com/richwps/commons/blob/master/common-xml/52n-ogc-schema/src/main/resources/META-INF/xml/wps/1.0.0/wpsTestProcess_request.xsd) / [response](https://github.com/richwps/commons/blob/master/common-xml/52n-ogc-schema/src/main/resources/META-INF/xml/wps/1.0.0/wpsTestProcess_response.xsd))
+  * ProfileProcess ([request]() / [response]())
 
-## WPS-T interface
+## WPS interface ##
 
-The integrated WPS-T interfaces is based on a former 52north implementation by Schäffer. It is extended by a specific ROLA Deployment Profile with the following XML schema description: (under development).
+#### Server Capabilities ####
+...
 
-Deployment of a ROLA process:
-{code}
+#### Describe a WPS process ####
+...
 
-Undeployment of a previously deployed ROLA process:
-{code}
+#### Execute a WPS process ####
+...
 
-## Orchestration engine
+## RichWPS interface ##
+
+#### Transactional WPS ####
+...
+
+#### Discover supported types ####
+...
+
+#### Test a WPS process ####
+...
+
+#### Profile a WPS process ####
+...
+
+
+## Orchestration engine ##
 
 The orchestration engine interprets deployed ROLA scripts and executes the contained workflow in order to provide processing results withing the servers WPS 1.0.0 interface.
 
@@ -28,7 +50,7 @@ The interpreter has the following capabilities:
 * execute local processes
 * execute external processes making use of the RichWPS client API
 
-## Development
+## Development ##
 
 See https://github.com/richwps/commons for shared libraries first.
 
