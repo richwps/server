@@ -41,15 +41,20 @@ public class RolaLocalProcessManager extends AbstractProcessManager {
     @Override
     public boolean unDeployProcess(UndeployProcessRequest request)
             throws Exception {
-        deleteWorksequenceDescription(request.getProcessID());
+    	String processId = request.getProcessID();
+    	if (!request.getKeepExecutionUnit()) {
+    		deleteRola(processId);
+    	} else {
+    		toggleArchiveExecutionUnit(processId);
+    	}
         return true;
     }
 
     @Override
     public boolean containsProcess(String processID) throws Exception {
-        URI rolaDirectory = getWorksequenceDescriptionDirectory();
+        URI rolaDirectory = getRolaDirectory();
         File directory = new File(rolaDirectory);
-        Collection<File> files = FileUtils.listFiles(directory, new String[]{"dsl"}, false);
+        Collection<File> files = FileUtils.listFiles(directory, new String[]{"rola"}, false);
         for (File file : files) {
             String baseName = FilenameUtils.getBaseName(file.getAbsolutePath());
             if (baseName.equals(processID)) {
@@ -67,9 +72,9 @@ public class RolaLocalProcessManager extends AbstractProcessManager {
 
     private Collection<String> getAllProcessesFromWdDirectory() {
         final Collection<String> processIds = new ArrayList<String>();
-        URI wdDirectory = getWorksequenceDescriptionDirectory();
-        File directory = new File(wdDirectory);
-        Collection<File> files = FileUtils.listFiles(directory, new String[]{"dsl"}, false);
+        URI rolaDirectory = getRolaDirectory();
+        File directory = new File(rolaDirectory);
+        Collection<File> files = FileUtils.listFiles(directory, new String[]{"rola"}, false);
         for (File file : files) {
             processIds.add(FilenameUtils.getBaseName(file.getAbsolutePath()));
         }
@@ -85,7 +90,7 @@ public class RolaLocalProcessManager extends AbstractProcessManager {
     }
 
     private Workflow getWorksequenceById(String algorithmID) throws Exception {
-        URI fileUri = buildWorksequenceDescriptionFileUri(algorithmID);
+        URI fileUri = buildRolaFileUri(algorithmID);
         File wdFile = new File(fileUri);
         Reader dslReader = new Reader();
         dslReader.load(wdFile.getAbsolutePath());
@@ -107,7 +112,7 @@ public class RolaLocalProcessManager extends AbstractProcessManager {
     private File saveWorksequenceDescription(String processId, String worksequenceDescription) {
         File wdFile = null;
         try {
-            URI fileUri = buildWorksequenceDescriptionFileUri(processId);
+            URI fileUri = buildRolaFileUri(processId);
             wdFile = new File(fileUri);
             BufferedWriter writer = new BufferedWriter(new FileWriter(wdFile));
             writer.write(worksequenceDescription);
@@ -119,23 +124,45 @@ public class RolaLocalProcessManager extends AbstractProcessManager {
         }
     }
 
-    private void deleteWorksequenceDescription(String processId) {
-        URI fileUri = buildWorksequenceDescriptionFileUri(processId);
+    private void toggleArchiveExecutionUnit(String processId) {
+    	URI fileUri = buildRolaFileUri(processId);
+    	File file = new File(fileUri);
+    	URI afileUri = buildArchivedRolaFileUri(processId);
+    	File afile = new File(afileUri);
+    	if (file.exists()) {
+    		file.renameTo(afile);
+    	} else {
+    		if (afile.exists()) {
+    			file.renameTo(file);
+    		}
+    	}
+    }
+    
+    private void deleteRola(String processId) {
+        URI fileUri = buildRolaFileUri(processId);
         File file = new File(fileUri);
         if (file.exists()) {
             file.delete();
         }
     }
 
-    private URI buildWorksequenceDescriptionFileUri(String processId) {
+    private URI buildRolaFileUri(String processId) {
         try {
-            return new URI(getWorksequenceDescriptionDirectory().toString() + processId + ".dsl");
+            return new URI(getRolaDirectory().toString() + processId + ".rola");
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
+    private URI buildArchivedRolaFileUri(String processId) {
+        try {
+            return new URI(getRolaDirectory().toString() + processId + ".arola");
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private URI getWorksequenceDescriptionDirectory() {
+    private URI getRolaDirectory() {
         String fullPath = getClass().getProtectionDomain().getCodeSource()
                 .getLocation().toString();
         int searchIndex = fullPath.indexOf("WEB-INF");
