@@ -32,7 +32,8 @@ import de.hsos.richwps.dsl.api.elements.Workflow;
 public class RolaLocalProcessManager extends AbstractProcessManager {
 
     private static Logger LOGGER = LoggerFactory.getLogger(RolaLocalProcessManager.class);
-
+    private static String EXT = "dsl";
+    
     public RolaLocalProcessManager(
             ITransactionalAlgorithmRepository parentRepository) {
         super(parentRepository);
@@ -54,7 +55,7 @@ public class RolaLocalProcessManager extends AbstractProcessManager {
     public boolean containsProcess(String processID) throws Exception {
         URI rolaDirectory = getRolaDirectory();
         File directory = new File(rolaDirectory);
-        Collection<File> files = FileUtils.listFiles(directory, new String[]{"rola"}, false);
+        Collection<File> files = FileUtils.listFiles(directory, new String[]{EXT}, false);
         for (File file : files) {
             String baseName = FilenameUtils.getBaseName(file.getAbsolutePath());
             if (baseName.equals(processID)) {
@@ -74,7 +75,7 @@ public class RolaLocalProcessManager extends AbstractProcessManager {
         final Collection<String> processIds = new ArrayList<String>();
         URI rolaDirectory = getRolaDirectory();
         File directory = new File(rolaDirectory);
-        Collection<File> files = FileUtils.listFiles(directory, new String[]{"rola"}, false);
+        Collection<File> files = FileUtils.listFiles(directory, new String[]{EXT}, false);
         for (File file : files) {
             processIds.add(FilenameUtils.getBaseName(file.getAbsolutePath()));
         }
@@ -119,7 +120,7 @@ public class RolaLocalProcessManager extends AbstractProcessManager {
             writer.close();
             return wdFile;
         } catch (IOException e) {
-            throw new RuntimeException("Could not save WD file "
+            throw new RuntimeException("Could not save rola file "
                     + (wdFile != null ? wdFile.getAbsolutePath() : ""));
         }
     }
@@ -148,7 +149,7 @@ public class RolaLocalProcessManager extends AbstractProcessManager {
 
     private URI buildRolaFileUri(String processId) {
         try {
-            return new URI(getRolaDirectory().toString() + processId + ".rola");
+            return new URI(getRolaDirectory().toString() + processId + "."+EXT);
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }
