@@ -724,15 +724,11 @@
                 <artifactId>52n-wps-io-impl</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            
-            <!--
-            dal: fixme
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>52n-wps-server-soap</artifactId>
-                <version>${project.version}</version>
+                <version>3.2.0</version>
             </dependency>
-            -->
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>52n-wps-algorithm-impl</artifactId>
