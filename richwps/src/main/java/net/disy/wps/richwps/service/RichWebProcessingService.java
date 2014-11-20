@@ -53,7 +53,7 @@ public class RichWebProcessingService extends HttpServlet{
 	
 	protected void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
 		
-		LOGGER.info("Inbound HTTP-POST DeployProcess Request. " + new Date());
+		LOGGER.info("Inbound HTTP-POST RichWP Request. " + new Date());
 		Document doc;
 		
 		InputStream resIs = null;
