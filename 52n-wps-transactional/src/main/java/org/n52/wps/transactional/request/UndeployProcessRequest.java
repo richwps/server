@@ -82,7 +82,7 @@ public class UndeployProcessRequest implements ITransactionalRequest {
 		
 		responseBuilder.updateUndeployment(true);
 		
-		LOGGER.info("Deployment of process with processId: " + processId);
+		LOGGER.info("Undeployment of process with processId: " + processId);
 	}
 
 	public String getProcessID() {

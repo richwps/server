@@ -110,15 +110,22 @@ public class GetSupportedTypesResponseBuilder implements IRichWPSResponseBuilder
 			ComplexTypesType complexOutputTypes = this.supportedOutputTypes.addNewComplexTypes();
 			
 			for (IGenerator generators : allGenerators) {
+				String schemaValue, mimetypeValue, encodingValue;
 				String[] schemas = generators.getSupportedSchemas();
 				String[] mimetypes = generators.getSupportedFormats();
 				String[] encodings = generators.getSupportedEncodings();
-				for(int i=0;i<schemas.length;i++) {
-					LOGGER.debug("GetSupportedTypes: ComplexOutputType: " + schemas[i] + " " + encodings[i] + " " + mimetypes[i]);
+				Integer loopcount = getLargerArray(schemas, getLargerArray(mimetypes, encodings)).length;
+				
+				for(int i=0;i<loopcount;i++) {
+					schemaValue = getArrayValue(schemas, i);
+					mimetypeValue = getArrayValue(mimetypes, i);
+					encodingValue = getArrayValue(encodings, i);
+					
+					LOGGER.debug("GetSupportedTypes: ComplexOutputType: " + schemaValue + " " + encodingValue + " " + mimetypeValue);
 					ComplexDataDescriptionType type = complexOutputTypes.addNewType();
-					type.setEncoding(encodings[i]);
-					type.setMimeType(mimetypes[i]);
-					type.setSchema(schemas[i]);
+					type.setEncoding(encodingValue);
+					type.setMimeType(mimetypeValue);
+					type.setSchema(schemaValue);
 				}
 			}
 			
@@ -141,6 +148,25 @@ public class GetSupportedTypesResponseBuilder implements IRichWPSResponseBuilder
 			return doc.newInputStream(XMLBeansHelper.getXmlOptions());
 		} catch (Exception e) {
 			throw new RuntimeException(e);
+		}
+	}
+	
+	public String[] getLargerArray(String[] arr1, String[] arr2) {
+		if(arr1.length >= arr2.length) {
+			return arr1;
+		}
+		else {
+			return arr2;
+		}
+	}
+	
+	public String getArrayValue(String[] arr, Integer index) {
+		String value;
+		try {
+			value = arr[index];
+			return value;
+		} catch (Exception e) {
+			return "";
 		}
 	}
 
