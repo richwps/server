@@ -8,6 +8,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.Map;
 
+import net.disy.wps.richwps.dtm.DataTypeManager;
 import net.opengis.wps.x100.ExecuteDocument;
 import net.opengis.wps.x100.InputDescriptionType;
 import net.opengis.wps.x100.OutputDescriptionType;
@@ -112,6 +113,8 @@ public class RolaAlgorithm extends AbstractTransactionalAlgorithm {
     public Class<?> getOutputDataType(String id) {
         OutputDescriptionType[] outputs = processDescription.getProcessOutputs().getOutputArray();
 
+//        DataTypeManager.getInstance().getBindingForOutputType();
+        
         for (OutputDescriptionType output : outputs) {
 
             if (output.isSetLiteralOutput()) {
