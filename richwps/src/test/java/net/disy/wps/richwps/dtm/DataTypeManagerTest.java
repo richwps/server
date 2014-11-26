@@ -1,6 +1,6 @@
 package net.disy.wps.richwps.dtm;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -15,8 +15,10 @@ import net.opengis.wps.x100.ComplexDataDescriptionType;
 import net.opengis.wps.x100.InputDescriptionType;
 import net.opengis.wps.x100.OutputDescriptionType;
 
+import org.eclipse.xtext.junit4.serializer.AssertNodeModelAcceptor;
 import org.junit.Test;
 import org.n52.wps.io.data.binding.complex.GTVectorDataBinding;
+import org.n52.wps.io.data.binding.complex.GenericFileDataBinding;
 import org.n52.wps.io.data.binding.literal.LiteralAnyURIBinding;
 import org.n52.wps.io.data.binding.literal.LiteralBase64BinaryBinding;
 import org.n52.wps.io.data.binding.literal.LiteralBooleanBinding;
@@ -57,6 +59,7 @@ public class DataTypeManagerTest {
 		
 		
 		complexOutputTypes = new HashMap<FormatTriplet<String, String, String>, Class<?>>();
+		
 		// GML
 		complexOutputTypes.put(new FormatTriplet<String, String, String>("http://schemas.opengis.net/gml/3.1.1/base/feature.xsd", "text/xml", "UTF-8"), GTVectorDataBinding.class);
 		complexOutputTypes.put(new FormatTriplet<String, String, String>("http://schemas.opengis.net/gml/3.2.1/base/feature.xsd", "text/xml; subtype=gml/3.2.1", "UTF-8"), GTVectorDataBinding.class);
@@ -67,6 +70,8 @@ public class DataTypeManagerTest {
 		complexOutputTypes.put(new FormatTriplet<String, String, String>("http://richwps.github.io/schemas/IntegerList", "application/xml", "UTF-8"), IntegerListBinding.class);
 		complexOutputTypes.put(new FormatTriplet<String, String, String>("http://richwps.github.io/schemas/ObservationFeatureCollectionList", "application/xml", "UTF-8"), ObeservationFeatureCollectionListBinding.class);
 		complexOutputTypes.put(new FormatTriplet<String, String, String>("http://richwps.github.io/schemas/IntersectionFeatureCollectionList", "application/xml", "UTF-8"), IntersectionFeatureCollectionListBinding.class);
+		complexOutputTypes.put(new FormatTriplet<String, String, String>("", "application/json", ""), GTVectorDataBinding.class);
+		complexOutputTypes.put(new FormatTriplet<String, String, String>("", "application/json", "UTF-8"), GTVectorDataBinding.class);
 		
 		// RichWPS BAW types
 		complexOutputTypes.put(new FormatTriplet<String, String, String>("", "application/x-netcdf", ""), NetCDFBinding.class);
@@ -112,17 +117,52 @@ public class DataTypeManagerTest {
 		Iterator<Entry<FormatTriplet<String, String, String>, Class<?>>> it = complexOutputTypes.entrySet().iterator();
 		for (int i=0;i<complexOutputTypes.size();i++) {
 			Map.Entry<FormatTriplet<String, String, String>, Class<?>> pairs = (Map.Entry<FormatTriplet<String, String, String>, Class<?>>) it.next();
-			FormatTriplet<String, String, String> triplet = pairs.getKey();
-			
-			odt = OutputDescriptionType.Factory.newInstance();
-			ComplexDataDescriptionType cddt = odt.addNewComplexOutput().addNewDefault().addNewFormat();
-			
-			cddt.setSchema(triplet.getSchema());
-			cddt.setMimeType(triplet.getMimeType());
-			cddt.setEncoding(triplet.getEncoding());
-		
-			Class<?> binding = dtm.getBindingForOutputType(odt);
+			Class<?> binding = getBindingForFormatTriplet(pairs.getKey()); 
 			assertTrue(binding.equals(pairs.getValue()));
 		}
 	}
+	
+	
+	@Test
+	public void testValidFormats() {
+		Class<?> binding;
+		
+		binding = getBindingForFormatTriplet(new FormatTriplet<String, String, String>("", "xml", ""));
+		assertTrue(binding.equals(GenericFileDataBinding.class));
+		
+		binding = getBindingForFormatTriplet(new FormatTriplet<String, String, String>("xsd", "", ""));
+		assertTrue(binding.equals(GenericFileDataBinding.class));
+		
+		binding = getBindingForFormatTriplet(new FormatTriplet<String, String, String>("xsd", "", ""));
+		assertTrue(binding.equals(GenericFileDataBinding.class));
+	}
+	
+	@Test
+	public void testInvalidFormats() {
+		Class<?> binding;
+		
+		binding = getBindingForFormatTriplet(new FormatTriplet<String, String, String>("", "", ""));
+		assertNull(binding);
+		
+		binding = getBindingForFormatTriplet(new FormatTriplet<String, String, String>("foo", "bar", "buzz"));
+		assertNull(binding);
+		
+		binding = getBindingForFormatTriplet(new FormatTriplet<String, String, String>("", "gml", ""));
+		assertNull(binding);
+		
+		binding = getBindingForFormatTriplet(new FormatTriplet<String, String, String>("", "", "gml"));
+		assertNull(binding);
+		
+	}
+	
+	private Class<?> getBindingForFormatTriplet(FormatTriplet<String, String, String> formatTriplet) {
+		OutputDescriptionType odt = OutputDescriptionType.Factory.newInstance();
+		ComplexDataDescriptionType cddt = odt.addNewComplexOutput().addNewDefault().addNewFormat();
+		
+		cddt.setSchema(formatTriplet.getSchema());
+		cddt.setMimeType(formatTriplet.getMimeType());
+		cddt.setEncoding(formatTriplet.getEncoding());
+	
+		return dtm.getBindingForOutputType(odt);
+	}	
 }

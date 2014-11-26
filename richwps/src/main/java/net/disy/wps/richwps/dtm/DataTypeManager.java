@@ -9,6 +9,7 @@ import net.opengis.wps.x100.InputDescriptionType;
 import net.opengis.wps.x100.OutputDescriptionType;
 
 import org.n52.wps.io.data.binding.complex.GTVectorDataBinding;
+import org.n52.wps.io.data.binding.complex.GenericFileDataBinding;
 import org.n52.wps.io.data.binding.literal.LiteralAnyURIBinding;
 import org.n52.wps.io.data.binding.literal.LiteralBase64BinaryBinding;
 import org.n52.wps.io.data.binding.literal.LiteralBooleanBinding;
@@ -183,7 +184,7 @@ public class DataTypeManager {
 		String mimeType = type.getMimeType();
 		String encoding = type.getEncoding();
 		
-		if (mimeType.toLowerCase().contains("xml")) {
+		if (mimeType.toLowerCase().contains("xml") || schema.toLowerCase().contains("xsd")) {
 		
 			if (schema.toLowerCase().contains("mpbresult")) {
 				return MPBResultBinding.class;
@@ -206,6 +207,10 @@ public class DataTypeManager {
 			if (schema.toLowerCase().contains("gml")) {
 				return GTVectorDataBinding.class;
 			}
+			return GenericFileDataBinding.class;
+		}
+		if (mimeType.toLowerCase().contains("json")) {
+			return GTVectorDataBinding.class;
 		}
 		if (mimeType.toLowerCase().contains("netcdf")) {
 			return NetCDFBinding.class;
