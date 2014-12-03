@@ -141,6 +141,9 @@ public class DataTypeManagerTest {
 	public void testInvalidFormats() {
 		Class<?> binding;
 		
+		binding = getBindingForFormatTriplet(new FormatTriplet<String, String, String>(null, null, null));
+		assertNull(binding);
+		
 		binding = getBindingForFormatTriplet(new FormatTriplet<String, String, String>("", "", ""));
 		assertNull(binding);
 		

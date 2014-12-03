@@ -22,8 +22,6 @@ import org.n52.wps.io.data.binding.literal.LiteralLongBinding;
 import org.n52.wps.io.data.binding.literal.LiteralShortBinding;
 import org.n52.wps.io.data.binding.literal.LiteralStringBinding;
 
-import com.sun.media.jai.opimage.OrderedDitherRIF;
-
 import de.baw.wps.binding.GMLCovBinding;
 import de.baw.wps.binding.NetCDFBinding;
 import de.baw.wps.binding.OMBinding;
@@ -180,9 +178,9 @@ public class DataTypeManager {
 	}
 	
 	private Class<?> getBindingForComplexType(ComplexDataDescriptionType type) {
-		String schema = type.getSchema();
-		String mimeType = type.getMimeType();
-		String encoding = type.getEncoding();
+		String schema = type.getSchema() == null ? "" : type.getSchema();
+		String mimeType = type.getMimeType() == null ? "" : type.getMimeType();
+		String encoding = type.getEncoding() == null ? "" : type.getEncoding();
 		
 		if (mimeType.toLowerCase().contains("xml") || schema.toLowerCase().contains("xsd")) {
 		
@@ -217,4 +215,6 @@ public class DataTypeManager {
 		}
 		return null;
 	}
+	
+	
 }
