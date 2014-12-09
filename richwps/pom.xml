@@ -33,6 +33,16 @@
             <version>4.8.1</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+        	<groupId>net.disy.wps</groupId>
+        	<artifactId>lkn-mpa</artifactId>
+        	<version>0.0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+        	<groupId>de.baw.wps</groupId>
+        	<artifactId>baw-utils</artifactId>
+        	<version>0.0.1-SNAPSHOT</version>
+        </dependency>
     </dependencies>
     <build>
         <pluginManagement>

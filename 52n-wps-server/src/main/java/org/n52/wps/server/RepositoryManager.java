@@ -256,9 +256,9 @@ public class RepositoryManager {
 		
 	}
 	
-	public Class getOutputDataTypeForAlgorithm(String algorithmIdentifier, String inputIdentifier){
+	public Class getOutputDataTypeForAlgorithm(String algorithmIdentifier, String outputIdentifier){
 		IAlgorithm algorithm = getAlgorithm(algorithmIdentifier);
-		return algorithm.getOutputDataType(inputIdentifier);
+		return algorithm.getOutputDataType(outputIdentifier);
 		
 	}
 	
