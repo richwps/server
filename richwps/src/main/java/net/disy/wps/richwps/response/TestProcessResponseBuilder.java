@@ -60,7 +60,6 @@ public class TestProcessResponseBuilder {
 		doc.getTestProcessResponse().addNewStatus();
 		doc.getTestProcessResponse().addNewDataInputs();
 		doc.getTestProcessResponse().addNewProcessOutputs();
-		doc.getTestProcessResponse().addNewIntermediateProcessOutputs();
 
 	}
 
@@ -120,23 +119,40 @@ public class TestProcessResponseBuilder {
 		testProcessResponse.getProcessOutputs().getOutputArray(1)
 				.addNewReference()
 				.setHref("http://foo.bar/some_destination1.xml");
-		// Test IntermediateOutputs
-		testProcessResponse.getIntermediateProcessOutputs()
-				.addNewIntermediateOutput();
-		testProcessResponse.getIntermediateProcessOutputs()
-				.getIntermediateOutputArray(0).addNewIdentifier()
+
+		testProcessResponse.getProcessOutputs().addNewOutput();
+		testProcessResponse.getProcessOutputs().getOutputArray(2)
+				.addNewIdentifier()
 				.setStringValue("var.intermediateLiteralOutput");
-		testProcessResponse.getIntermediateProcessOutputs()
-				.getIntermediateOutputArray(0).addNewData().addNewLiteralData()
+		testProcessResponse.getProcessOutputs().getOutputArray(2).addNewData()
+				.addNewLiteralData()
 				.setStringValue("intermediateLiteralOutputValue");
 
-		testProcessResponse.getIntermediateProcessOutputs()
-				.addNewIntermediateOutput();
-		testProcessResponse.getIntermediateProcessOutputs()
-				.getIntermediateOutputArray(1).addNewIdentifier()
+		testProcessResponse.getProcessOutputs().addNewOutput();
+		testProcessResponse.getProcessOutputs().getOutputArray(3)
+				.addNewIdentifier()
 				.setStringValue("var.intermediateReferenceOutput");
-		testProcessResponse.getIntermediateProcessOutputs()
-				.getIntermediateOutputArray(1).addNewReference()
+		testProcessResponse.getProcessOutputs().getOutputArray(3)
+				.addNewReference()
 				.setHref("http://foo.bar/some_destination2.xml");
+
+		// Test IntermediateOutputs
+		// testProcessResponse.getIntermediateProcessOutputs()
+		// .addNewIntermediateOutput();
+		// testProcessResponse.getIntermediateProcessOutputs()
+		// .getIntermediateOutputArray(0).addNewIdentifier()
+		// .setStringValue("var.intermediateLiteralOutput");
+		// testProcessResponse.getIntermediateProcessOutputs()
+		// .getIntermediateOutputArray(0).addNewData().addNewLiteralData()
+		// .setStringValue("intermediateLiteralOutputValue");
+		//
+		// testProcessResponse.getIntermediateProcessOutputs()
+		// .addNewIntermediateOutput();
+		// testProcessResponse.getIntermediateProcessOutputs()
+		// .getIntermediateOutputArray(1).addNewIdentifier()
+		// .setStringValue("var.intermediateReferenceOutput");
+		// testProcessResponse.getIntermediateProcessOutputs()
+		// .getIntermediateOutputArray(1).addNewReference()
+		// .setHref("http://foo.bar/some_destination2.xml");
 	}
 }
