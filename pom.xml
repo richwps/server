@@ -227,6 +227,7 @@
         <module>52n-wps-server</module>
         <module>52n-wps-webapp</module>
         <module>52n-wps-transactional</module>
+        <module>52n-wps-io-geotools</module>
         <module>52n-wps-algorithm</module>
         <module>richwps</module>
     </modules>
