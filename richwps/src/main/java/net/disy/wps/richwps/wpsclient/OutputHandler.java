@@ -29,30 +29,29 @@ is extensible in terms of processes and data handlers.
  ***************************************************************/
 
 
-package org.n52.wps.transactional.algorithm;
+package net.disy.wps.richwps.wpsclient;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactoryConfigurationError;
+
+import net.disy.wps.richwps.dtm.DataTypeManager;
 import net.opengis.wps.x100.OutputDataType;
 import net.opengis.wps.x100.OutputDescriptionType;
 import net.opengis.wps.x100.ProcessDescriptionType;
 
+import org.n52.wps.commons.XMLUtil;
 import org.n52.wps.io.BasicXMLTypeFactory;
 import org.n52.wps.io.IOHandler;
 import org.n52.wps.io.IParser;
 import org.n52.wps.io.ParserFactory;
 import org.n52.wps.io.data.IData;
-import org.n52.wps.io.data.binding.complex.GTRasterDataBinding;
-import org.n52.wps.io.data.binding.complex.GTVectorDataBinding;
-import org.n52.wps.io.data.binding.literal.LiteralBooleanBinding;
-import org.n52.wps.io.data.binding.literal.LiteralDoubleBinding;
-import org.n52.wps.io.data.binding.literal.LiteralIntBinding;
-import org.n52.wps.io.data.binding.literal.LiteralStringBinding;
 import org.n52.wps.server.ExceptionReport;
+import org.w3c.dom.Node;
 
 
-public class OutputParser {
-	
+public class OutputHandler {
 	
 	/**
 	 * Handles the ComplexValueReference
@@ -62,7 +61,6 @@ public class OutputParser {
 	 */
 	public static String handleComplexValueReference(OutputDataType output) throws ExceptionReport{
 		return output.getReference().getHref();
-		
 	}
 	
 	/**
@@ -73,8 +71,11 @@ public class OutputParser {
 	 * @throws ExceptionReport If error occured while parsing XML
 	 */
 	public static IData handleComplexValue(OutputDataType output, ProcessDescriptionType processDescription) throws ExceptionReport{
+		DataTypeManager dtm = DataTypeManager.getInstance();
 		String outputID = output.getIdentifier().getStringValue();
-		String complexValue = output.getData().getComplexData().toString();
+		
+		String complexValue = getComplexValueNodeString(output.getData().getComplexData().getDomNode());
+
 		OutputDescriptionType outputDesc = null;
 		for(OutputDescriptionType tempDesc : processDescription.getProcessOutputs().getOutputArray()) {
 			if((tempDesc.getIdentifier().getStringValue().startsWith(outputID))) {
@@ -90,32 +91,32 @@ public class OutputParser {
 		// get data specification from request
 		String schema = output.getData().getComplexData().getSchema();
 		String encoding = output.getData().getComplexData().getEncoding();
-		String format = output.getData().getComplexData().getMimeType();
+		String mimeType = output.getData().getComplexData().getMimeType();
 		
 		// check for null elements in request and replace by defaults
 		if(schema == null) {
 			schema = outputDesc.getComplexOutput().getDefault().getFormat().getSchema();
 		}
-		if(format == null) {
-			format = outputDesc.getComplexOutput().getDefault().getFormat().getMimeType();
+		if(mimeType == null) {
+			mimeType = outputDesc.getComplexOutput().getDefault().getFormat().getMimeType();
 		}
 		if(encoding == null) {
 			encoding = outputDesc.getComplexOutput().getDefault().getFormat().getEncoding();
 		}
 		
-		Class outputDataType = determineOutputDataType(outputID, outputDesc);
+		Class<?> outputDataType = dtm.getBindingForOutputType(outputDesc);
 		
-		IParser parser = ParserFactory.getInstance().getParser(schema, format, encoding, outputDataType);
-//		if(parser == null) {
-//			parser = ParserFactory.getInstance().getSimpleParser();
-//		}
-		IData collection = null;
+		IParser parser = ParserFactory.getInstance().getParser(schema, mimeType, encoding, outputDataType);
+		if(parser == null) {
+			throw new ExceptionReport("Error. No applicable parser found for " + schema + "," + mimeType + "," + encoding, ExceptionReport.NO_APPLICABLE_CODE);
+		}
+		IData data = null;
 		// encoding is UTF-8 (or nothing and we default to UTF-8)
 		// everything that goes to this condition should be inline xml data
 		if (encoding == null || encoding.equals("") || encoding.equalsIgnoreCase(IOHandler.DEFAULT_ENCODING)){
 			try {
 				InputStream stream = new ByteArrayInputStream(complexValue.getBytes());
-				collection = parser.parse(stream, format, schema);
+				data = parser.parse(stream, mimeType, schema);
 			}
 			catch(RuntimeException e) {
 				throw new ExceptionReport("Error occured, while XML parsing", 
@@ -125,38 +126,7 @@ public class OutputParser {
 		else {
 			throw new ExceptionReport("parser does not support operation: " + parser.getClass().getName(), ExceptionReport.INVALID_PARAMETER_VALUE);
 		}
-		return collection;
-	}
-	
-	
-
-	private static Class determineOutputDataType(String outputID, OutputDescriptionType output) {
-			
-		if(output.isSetLiteralOutput()){
-			String datatype = output.getLiteralOutput().getDataType().getStringValue();
-			if(datatype.contains("tring")){
-				return LiteralStringBinding.class;
-			}
-			if(datatype.contains("ollean")){
-				return LiteralBooleanBinding.class;
-			}
-			if(datatype.contains("loat") || datatype.contains("ouble")){
-				return LiteralDoubleBinding.class;
-			}
-			if(datatype.contains("nt")){
-				return LiteralIntBinding.class;
-			}
-		}
-		if(output.isSetComplexOutput()){
-			String mimeType = output.getComplexOutput().getDefault().getFormat().getMimeType();
-			if(mimeType.contains("xml") || (mimeType.contains("XML"))){
-				return GTVectorDataBinding.class;
-			}else{
-				return GTRasterDataBinding.class;
-			}
-		}
-		
-		throw new RuntimeException("Could not determie internal inputDataType");
+		return data;
 	}
 
 	public static IData handleLiteralValue(OutputDataType output) throws ExceptionReport {
@@ -187,5 +157,18 @@ public class OutputParser {
 		//String inputID = input.getIdentifier().getStringValue();
 		throw new ExceptionReport("BBox is not supported", ExceptionReport.OPERATION_NOT_SUPPORTED);
 	}
+	
+	protected static String getComplexValueNodeString(Node complexValueNode) {
+        String complexValue;
+        try {
+            complexValue = XMLUtil.nodeToString(complexValueNode);
+            complexValue = complexValue.substring(complexValue.indexOf(">") + 1, complexValue.lastIndexOf("</"));
+        } catch (TransformerFactoryConfigurationError e1) {
+            throw new TransformerFactoryConfigurationError("Could not parse inline data. Reason " + e1);
+        } catch (TransformerException e1) {
+            throw new TransformerFactoryConfigurationError("Could not parse inline data. Reason " + e1);
+        }
+        return complexValue;
+    }
 
 }

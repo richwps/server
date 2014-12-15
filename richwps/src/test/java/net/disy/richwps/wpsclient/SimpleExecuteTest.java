@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import net.disy.wps.richwps.wpsclient.OutputHandler;
 import net.disy.wps.richwps.wpsclient.WpsClient;
 import net.opengis.wps.x100.ExecuteDocument;
 import net.opengis.wps.x100.ExecuteResponseDocument;
@@ -22,7 +23,6 @@ import org.n52.wps.client.WPSClientSession;
 import org.n52.wps.io.data.IData;
 import org.n52.wps.io.data.binding.literal.LiteralDoubleBinding;
 import org.n52.wps.io.data.binding.literal.LiteralStringBinding;
-import org.n52.wps.transactional.algorithm.OutputParser;
 
 public class SimpleExecuteTest {
 	String url = "http://geoprocessing.demo.52north.org:8080/wps/WebProcessingService";

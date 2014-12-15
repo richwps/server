@@ -12,14 +12,12 @@ import net.opengis.wps.x100.OutputDataType;
 import net.opengis.wps.x100.ProcessDescriptionType;
 
 import org.apache.commons.lang.Validate;
-import org.geotools.feature.FeatureCollection;
 import org.n52.wps.client.WPSClientException;
 import org.n52.wps.client.WPSClientSession;
 import org.n52.wps.io.data.IData;
 import org.n52.wps.io.data.binding.complex.GTVectorDataBinding;
 import org.n52.wps.io.data.binding.literal.LiteralStringBinding;
 import org.n52.wps.server.ExceptionReport;
-import org.n52.wps.transactional.algorithm.OutputParser;
 
 public class WpsClient {
 
@@ -153,13 +151,13 @@ public class WpsClient {
 			// 4.the the literal value as String
 			if (resultValue.getData().getLiteralData() != null) {
 				resultData.put(key,
-						OutputParser.handleLiteralValue(resultValue));
+						OutputHandler.handleLiteralValue(resultValue));
 			}
 			// 5.parse the complex value
 			if (resultValue.getData().getComplexData() != null) {
 
 				// TODO gather outputdescription for handling the complex value
-				resultData.put(key, OutputParser.handleComplexValue(
+				resultData.put(key, OutputHandler.handleComplexValue(
 						resultValue, processDescription));
 				
 
@@ -174,7 +172,7 @@ public class WpsClient {
 
 			// 7.parse Bounding Box value
 			if (resultValue.getData().getBoundingBoxData() != null) {
-				resultData.put(key, OutputParser.handleBBoxValue(resultValue));
+				resultData.put(key, OutputHandler.handleBBoxValue(resultValue));
 			}
 
 		}
