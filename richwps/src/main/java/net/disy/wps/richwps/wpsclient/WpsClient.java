@@ -15,8 +15,6 @@ import org.apache.commons.lang.Validate;
 import org.n52.wps.client.WPSClientException;
 import org.n52.wps.client.WPSClientSession;
 import org.n52.wps.io.data.IData;
-import org.n52.wps.io.data.binding.complex.GTVectorDataBinding;
-import org.n52.wps.io.data.binding.literal.LiteralStringBinding;
 import org.n52.wps.server.ExceptionReport;
 
 public class WpsClient {
@@ -90,41 +88,19 @@ public class WpsClient {
 						String.valueOf(inputValue.getPayload()));
 
 			} else if (input.getComplexData() != null) {
-				// TODO determine schema and other params from the matching
-				// binding
-				// executeBuilder.addComplexData(inputName, inputValue, null,
-				// "UTF-8", "text/xml");
-				// following lines are active for testing
-				// Complexdata by value
-				if (inputValue instanceof GTVectorDataBinding) {
-					try {
-						executeBuilder
-								.addComplexData(
-										inputName,
-										inputValue,
-										"http://schemas.opengis.net/gml/3.1.1/base/feature.xsd",
-										null, "text/xml");
-					} catch (WPSClientException e) {
-						throw new RuntimeException(e);
-					}
-				}
-				// Complexdata Reference
-				if (inputValue instanceof LiteralStringBinding) {
-					executeBuilder
-							.addComplexDataReference(
-									inputName,
-									(String) inputValue.getPayload(),
-									"http://schemas.opengis.net/gml/3.1.1/base/gml.xsd",
-									null, "text/xml; subtype=gml/3.1.1");
+				try {
+					executeBuilder.addComplexData(
+							inputName,
+							inputValue,
+							input.getComplexData().getDefault().getFormat().getSchema(),
+							input.getComplexData().getDefault().getFormat().getEncoding(),
+							input.getComplexData().getDefault().getFormat().getMimeType()
+							);
+				} catch (WPSClientException e) {
+					throw new RuntimeException(e);
 				}
 			}
 		}
-
-		// TODO only applies to complex data, not needed for literal data
-		// executeBuilder.setMimeTypeForOutput("text/plain", "result");
-		// executeBuilder.setSchemaForOutput(
-		// "http://schemas.opengis.net/gml/3.1.1/base/feature.xsd",
-		// "result");
 
 		for (String outputName : outputNames) {
 			executeBuilder.addOutput(outputName);
@@ -136,45 +112,34 @@ public class WpsClient {
 
 	private Map<String, IData> getOutputDataFromResponse(
 			ExecuteResponseDocument response, ProcessDescriptionType processDescription) throws ExceptionReport {
-		// Improvement: Maybe we can improve the ExecuteResponseAnalyser to
-		// support all data types
-		// because now it doesn't support literal data, that's why I took the
-		// code here from the draft in
-		// GenericTransactionalAlgorithm.
 		Map<String, IData> resultData = new HashMap<String, IData>();
 		OutputDataType[] resultValues = response.getExecuteResponse()
 				.getProcessOutputs().getOutputArray();
 
 		for (OutputDataType resultValue : resultValues) {
-			// 3.get the identifier as key
-			String key = resultValue.getIdentifier().getStringValue();
-			// 4.the the literal value as String
+
+			String outputIdentifier = resultValue.getIdentifier().getStringValue();
+			// Literal output
 			if (resultValue.getData().getLiteralData() != null) {
-				resultData.put(key,
+				resultData.put(outputIdentifier,
 						OutputHandler.handleLiteralValue(resultValue));
 			}
-			// 5.parse the complex value
+			// Complex output
 			if (resultValue.getData().getComplexData() != null) {
-
-				// TODO gather outputdescription for handling the complex value
-				resultData.put(key, OutputHandler.handleComplexValue(
+				resultData.put(outputIdentifier, OutputHandler.handleComplexValue(
 						resultValue, processDescription));
-				
-
 			}
-			// 6.parse the complex value reference
+			// Reference output
 			if (resultValue.getReference() != null) {
 				// TODO handle this
 				// download the data, parse it and put it in the hashmap
 				// resultData.put(key,
-				// OutputParser.handleComplexValueReference(resultValue));
+				// OutputHandler.handleComplexValueReference(resultValue));
 			}
-
-			// 7.parse Bounding Box value
+			// BoundingBox output
 			if (resultValue.getData().getBoundingBoxData() != null) {
-				resultData.put(key, OutputHandler.handleBBoxValue(resultValue));
+				resultData.put(outputIdentifier, OutputHandler.handleBBoxValue(resultValue));
 			}
-
 		}
 		return resultData;
 	}
