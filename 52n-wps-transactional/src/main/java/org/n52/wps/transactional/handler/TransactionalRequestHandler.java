@@ -75,55 +75,74 @@ import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 
 public class TransactionalRequestHandler {
-	
-	private static Logger LOGGER = LoggerFactory.getLogger(TransactionalRequestHandler.class);
-	
+
+	private static Logger LOGGER = LoggerFactory
+			.getLogger(TransactionalRequestHandler.class);
+
 	protected OutputStream os;
-	
+
 	protected ITransactionalRequest req;
-	
-	public TransactionalRequestHandler(InputStream is, OutputStream os) throws ExceptionReport {
 
-		Document doc;
-		this.os = os;
-		
-		try {
-		DocumentBuilderFactory fac = DocumentBuilderFactory.newInstance();
-		fac.setNamespaceAware(true);//this prevents "xmlns="""
-		fac.setIgnoringElementContentWhitespace(true);
-		
-		DocumentBuilder documentBuilder= fac.newDocumentBuilder();
-		doc = documentBuilder.parse(is);
-				
-		Node child = doc.getFirstChild();
-		
-		while(child.getNodeName().compareTo("#comment")==0) {
-			child = child.getNextSibling();
-		}
-
-		// TODO: check version
-		Node versionNode = child.getAttributes().getNamedItem("version");
-		
-		String requestType = getRequestType(doc.getFirstChild());
-
-		LOGGER.info("Request type: " + requestType);
-		
-		if (requestType == null) {
+	public TransactionalRequestHandler(ITransactionalRequest request)
+			throws ExceptionReport {
+		if (request == null) {
 			throw new ExceptionReport("Request not valid",
 					ExceptionReport.OPERATION_NOT_SUPPORTED);
-		} else if (requestType.equals("DeployProcess")) {
-			this.req = new DeployProcessRequest(doc);
-		} else if (requestType.equals("UnDeployProcess")) {
-			this.req = new UndeployProcessRequest(doc);
+		} else if (request instanceof DeployProcessRequest
+				|| request instanceof UndeployProcessRequest) {
+			this.req = request;
 		} else {
 			throw new ExceptionReport("Request type unknown ("
-					+ requestType
+					+ request.getClass().toString()
 					+ ") Must be DeployProcess or UnDeployProcess",
 					ExceptionReport.OPERATION_NOT_SUPPORTED);
 		}
 
-		}
-		catch (SAXException e) {
+		req = request;
+	}
+
+	public TransactionalRequestHandler(InputStream is, OutputStream os)
+			throws ExceptionReport {
+
+		Document doc;
+		this.os = os;
+
+		try {
+			DocumentBuilderFactory fac = DocumentBuilderFactory.newInstance();
+			fac.setNamespaceAware(true);// this prevents "xmlns="""
+			fac.setIgnoringElementContentWhitespace(true);
+
+			DocumentBuilder documentBuilder = fac.newDocumentBuilder();
+			doc = documentBuilder.parse(is);
+
+			Node child = doc.getFirstChild();
+
+			while (child.getNodeName().compareTo("#comment") == 0) {
+				child = child.getNextSibling();
+			}
+
+			// TODO: check version
+			Node versionNode = child.getAttributes().getNamedItem("version");
+
+			String requestType = getRequestType(doc.getFirstChild());
+
+			LOGGER.info("Request type: " + requestType);
+
+			if (requestType == null) {
+				throw new ExceptionReport("Request not valid",
+						ExceptionReport.OPERATION_NOT_SUPPORTED);
+			} else if (requestType.equals("DeployProcess")) {
+				this.req = new DeployProcessRequest(doc);
+			} else if (requestType.equals("UnDeployProcess")) {
+				this.req = new UndeployProcessRequest(doc);
+			} else {
+				throw new ExceptionReport("Request type unknown ("
+						+ requestType
+						+ ") Must be DeployProcess or UnDeployProcess",
+						ExceptionReport.OPERATION_NOT_SUPPORTED);
+			}
+
+		} catch (SAXException e) {
 			throw new ExceptionReport(
 					"There went something wrong with parsing the POST data: "
 							+ e.getMessage(),
@@ -137,9 +156,9 @@ public class TransactionalRequestHandler {
 					"There is a internal parser configuration error",
 					ExceptionReport.NO_APPLICABLE_CODE, e);
 		}
-		
+
 	}
-	
+
 	/**
 	 * Handles the request and returns a transactional response (if succeeded)
 	 * or throws an exception (otherwise)
@@ -151,8 +170,7 @@ public class TransactionalRequestHandler {
 	 * @throws Exception
 	 *             if an error occurs handling the request
 	 */
-	public ITransactionalResponse handle()
-			throws ExceptionReport {
+	public ITransactionalResponse handle() throws ExceptionReport {
 		if (this.req == null)
 			throw new ExceptionReport("Internal Error", "");
 		if (req instanceof DeployProcessRequest) {
@@ -165,15 +183,16 @@ public class TransactionalRequestHandler {
 		}
 	}
 
-	private DeployProcessResponse handleDeploy(
-			DeployProcessRequest request) throws ExceptionReport {
-		
+	private DeployProcessResponse handleDeploy(DeployProcessRequest request)
+			throws ExceptionReport {
+
 		DeployProcessResponse response;
 		saveProcessDescription(request);
-		
+
 		try {
 			ITransactionalAlgorithmRepository repository = TransactionalHelper
-					.getMatchingTransactionalRepository(request.getDeploymentProfileName());
+					.getMatchingTransactionalRepository(request
+							.getDeploymentProfileName());
 
 			if (repository == null) {
 				throw new ExceptionReport("Could not find matching repository",
@@ -188,36 +207,36 @@ public class TransactionalRequestHandler {
 				response = new DeployProcessResponse(request);
 				return response;
 			}
-			
+
 		} catch (RuntimeException e) {
 			throw new ExceptionReport("Could not deploy process",
 					ExceptionReport.NO_APPLICABLE_CODE);
 		}
-		
+
 	}
 
 	private void saveProcessDescription(DeployProcessRequest request) {
 		String processId = request.getProcessId();
 		ProcessDescriptionType pDescr = request.getProcessDescription();
-		
+
 		URI fileUri = generateProcessDescriptionFileUri(processId);
-		
-			try {
-				writeXmlFile(pDescr, fileUri);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (TransformerFactoryConfigurationError e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+
+		try {
+			writeXmlFile(pDescr, fileUri);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (TransformerFactoryConfigurationError e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
-	//TODO
+	// TODO
 	private static ITransactionalResponse handleUnDeploy(
 			UndeployProcessRequest request) throws ExceptionReport {
 		UndeployProcessResponse response;
-		
+
 		try {
 			if (RepositoryManager.getInstance().getAlgorithm(
 					request.getProcessID()) == null) {
@@ -248,29 +267,31 @@ public class TransactionalRequestHandler {
 					ExceptionReport.NO_APPLICABLE_CODE);
 		}
 	}
-	
+
 	public static URI generateProcessDescriptionFileUri(String processId) {
-		String fullPath =  GenericTransactionalAlgorithm.class.getProtectionDomain().getCodeSource().getLocation().toString();
-		int searchIndex= fullPath.indexOf("WEB-INF");
+		String fullPath = GenericTransactionalAlgorithm.class
+				.getProtectionDomain().getCodeSource().getLocation().toString();
+		int searchIndex = fullPath.indexOf("WEB-INF");
 		String subPath = fullPath.substring(0, searchIndex);
-		
+
 		URI directoryUri;
 		try {
-			directoryUri = new URL(subPath+"WEB-INF/ProcessDescriptions/").toURI();
-		File directory = new File(directoryUri);
-		if(!directory.exists()){
-			directory.mkdirs();
-		}
+			directoryUri = new URL(subPath + "WEB-INF/ProcessDescriptions/")
+					.toURI();
+			File directory = new File(directoryUri);
+			if (!directory.exists()) {
+				directory.mkdirs();
+			}
 
-		return new URI(directoryUri.toString() + "/" + processId + ".xml");
+			return new URI(directoryUri.toString() + "/" + processId + ".xml");
 		} catch (MalformedURLException e) {
 			throw new RuntimeException(e);
 		} catch (URISyntaxException e) {
 			throw new RuntimeException(e);
 		}
-		
+
 	}
-	
+
 	private static void deleteProcessDescription(String processId) {
 		URI fileUri = generateProcessDescriptionFileUri(processId);
 		File file = new File(fileUri);
@@ -278,63 +299,61 @@ public class TransactionalRequestHandler {
 			file.delete();
 		}
 	}
-	
+
 	protected void writeXmlFile(XmlObject doc, URI fileUri) throws IOException {
 		File file = new File(fileUri);
-        String parent = file.getParent();
-        File directory = new File(parent);
-        directory.mkdirs();
+		String parent = file.getParent();
+		File directory = new File(parent);
+		directory.mkdirs();
 
 		XmlOptions xmlOptions = new XmlOptions();
-        xmlOptions.setSavePrettyPrint();
-        
-        doc.save(file,xmlOptions);
+		xmlOptions.setSavePrettyPrint();
+
+		doc.save(file, xmlOptions);
 
 	}
-	
+
 	@Deprecated
-	protected void writeXmlFile(Node node, URI fileUri) throws IOException, TransformerFactoryConfigurationError, TransformerException, ParserConfigurationException {
+	protected void writeXmlFile(Node node, URI fileUri) throws IOException,
+			TransformerFactoryConfigurationError, TransformerException,
+			ParserConfigurationException {
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		factory.setNamespaceAware(true);
 		DocumentBuilder documentBuilder = factory.newDocumentBuilder();
 		Document tempDocument = documentBuilder.newDocument();
 		Node importedNode = tempDocument.importNode(node, true);
 		tempDocument.appendChild(importedNode);
-		tempDocument.getDocumentElement().setAttribute(
-			    "xmlns:wps",
-			    "http://www.opengis.net/wps/1.0.0");
-		tempDocument.getDocumentElement().setAttribute(
-			    "xmlns:ows",
-			    "http://www.opengis.net/ows/1.1");
-        // Prepare the DOM document for writing
-        Source source = new DOMSource(tempDocument);
+		tempDocument.getDocumentElement().setAttribute("xmlns:wps",
+				"http://www.opengis.net/wps/1.0.0");
+		tempDocument.getDocumentElement().setAttribute("xmlns:ows",
+				"http://www.opengis.net/ows/1.1");
+		// Prepare the DOM document for writing
+		Source source = new DOMSource(tempDocument);
 
-        // Prepare the output file
-        File file = new File(fileUri);
-        String parent = file.getParent();
-        File directory = new File(parent);
-        directory.mkdirs();
-        //file.createNewFile();
-        OutputStream fileOutput = new FileOutputStream(file);
-        Result result = new StreamResult(fileOutput);
+		// Prepare the output file
+		File file = new File(fileUri);
+		String parent = file.getParent();
+		File directory = new File(parent);
+		directory.mkdirs();
+		// file.createNewFile();
+		OutputStream fileOutput = new FileOutputStream(file);
+		Result result = new StreamResult(fileOutput);
 
-        // Write the DOM document to the file
-        Transformer xformer = TransformerFactory.newInstance().newTransformer();
-        xformer.transform(source, result);
-        fileOutput.close();
+		// Write the DOM document to the file
+		Transformer xformer = TransformerFactory.newInstance().newTransformer();
+		xformer.transform(source, result);
+		fileOutput.close();
 	}
-	
+
 	private String getRequestType(Node node) {
 		String localName = node.getLocalName();
 		if (localName.equalsIgnoreCase("undeployprocess")) {
 			return "UnDeployProcess";
-		}
-		else if (localName.equalsIgnoreCase("deployprocess")) {
-				return "DeployProcess";
-		}
-		else {
+		} else if (localName.equalsIgnoreCase("deployprocess")) {
+			return "DeployProcess";
+		} else {
 			return null;
 		}
 	}
-	
+
 }
