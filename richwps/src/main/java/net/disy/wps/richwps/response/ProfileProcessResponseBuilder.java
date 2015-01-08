@@ -8,7 +8,7 @@ import java.util.List;
 import javax.xml.XMLConstants;
 import javax.xml.namespace.QName;
 
-import net.disy.wps.richwps.request.TestProcessRequest;
+import net.disy.wps.richwps.request.ProfileProcessRequest;
 import net.opengis.ows.x11.DomainMetadataType;
 import net.opengis.ows.x11.LanguageStringType;
 import net.opengis.wps.x100.DataInputsType;
@@ -19,9 +19,9 @@ import net.opengis.wps.x100.OutputDataType;
 import net.opengis.wps.x100.OutputDefinitionType;
 import net.opengis.wps.x100.OutputDescriptionType;
 import net.opengis.wps.x100.ProcessDescriptionType;
+import net.opengis.wps.x100.ProfileProcessResponseDocument;
+import net.opengis.wps.x100.ProfileProcessResponseDocument.ProfileProcessResponse;
 import net.opengis.wps.x100.StatusType;
-import net.opengis.wps.x100.TestProcessResponseDocument;
-import net.opengis.wps.x100.TestProcessResponseDocument.TestProcessResponse;
 
 import org.apache.xmlbeans.XmlCursor;
 import org.n52.wps.io.data.IBBOXData;
@@ -42,34 +42,34 @@ import de.hsos.richwps.dsl.api.elements.OutputReferenceMapping;
 
 /**
  * This implementation provides functionality for building the Response on a
- * TestProcessRequest. It holds, gathers and generates all necessary data to
+ * ProfileProcessRequest. It holds, gathers and generates all necessary data to
  * create the Response.
  * 
  * 
  * @author faltin
  *
  */
-public class TestProcessResponseBuilder {
+public class ProfileProcessResponseBuilder {
 	private static Logger LOGGER = LoggerFactory
-			.getLogger(TestProcessResponseBuilder.class);
+			.getLogger(ProfileProcessResponseBuilder.class);
 
 	private String identifier;
 	private DataInputsType dataInputs;
-	protected TestProcessResponseDocument testProcessResponseDocument;
+	protected ProfileProcessResponseDocument profileProcessResponseDocument;
 	private ExecuteResponseDocument executeResponseDocument;
-	private TestProcessRequest request;
+	private ProfileProcessRequest request;
 	private RawData rawDataElement;
 	private ProcessDescriptionType description;
 	private Calendar creationTime;
-	private List<OutputReferenceDescription> outputReferenceDescs;
+	private List<OutputReferenceDescription> varOutDescs;
 
 	/**
-	 * Constructs a new TestProcessResponseBuilder
+	 * Constructs a new ProfileProcessResponseBuilder
 	 * 
 	 * @param request
-	 *            the TestProcessRequest
+	 *            the ProfileProcessRequest
 	 */
-	public TestProcessResponseBuilder(TestProcessRequest request) {
+	public ProfileProcessResponseBuilder(ProfileProcessRequest request) {
 		this.request = request;
 		description = this.request.getProcessDescription();
 		identifier = description.getIdentifier().getStringValue().trim();
@@ -78,30 +78,30 @@ public class TestProcessResponseBuilder {
 					"Error while accessing the process description for "
 							+ identifier);
 		}
-		testProcessResponseDocument = TestProcessResponseDocument.Factory
+		profileProcessResponseDocument = ProfileProcessResponseDocument.Factory
 				.newInstance();
-		testProcessResponseDocument.addNewTestProcessResponse();
-		XmlCursor c = testProcessResponseDocument.newCursor();
+		profileProcessResponseDocument.addNewProfileProcessResponse();
+		XmlCursor c = profileProcessResponseDocument.newCursor();
 		c.toFirstChild();
 		c.toLastAttribute();
 		c.setAttributeText(new QName(
 				XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI, "schemaLocation"),
-				"./wpsTestProcess_response.xsd");
-		TestProcessResponse testProcessResponse = testProcessResponseDocument
-				.getTestProcessResponse();
-		testProcessResponse
+				"./wpsProfileProcess_response.xsd");
+		ProfileProcessResponse profileProcessResponse = profileProcessResponseDocument
+				.getProfileProcessResponse();
+		profileProcessResponse
 				.setServiceInstance(CapabilitiesConfiguration.WPS_ENDPOINT_URL
 						+ "?REQUEST=GetCapabilities&SERVICE=WPS");
-		testProcessResponse.setLang(WebProcessingService.DEFAULT_LANGUAGE);
-		testProcessResponse.setService("WPS");
-		testProcessResponse.setVersion(Request.SUPPORTED_VERSION);
+		profileProcessResponse.setLang(WebProcessingService.DEFAULT_LANGUAGE);
+		profileProcessResponse.setService("WPS");
+		profileProcessResponse.setVersion(Request.SUPPORTED_VERSION);
 
-		testProcessResponse.addNewProcess();
-		testProcessResponse.getProcess().addNewIdentifier()
+		profileProcessResponse.addNewProcess();
+		profileProcessResponse.getProcess().addNewIdentifier()
 				.setStringValue(identifier);
-		testProcessResponse.getProcess().setProcessVersion(
+		profileProcessResponse.getProcess().setProcessVersion(
 				description.getProcessVersion());
-		testProcessResponse.getProcess().setTitle(description.getTitle());
+		profileProcessResponse.getProcess().setTitle(description.getTitle());
 		initializeExecuteResponseDocument();
 		creationTime = Calendar.getInstance();
 	}
@@ -149,11 +149,11 @@ public class TestProcessResponseBuilder {
 			String id = request.getUniqueId().toString();
 			String statusLocation = DatabaseFactory.getDatabase()
 					.generateRetrieveResultURL(id);
-			testProcessResponseDocument.getTestProcessResponse()
+			profileProcessResponseDocument.getProfileProcessResponse()
 					.setStatusLocation(statusLocation);
 		}
 		try {
-			return testProcessResponseDocument.newInputStream(XMLBeansHelper
+			return profileProcessResponseDocument.newInputStream(XMLBeansHelper
 					.getXmlOptions());
 		} catch (Exception e) {
 			throw new RuntimeException(e);
@@ -167,15 +167,16 @@ public class TestProcessResponseBuilder {
 	 * 
 	 * @throws ExceptionReport
 	 */
+
 	public void update() throws ExceptionReport {
 
-		net.opengis.wps.x100.TestProcessResponseDocument.TestProcessResponse testProcessResponseElem = testProcessResponseDocument
-				.getTestProcessResponse();
+		net.opengis.wps.x100.ProfileProcessResponseDocument.ProfileProcessResponse profileProcessResponseElem = profileProcessResponseDocument
+				.getProfileProcessResponse();
 		ExecuteResponse executeResponseElem = executeResponseDocument
 				.getExecuteResponse();
 
 		// if status succeeded, update reponse with result
-		if (testProcessResponseElem.getStatus().isSetProcessSucceeded()) {
+		if (profileProcessResponseElem.getStatus().isSetProcessSucceeded()) {
 			// FIXME Importing WPSConfiguration produces weird behaviour. (No
 			// autocompletion available)
 
@@ -186,38 +187,36 @@ public class TestProcessResponseBuilder {
 			// if (new
 			// Boolean(WPSConfig.getInstance().getWPSConfig().getServer()
 			// .getIncludeDataInputsInResponse())) {
-			dataInputs = request.getTestProcess().getDataInputs();
-			testProcessResponseElem.setDataInputs(dataInputs);
+			dataInputs = request.getProfileProcess().getDataInputs();
+			profileProcessResponseElem.setDataInputs(dataInputs);
 			executeResponseElem.setDataInputs(dataInputs);
 			// }
-			testProcessResponseElem.addNewProcessOutputs();
+			profileProcessResponseElem.addNewProcessOutputs();
 			executeResponseElem.addNewProcessOutputs();
 			// has the client specified the outputs?
-			outputReferenceDescs = new ArrayList<OutputReferenceDescription>();
-			List<OutputReferenceMapping> outputReferenceMappings = request
-					.getOutputReferenceMappings();
+			varOutDescs = new ArrayList<OutputReferenceDescription>();
+			List<OutputReferenceMapping> processOutputsOnVariablesMapping = null;
 			OutputDescriptionType[] outputDescs = description
 					.getProcessOutputs().getOutputArray();
-			if (request.getTestProcess().isSetResponseForm()) {
+			if (request.getProfileProcess().isSetResponseForm()) {
 				// Get the outputdescriptions from the algorithm
 
-				for (int i = 0; i < outputReferenceMappings.size(); i++) {
-					String outputIdentifier = outputReferenceMappings.get(i)
-							.getOutputIdentifier();
+				for (int i = 0; i < processOutputsOnVariablesMapping.size(); i++) {
+					String outputIdentifier = processOutputsOnVariablesMapping
+							.get(i).getOutputIdentifier();
 					// Get OutputDescriptions of current Process
 					OutputDescriptionType[] descs = RepositoryManager
 							.getInstance()
 							.getProcessDescription(
-									outputReferenceMappings.get(i)
+									processOutputsOnVariablesMapping.get(i)
 											.getProcessId())
 							.getProcessOutputs().getOutputArray();
 					for (OutputDescriptionType desc : descs) {
 						if (desc.getIdentifier().getStringValue()
 								.equals(outputIdentifier)) {
-							outputReferenceDescs
-									.add(new OutputReferenceDescription(
-											outputReferenceMappings.get(i),
-											desc));
+							varOutDescs.add(new OutputReferenceDescription(
+									processOutputsOnVariablesMapping.get(i),
+									desc));
 						}
 					}
 				}
@@ -225,17 +224,17 @@ public class TestProcessResponseBuilder {
 				if (request.isRawData()) {
 					// TODO Not verified! Verify!
 					OutputDefinitionType rawDataOutput = request
-							.getTestProcess().getResponseForm()
+							.getProfileProcess().getResponseForm()
 							.getRawDataOutput();
 					String definedOutputId = rawDataOutput.getIdentifier()
 							.getStringValue();
 					OutputDescriptionType desc = XMLBeansHelper.findOutputByID(
 							definedOutputId, outputDescs);
 					if (desc.isSetComplexOutput()) {
-						String encoding = TestProcessResponseBuilder
+						String encoding = ProfileProcessResponseBuilder
 								.getEncoding(desc, rawDataOutput);
-						String schema = TestProcessResponseBuilder.getSchema(
-								desc, rawDataOutput);
+						String schema = ProfileProcessResponseBuilder
+								.getSchema(desc, rawDataOutput);
 						String responseMimeType = getMimeType(rawDataOutput,
 								null);
 						generateComplexDataOutput(definedOutputId, false, true,
@@ -261,11 +260,12 @@ public class TestProcessResponseBuilder {
 				}
 				// Get the outputdefinitions from the clients request
 				// For each request of output
-				for (int i = 0; i < request.getTestProcess().getResponseForm()
-						.getResponseDocument().getOutputArray().length; i++) {
-					OutputDefinitionType definition = request.getTestProcess()
-							.getResponseForm().getResponseDocument()
-							.getOutputArray(i);
+				for (int i = 0; i < request.getProfileProcess()
+						.getResponseForm().getResponseDocument()
+						.getOutputArray().length; i++) {
+					OutputDefinitionType definition = request
+							.getProfileProcess().getResponseForm()
+							.getResponseDocument().getOutputArray(i);
 					String definedOutputId = definition.getIdentifier()
 							.getStringValue();
 					OutputReferenceDescription varOutDescription = getVarOutDescriptionOfDefinedOutput(definedOutputId);
@@ -286,9 +286,9 @@ public class TestProcessResponseBuilder {
 
 						String mimeType = getMimeType(definition,
 								varOutDescription);
-						String schema = TestProcessResponseBuilder.getSchema(
-								desc, definition);
-						String encoding = TestProcessResponseBuilder
+						String schema = ProfileProcessResponseBuilder
+								.getSchema(desc, definition);
+						String encoding = ProfileProcessResponseBuilder
 								.getEncoding(desc, definition);
 
 						generateComplexDataOutput(definedOutputId,
@@ -319,9 +319,9 @@ public class TestProcessResponseBuilder {
 				LOGGER.info("OutputDefinitions are not stated explicitly in request");
 				// THIS IS A WORKAROUND AND ACTUALLY NOT COMPLIANT TO THE
 				// SPEC.
-				for (int i = 0; i < outputReferenceMappings.size(); i++) {
-					String currentProcessId = outputReferenceMappings.get(i)
-							.getProcessId();
+				for (int i = 0; i < processOutputsOnVariablesMapping.size(); i++) {
+					String currentProcessId = processOutputsOnVariablesMapping
+							.get(i).getProcessId();
 					OutputDescriptionType[] descs = RepositoryManager
 							.getInstance()
 							.getProcessDescription(currentProcessId)
@@ -329,12 +329,13 @@ public class TestProcessResponseBuilder {
 					for (OutputDescriptionType desc : descs) {
 						if (desc.getIdentifier()
 								.getStringValue()
-								.equals(outputReferenceMappings.get(i)
+								.equals(processOutputsOnVariablesMapping.get(i)
 										.getOutputIdentifier())) {
 							OutputReferenceDescription varOutDesc = new OutputReferenceDescription(
-									outputReferenceMappings.get(i), desc);
+									processOutputsOnVariablesMapping.get(i),
+									desc);
 							if (!varOutDescsContains(varOutDesc)) {
-								outputReferenceDescs.add(varOutDesc);
+								varOutDescs.add(varOutDesc);
 							}
 						}
 					}
@@ -343,7 +344,7 @@ public class TestProcessResponseBuilder {
 				if (description == null) {
 					throw new RuntimeException(
 							"Error while accessing the process description for "
-									+ request.getTestProcess()
+									+ request.getProfileProcess()
 											.getProcessDescription()
 											.getIdentifier().getStringValue());
 				}
@@ -367,32 +368,31 @@ public class TestProcessResponseBuilder {
 								outputDescs[i].getTitle());
 					}
 				}
-				for (int i = 0; i < outputReferenceDescs.size(); i++) {
-					if (outputReferenceDescs.get(i).getDescription()
+				for (int i = 0; i < varOutDescs.size(); i++) {
+					if (varOutDescs.get(i).getDescription()
 							.isSetComplexOutput()) {
-						String schema = outputReferenceDescs.get(i)
-								.getDescription().getComplexOutput()
-								.getDefault().getFormat().getSchema();
-						String encoding = outputReferenceDescs.get(i)
-								.getDescription().getComplexOutput()
-								.getDefault().getFormat().getEncoding();
-						String mimeType = outputReferenceDescs.get(i)
-								.getDescription().getComplexOutput()
-								.getDefault().getFormat().getMimeType();
-						generateComplexDataOutput(outputReferenceDescs.get(i)
+						String schema = varOutDescs.get(i).getDescription()
+								.getComplexOutput().getDefault().getFormat()
+								.getSchema();
+						String encoding = varOutDescs.get(i).getDescription()
+								.getComplexOutput().getDefault().getFormat()
+								.getEncoding();
+						String mimeType = varOutDescs.get(i).getDescription()
+								.getComplexOutput().getDefault().getFormat()
+								.getMimeType();
+						generateComplexDataOutput(varOutDescs.get(i)
 								.getProcessOutputOnVariableMapping()
 								.getOutputReference(), false, false, schema,
-								mimeType, encoding, outputReferenceDescs.get(i)
+								mimeType, encoding, varOutDescs.get(i)
 										.getDescription().getTitle());
-					} else if (outputReferenceDescs.get(i).getDescription()
+					} else if (varOutDescs.get(i).getDescription()
 							.isSetLiteralOutput()) {
-						generateLiteralDataOutput(outputReferenceDescs.get(i)
+						generateLiteralDataOutput(varOutDescs.get(i)
 								.getProcessOutputOnVariableMapping()
-								.getOutputReference(), false,
-								outputReferenceDescs.get(i).getDescription()
-										.getLiteralOutput().getDataType()
-										.getReference(), null, null, null,
-								outputReferenceDescs.get(i).getDescription()
+								.getOutputReference(), false, varOutDescs
+								.get(i).getDescription().getLiteralOutput()
+								.getDataType().getReference(), null, null,
+								null, varOutDescs.get(i).getDescription()
 										.getTitle());
 					}
 
@@ -400,15 +400,16 @@ public class TestProcessResponseBuilder {
 			}
 			// }
 		} else if (request.isStoreResponse()) {
-			testProcessResponseElem.setStatusLocation(DatabaseFactory
+			profileProcessResponseElem.setStatusLocation(DatabaseFactory
 					.getDatabase().generateRetrieveResultURL(
 							(request.getUniqueId()).toString()));
 		}
+
 	}
 
 	private boolean varOutDescsContains(OutputReferenceDescription varOutDesc) {
-		for (int i = 0; i < outputReferenceDescs.size(); i++) {
-			if (outputReferenceDescs
+		for (int i = 0; i < varOutDescs.size(); i++) {
+			if (varOutDescs
 					.get(i)
 					.getProcessOutputOnVariableMapping()
 					.getOutputReference()
@@ -422,7 +423,7 @@ public class TestProcessResponseBuilder {
 
 	private OutputDescriptionType getDescOfVariable(String definedOutputId) {
 		OutputDescriptionType outputDescription = null;
-		for (OutputReferenceDescription varOutDescription : outputReferenceDescs) {
+		for (OutputReferenceDescription varOutDescription : varOutDescs) {
 			if (varOutDescription.getProcessOutputOnVariableMapping()
 					.getOutputReference().equals(definedOutputId)) {
 				outputDescription = varOutDescription.getDescription();
@@ -434,10 +435,10 @@ public class TestProcessResponseBuilder {
 	private OutputReferenceDescription getVarOutDescriptionOfDefinedOutput(
 			String varReferenceId) {
 		OutputReferenceDescription varOutDescription = null;
-		for (int i = 0; i < outputReferenceDescs.size(); i++) {
-			if (outputReferenceDescs.get(i).getProcessOutputOnVariableMapping()
+		for (int i = 0; i < varOutDescs.size(); i++) {
+			if (varOutDescs.get(i).getProcessOutputOnVariableMapping()
 					.getOutputReference().equals(varReferenceId)) {
-				varOutDescription = outputReferenceDescs.get(i);
+				varOutDescription = varOutDescs.get(i);
 			}
 		}
 		return varOutDescription;
@@ -449,11 +450,13 @@ public class TestProcessResponseBuilder {
 	 * @param status
 	 *            status to be set.
 	 */
+
 	public void setStatus(StatusType status) {
 		// workaround, should be generated either at the creation of the
 		// document or when the process has been finished.
 		status.setCreationTime(creationTime);
-		testProcessResponseDocument.getTestProcessResponse().setStatus(status);
+		profileProcessResponseDocument.getProfileProcessResponse().setStatus(
+				status);
 	}
 
 	private static String getSchema(OutputDescriptionType desc,
@@ -480,6 +483,7 @@ public class TestProcessResponseBuilder {
 	 * 
 	 * @return the mime-type.
 	 */
+
 	public String getMimeType() {
 		return getMimeType(null, null);
 	}
@@ -493,13 +497,14 @@ public class TestProcessResponseBuilder {
 	 *            the description of
 	 * @return the mime-type
 	 */
+
 	public String getMimeType(OutputDefinitionType def,
 			OutputReferenceDescription outputReferenceDescription) {
 
 		String mimeType = "";
 		OutputDescriptionType[] outputDescs = description.getProcessOutputs()
 				.getOutputArray();
-		boolean isSetResponseForm = request.getTestProcess()
+		boolean isSetResponseForm = request.getProfileProcess()
 				.isSetResponseForm();
 
 		String definedOutputId = "";
@@ -508,12 +513,13 @@ public class TestProcessResponseBuilder {
 			definedOutputId = def.getIdentifier().getStringValue();
 		} else if (isSetResponseForm) {
 
-			if (request.getTestProcess().getResponseForm().isSetRawDataOutput()) {
-				definedOutputId = request.getTestProcess().getResponseForm()
+			if (request.getProfileProcess().getResponseForm()
+					.isSetRawDataOutput()) {
+				definedOutputId = request.getProfileProcess().getResponseForm()
 						.getRawDataOutput().getIdentifier().getStringValue();
-			} else if (request.getTestProcess().getResponseForm()
+			} else if (request.getProfileProcess().getResponseForm()
 					.isSetResponseDocument()) {
-				definedOutputId = request.getTestProcess().getResponseForm()
+				definedOutputId = request.getProfileProcess().getResponseForm()
 						.getResponseDocument().getOutputArray(0)
 						.getIdentifier().getStringValue();
 			}
@@ -536,7 +542,7 @@ public class TestProcessResponseBuilder {
 			// Get the outputdescriptions from the algorithm
 			if (request.isRawData()) {
 				// TODO Not verified! Verify!
-				mimeType = request.getTestProcess().getResponseForm()
+				mimeType = request.getProfileProcess().getResponseForm()
 						.getRawDataOutput().getMimeType();
 			} else {
 				// mimeType = "text/xml";
@@ -594,11 +600,11 @@ public class TestProcessResponseBuilder {
 				outputDataItem.updateResponseAsReference(
 						executeResponseDocument,
 						(request.getUniqueId()).toString(), mimeType);
-				updateTestProcessResponse(definedOutputId);
+				updateProfileProcessResponse(definedOutputId);
 			} else {
 				outputDataItem
 						.updateResponseForInlineComplexData(executeResponseDocument);
-				updateTestProcessResponse(definedOutputId);
+				updateProfileProcessResponse(definedOutputId);
 			}
 		}
 
@@ -606,7 +612,7 @@ public class TestProcessResponseBuilder {
 
 	private String getOutputIdOfRelatedOutput(String definedOutputId) {
 		String outputIdentifier = null;
-		for (OutputReferenceDescription varOutDescription : outputReferenceDescs) {
+		for (OutputReferenceDescription varOutDescription : varOutDescs) {
 			if (varOutDescription.getProcessOutputOnVariableMapping()
 					.getOutputReference().equals(definedOutputId)) {
 				outputIdentifier = varOutDescription
@@ -622,7 +628,7 @@ public class TestProcessResponseBuilder {
 
 	private String getProcessIdOfRelatedOutput(String definedOutputId) {
 		String processId = null;
-		for (OutputReferenceDescription varOutDescription : outputReferenceDescs) {
+		for (OutputReferenceDescription varOutDescription : varOutDescs) {
 			if (varOutDescription.getProcessOutputOnVariableMapping()
 					.getOutputReference().equals(definedOutputId)) {
 				processId = varOutDescription
@@ -638,7 +644,7 @@ public class TestProcessResponseBuilder {
 	private ProcessDescriptionType getProcessDescriptionOfRelatedOutput(
 			String definedOutputId) {
 		ProcessDescriptionType processDescription = null;
-		for (OutputReferenceDescription varOutDescription : outputReferenceDescs) {
+		for (OutputReferenceDescription varOutDescription : varOutDescs) {
 			if (varOutDescription.getProcessOutputOnVariableMapping()
 					.getOutputReference().equals(definedOutputId)) {
 				String processId = varOutDescription
@@ -653,9 +659,9 @@ public class TestProcessResponseBuilder {
 		return processDescription;
 	}
 
-	private void updateTestProcessResponse(String responseID) {
-		OutputDataType output = testProcessResponseDocument
-				.getTestProcessResponse().getProcessOutputs().addNewOutput();
+	private void updateProfileProcessResponse(String responseID) {
+		OutputDataType output = profileProcessResponseDocument
+				.getProfileProcessResponse().getProcessOutputs().addNewOutput();
 		OutputDataType[] outputs = executeResponseDocument.getExecuteResponse()
 				.getProcessOutputs().getOutputArray();
 		for (OutputDataType currentOutput : outputs) {
@@ -682,7 +688,7 @@ public class TestProcessResponseBuilder {
 					getProcessDescriptionOfRelatedOutput(definedOutputId));
 			handler.updateResponseForLiteralData(executeResponseDocument,
 					dataTypeReference);
-			updateTestProcessResponse(definedOutputId);
+			updateProfileProcessResponse(definedOutputId);
 		}
 	}
 
@@ -702,9 +708,8 @@ public class TestProcessResponseBuilder {
 					getProcessDescriptionOfRelatedOutput(definedOutputId));
 			// TODO Not verified! Verify!
 			handler.updateResponseForBBOXData(executeResponseDocument, obj);
-			updateTestProcessResponse(definedOutputId);
+			updateProfileProcessResponse(definedOutputId);
 		}
 
 	}
-
 }

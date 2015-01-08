@@ -28,7 +28,6 @@ is extensible in terms of processes and data handlers.
 
  ***************************************************************/
 
-
 package org.n52.wps.transactional.deploy;
 
 import java.util.Collection;
@@ -42,11 +41,23 @@ import org.n52.wps.transactional.request.UndeployProcessRequest;
 
 public interface IProcessManager {
 
-	
 	boolean unDeployProcess(UndeployProcessRequest request) throws Exception;
+
 	boolean containsProcess(String processID) throws Exception;
+
 	Collection<String> getAllProcesses() throws Exception;
-	Map<String, IData> invoke(ExecuteDocument payload, String algorithmID) throws Exception;
+
+	Map<String, IData> invoke(ExecuteDocument payload, String algorithmID)
+			throws Exception;
+
 	boolean deployProcess(DeployProcessRequest request) throws Exception;
-	
+
+	Map<String, IData> testInvoke(ExecuteDocument payload, String algorithmID)
+			throws Exception;
+
+	Object getOutputReferenceMappings();
+
+	Object profileInvoke(ExecuteDocument document, String algorithmID)
+			throws Exception;
+
 }

@@ -1,26 +1,18 @@
 package net.disy.wps.richwps.request;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringWriter;
-import java.io.Writer;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.TransformerFactoryConfigurationError;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 
-import net.disy.wps.richwps.response.TestProcessResponse;
-import net.disy.wps.richwps.response.TestProcessResponseBuilder;
+import net.disy.wps.richwps.oe.processor.ProfilingOutputs;
+import net.disy.wps.richwps.oe.processor.TimeMeasurement;
+import net.disy.wps.richwps.response.ProfileProcessResponse;
+import net.disy.wps.richwps.response.ProfileProcessResponseBuilder;
 import net.opengis.ows.x11.ExceptionType;
 import net.opengis.wps.x100.DeployProcessDocument;
 import net.opengis.wps.x100.DeployProcessDocument.DeployProcess;
@@ -28,9 +20,9 @@ import net.opengis.wps.x100.ExecuteDocument;
 import net.opengis.wps.x100.ExecuteDocument.Execute;
 import net.opengis.wps.x100.InputType;
 import net.opengis.wps.x100.ProcessDescriptionType;
+import net.opengis.wps.x100.ProfileProcessDocument;
+import net.opengis.wps.x100.ProfileProcessDocument.ProfileProcess;
 import net.opengis.wps.x100.StatusType;
-import net.opengis.wps.x100.TestProcessDocument;
-import net.opengis.wps.x100.TestProcessDocument.TestProcess;
 import net.opengis.wps.x100.UndeployProcessDocument;
 import net.opengis.wps.x100.UndeployProcessDocument.UndeployProcess;
 
@@ -62,50 +54,64 @@ import org.n52.wps.transactional.response.ITransactionalResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-
-import de.hsos.richwps.dsl.api.elements.OutputReferenceMapping;
 
 /**
+ * This implementation represents information about a transferred
+ * ProfileProcess-Request.
+ * 
+ * <p>
+ * Furthermore it provides functionality for building the response. Therefore it
+ * is callable by a caller where the invoked method handles the procedure to
+ * calculate information und building the response with this information. <\p>
  * 
  * @author faltin
  *
  */
-public class TestProcessRequest extends Request implements IRichWPSRequest,
+public class ProfileProcessRequest extends Request implements IRichWPSRequest,
 		IObserver {
 	private static Logger LOGGER = LoggerFactory
-			.getLogger(TestProcessRequest.class);
-	protected TestProcessDocument testDoc;
+			.getLogger(ProfileProcessRequest.class);
+	protected ProfileProcessDocument profileDoc;
 	protected String processId, schema, executionUnit;
 	protected ProcessDescriptionType processDescription;
-	private TestProcessResponseBuilder responseBuilder;
+	private ProfileProcessResponseBuilder responseBuilder;
 	private Map<String, IData> returnResults;
 	private ExecuteDocument execDoc;
 	private DeployProcessDocument deployProcessDocument;
 	private UndeployProcessDocument undeployProcessDocument;
-	private List<OutputReferenceMapping> outputReferenceMappings;
+	private TimeMeasurement timeMeasurement;
 
-	public TestProcessRequest(Document doc) throws ExceptionReport,
+	/**
+	 * Constructs a new ProfileProcessRequest.
+	 * 
+	 * @param doc
+	 *            the request-document
+	 * @throws ExceptionReport
+	 * @throws ParserConfigurationException
+	 * @throws TransformerFactoryConfigurationError
+	 * @throws TransformerException
+	 */
+	public ProfileProcessRequest(Document doc) throws ExceptionReport,
 			ParserConfigurationException, TransformerFactoryConfigurationError,
-			TransformerException, SAXException, IOException {
+			TransformerException {
 		super(doc);
 		try {
 			XmlOptions option = new XmlOptions();
 			option.setLoadTrimTextBuffer();
-			this.testDoc = TestProcessDocument.Factory.parse(doc, option);
-			if (testDoc == null) {
-				LOGGER.error("TestProcessDocument is null");
+			this.profileDoc = ProfileProcessDocument.Factory.parse(doc, option);
+			if (profileDoc == null) {
+				LOGGER.error("ProfileProcessDocument is null");
 				throw new ExceptionReport("Error while parsing post data",
 						ExceptionReport.MISSING_PARAMETER_VALUE);
 			}
 			extractSubmittedExecuteDocument();
 
-			processDescription = testDoc.getTestProcess()
+			processDescription = profileDoc.getProfileProcess()
 					.getProcessDescription();
 			processId = processDescription.getIdentifier().getStringValue()
 					.trim();
-			XmlObject execUnit = testDoc.getTestProcess().getExecutionUnit();
+			XmlObject execUnit = profileDoc.getProfileProcess()
+					.getExecutionUnit();
 			XmlCursor xcur = execUnit.newCursor();
 			executionUnit = xcur.getTextValue();
 		} catch (XmlException e) {
@@ -113,8 +119,9 @@ public class TestProcessRequest extends Request implements IRichWPSRequest,
 					ExceptionReport.MISSING_PARAMETER_VALUE, e);
 		}
 
-		responseBuilder = new TestProcessResponseBuilder(this);
-		LOGGER.info("Test of process with processId: " + processId);
+		responseBuilder = new ProfileProcessResponseBuilder(this);
+		LOGGER.info("Profiling of process with processId: " + processId);
+
 	}
 
 	private ITransactionalResponse deployProcess() throws ExceptionReport {
@@ -143,11 +150,11 @@ public class TestProcessRequest extends Request implements IRichWPSRequest,
 				.newInstance();
 		UndeployProcess undeployProcess = undeployProcessDocument
 				.addNewUndeployProcess();
-		TestProcess testProcess = testDoc.getTestProcess();
-		undeployProcess.setService(testProcess.getService());
-		undeployProcess.setVersion(testProcess.getVersion());
-		if (testProcess.getLanguage() != null) {
-			undeployProcess.setLanguage(testProcess.getLanguage());
+		ProfileProcess profileProcess = profileDoc.getProfileProcess();
+		undeployProcess.setService(profileProcess.getService());
+		undeployProcess.setVersion(profileProcess.getVersion());
+		if (profileProcess.getLanguage() != null) {
+			undeployProcess.setLanguage(profileProcess.getLanguage());
 		}
 		undeployProcess.addNewProcess();
 		undeployProcess
@@ -164,36 +171,36 @@ public class TestProcessRequest extends Request implements IRichWPSRequest,
 				.newInstance();
 		DeployProcess deployProcess = deployProcessDocument
 				.addNewDeployProcess();
-		TestProcess testProcess = testDoc.getTestProcess();
-		deployProcess.setService(testProcess.getService());
-		deployProcess.setVersion(testProcess.getVersion());
-		if (testProcess.getLanguage() != null) {
-			deployProcess.setLanguage(testProcess.getLanguage());
+		ProfileProcess profileProcess = profileDoc.getProfileProcess();
+		deployProcess.setService(profileProcess.getService());
+		deployProcess.setVersion(profileProcess.getVersion());
+		if (profileProcess.getLanguage() != null) {
+			deployProcess.setLanguage(profileProcess.getLanguage());
 		}
 		deployProcess.setProcessDescription(processDescription);
 		deployProcess.setExecutionUnit(XmlString.Factory
 				.newValue(executionUnit));
-		if (testProcess.getDeploymentProfileName() != null) {
-			deployProcess.setDeploymentProfileName(testProcess
+		if (profileProcess.getDeploymentProfileName() != null) {
+			deployProcess.setDeploymentProfileName(profileProcess
 					.getDeploymentProfileName());
 		}
 		return deployProcessDocument;
 	}
 
 	private ExecuteDocument extractExecuteDocument() {
-		TestProcess testProcess = testDoc.getTestProcess();
+		ProfileProcess profileProcess = profileDoc.getProfileProcess();
 		ExecuteRequestBuilder executeRequestBuilder = new ExecuteRequestBuilder(
-				testProcess.getProcessDescription());
+				profileProcess.getProcessDescription());
 		ExecuteDocument executeDocument = executeRequestBuilder.getExecute();
 		Execute execute = executeDocument.getExecute();
-		if (testProcess.getDataInputs() != null) {
-			execute.setDataInputs(testProcess.getDataInputs());
+		if (profileProcess.getDataInputs() != null) {
+			execute.setDataInputs(profileProcess.getDataInputs());
 		}
-		if (testProcess.getResponseForm() != null) {
-			execute.setResponseForm(testProcess.getResponseForm());
+		if (profileProcess.getResponseForm() != null) {
+			execute.setResponseForm(profileProcess.getResponseForm());
 		}
-		if (testProcess.getLanguage() != null) {
-			execute.setLanguage(testProcess.getLanguage());
+		if (profileProcess.getLanguage() != null) {
+			execute.setLanguage(profileProcess.getLanguage());
 		}
 		return executeDocument;
 	}
@@ -205,78 +212,83 @@ public class TestProcessRequest extends Request implements IRichWPSRequest,
 		return (Document) execDoc.getDomNode();
 	}
 
-	public static Document newDocumentFromInputStream(InputStream in) {
-		DocumentBuilderFactory factory = null;
-		DocumentBuilder builder = null;
-		Document ret = null;
-
-		try {
-			factory = DocumentBuilderFactory.newInstance();
-			builder = factory.newDocumentBuilder();
-		} catch (ParserConfigurationException e) {
-			e.printStackTrace();
-		}
-
-		try {
-			ret = builder.parse(new InputSource(in));
-		} catch (SAXException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return ret;
-	}
-
-	public static final void prettyPrint(Document xml)
-			throws TransformerFactoryConfigurationError, TransformerException {
-		Transformer tf = TransformerFactory.newInstance().newTransformer();
-		tf.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-		tf.setOutputProperty(OutputKeys.INDENT, "yes");
-		Writer out = new StringWriter();
-		tf.transform(new DOMSource(xml), new StreamResult(out));
-		System.out.println(out.toString());
-	}
-
-	public TestProcessResponseBuilder getTestProcessResponseBuilder() {
+	/**
+	 * Returns the ProfileProcessResponseBuilder.
+	 * 
+	 * @return the ProfileProcessResponseBuilder.
+	 */
+	public ProfileProcessResponseBuilder getProfileProcessResponseBuilder() {
 		return responseBuilder;
 	}
 
-	public TestProcess getTestProcess() {
-		return testDoc.getTestProcess();
+	/**
+	 * Returns the ProfileProcess part of the ProfileProcess-Document.
+	 * 
+	 * @return the ProfileProcess-document-part.
+	 */
+	public ProfileProcess getProfileProcess() {
+		return profileDoc.getProfileProcess();
 	}
 
-	public TestProcessDocument getTestDoc() {
-		return testDoc;
+	/**
+	 * Returns the ProfileProcess-Document
+	 * 
+	 * @return the ProfileProcess-Document.
+	 */
+	public ProfileProcessDocument getProfileDoc() {
+		return profileDoc;
 	}
 
+	/**
+	 * Returns the process-identifier.
+	 * 
+	 * @return the process-identifier.
+	 */
 	public String getProcessId() {
 		return processId;
 	}
 
+	/**
+	 * Returns the schema.
+	 * 
+	 * @return the schema.
+	 */
 	public String getSchema() {
 		return schema;
 	}
 
+	/**
+	 * Returns the execution-unit.
+	 * 
+	 * @return the execution-unit.
+	 */
 	public String getExecutionUnit() {
 		return executionUnit;
 	}
 
+	/**
+	 * Returns the process-description.
+	 * 
+	 * @return the process-description.
+	 */
 	public ProcessDescriptionType getProcessDescription() {
 		return processDescription;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.n52.wps.server.request.Request#getAttachedResult()
+	 */
 	public Map<String, IData> getAttachedResult() {
 		return returnResults;
 	}
 
-	/**
+	/*
+	 * (non-Javadoc)
 	 * 
-	 * @return
+	 * @see org.n52.wps.server.request.Request#call()
 	 */
-	public List<OutputReferenceMapping> getOutputReferenceMappings() {
-		return outputReferenceMappings;
-	}
-
 	@Override
 	public Response call() throws ExceptionReport {
 		IAlgorithm algorithm = null;
@@ -284,11 +296,11 @@ public class TestProcessRequest extends Request implements IRichWPSRequest,
 		try {
 			deployProcess();
 			ExecutionContext context;
-			TestProcess testProcess = testDoc.getTestProcess();
-			if (testProcess.isSetResponseForm()) {
-				context = testProcess.getResponseForm().isSetRawDataOutput() ? new ExecutionContext(
-						testProcess.getResponseForm().getRawDataOutput())
-						: new ExecutionContext(Arrays.asList(testProcess
+			ProfileProcess profileProcess = profileDoc.getProfileProcess();
+			if (profileProcess.isSetResponseForm()) {
+				context = profileProcess.getResponseForm().isSetRawDataOutput() ? new ExecutionContext(
+						profileProcess.getResponseForm().getRawDataOutput())
+						: new ExecutionContext(Arrays.asList(profileProcess
 								.getResponseForm().getResponseDocument()
 								.getOutputArray()));
 			} else {
@@ -306,8 +318,8 @@ public class TestProcessRequest extends Request implements IRichWPSRequest,
 
 			// parse the input
 			InputType[] inputs = new InputType[0];
-			if (testProcess.getDataInputs() != null) {
-				inputs = testProcess.getDataInputs().getInputArray();
+			if (profileProcess.getDataInputs() != null) {
+				inputs = profileProcess.getDataInputs().getInputArray();
 			}
 			InputHandler parser = new InputHandler.Builder(inputs,
 					getAlgorithmIdentifier()).build();
@@ -332,11 +344,11 @@ public class TestProcessRequest extends Request implements IRichWPSRequest,
 			}
 
 			if (algorithm instanceof AbstractTransactionalAlgorithm) {
-				returnResults = ((AbstractTransactionalAlgorithm) algorithm)
-						.testRun(execDoc);
-				// FIXME Don't do this cast
-				outputReferenceMappings = (List<OutputReferenceMapping>) ((AbstractTransactionalAlgorithm) algorithm)
-						.getOutputReferenceMappings();
+				Object result = ((AbstractTransactionalAlgorithm) algorithm)
+						.profileRun(execDoc);
+				ProfilingOutputs profilingOutputs = (ProfilingOutputs) result;
+				returnResults = profilingOutputs.getOutputData();
+				timeMeasurement = profilingOutputs.getTimeMeasurement();
 			} else {
 				// TODO Not verified! Verify!
 				inputMap = parser.getParsedInputData();
@@ -365,7 +377,7 @@ public class TestProcessRequest extends Request implements IRichWPSRequest,
 			if (errorMessage == null) {
 				errorMessage = "UNKNOWN ERROR";
 			}
-			LOGGER.error("Exception/Error while executing TestProcessRequest for "
+			LOGGER.error("Exception/Error while executing ProfileProcessRequest for "
 					+ getAlgorithmIdentifier() + ": " + errorMessage);
 			updateStatusError(errorMessage);
 			if (e instanceof Error) {
@@ -404,16 +416,29 @@ public class TestProcessRequest extends Request implements IRichWPSRequest,
 				}
 			}
 		}
-		TestProcessResponse testProcessResponse = new TestProcessResponse(this);
-		return testProcessResponse;
+		ProfileProcessResponse profileProcessResponse = new ProfileProcessResponse(
+				this);
+		return profileProcessResponse;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.n52.wps.server.request.Request#validate()
+	 */
 	@Override
 	public boolean validate() throws ExceptionReport {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.n52.wps.server.observerpattern.IObserver#update(org.n52.wps.server
+	 * .observerpattern.ISubject)
+	 */
 	@Override
 	public void update(ISubject subject) {
 		Object state = subject.getState();
@@ -431,6 +456,9 @@ public class TestProcessRequest extends Request implements IRichWPSRequest,
 
 	}
 
+	/**
+	 * Updates status of process.
+	 */
 	public void updateStatusStarted() {
 		StatusType status = StatusType.Factory.newInstance();
 		status.addNewProcessStarted().setPercentCompleted(0);
@@ -442,11 +470,11 @@ public class TestProcessRequest extends Request implements IRichWPSRequest,
 		try {
 			responseBuilder.update();
 			if (isStoreResponse()) {
-				TestProcessResponse testProcessResponse = new TestProcessResponse(
+				ProfileProcessResponse profileProcessResponse = new ProfileProcessResponse(
 						this);
 				InputStream is = null;
 				try {
-					is = testProcessResponse.getAsStream();
+					is = profileProcessResponse.getAsStream();
 					DatabaseFactory.getDatabase().storeResponse(
 							getUniqueId().toString(), is);
 				} finally {
@@ -459,27 +487,44 @@ public class TestProcessRequest extends Request implements IRichWPSRequest,
 		}
 	}
 
+	/**
+	 * Returns <code>true<\code> if the Response has to be stored.
+	 * 
+	 * @return <code>true<\code> if the Response has to be stored;
+	 *         <code>false<\code> otherwise.
+	 */
 	public boolean isStoreResponse() {
-		TestProcess testProcess = testDoc.getTestProcess();
-		if (testProcess.getResponseForm() == null) {
+		ProfileProcess profileProcess = profileDoc.getProfileProcess();
+		if (profileProcess.getResponseForm() == null) {
 			return false;
 		}
-		if (testProcess.getResponseForm().getRawDataOutput() != null) {
+		if (profileProcess.getResponseForm().getRawDataOutput() != null) {
 			return false;
 		}
-		return testProcess.getResponseForm().getResponseDocument()
+		return profileProcess.getResponseForm().getResponseDocument()
 				.getStoreExecuteResponse();
 	}
 
+	/**
+	 * Returns the identifier of the algorithm.
+	 * 
+	 * @return the identifier of the algorithm.
+	 */
 	public String getAlgorithmIdentifier() {
-		ProcessDescriptionType processDescription = testDoc.getTestProcess()
-				.getProcessDescription();
+		ProcessDescriptionType processDescription = profileDoc
+				.getProfileProcess().getProcessDescription();
 		if (processDescription.getIdentifier() != null) {
 			return processDescription.getIdentifier().getStringValue();
 		}
 		return null;
 	}
 
+	/**
+	 * Updates the status to Error-status.
+	 * 
+	 * @param errorMessage
+	 *            the error message
+	 */
 	public void updateStatusError(String errorMessage) {
 		StatusType status = StatusType.Factory.newInstance();
 		net.opengis.ows.x11.ExceptionReportDocument.ExceptionReport excRep = status
@@ -491,27 +536,41 @@ public class TestProcessRequest extends Request implements IRichWPSRequest,
 		updateStatus(status);
 	}
 
+	/**
+	 * Updates status to Success-status.
+	 */
 	public void updateStatusSuccess() {
 		StatusType status = StatusType.Factory.newInstance();
 		status.setProcessSucceeded("Process successful");
 		updateStatus(status);
 	}
 
+	/**
+	 * Updates status to Accepted-status.
+	 */
 	public void updateStatusAccepted() {
 		StatusType status = StatusType.Factory.newInstance();
 		status.setProcessAccepted("Process Accepted");
 		updateStatus(status);
 	}
 
+	/**
+	 * Returns <code>true<\code> if the Response has to be returned as raw-data.
+	 * 
+	 * @return <code>true<\code> if the Response has to be returned as raw-data;
+	 *         <code>false<\code> otherwise.
+	 */
+
 	public boolean isRawData() {
-		TestProcess testProcess = testDoc.getTestProcess();
-		if (testProcess.getResponseForm() == null) {
+		ProfileProcess profileProcess = profileDoc.getProfileProcess();
+		if (profileProcess.getResponseForm() == null) {
 			return false;
 		}
-		if (testProcess.getResponseForm().getRawDataOutput() != null) {
+		if (profileProcess.getResponseForm().getRawDataOutput() != null) {
 			return true;
 		} else {
 			return false;
 		}
 	}
+
 }

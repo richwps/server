@@ -25,118 +25,169 @@ import org.n52.wps.transactional.service.TransactionalHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.hsos.richwps.dsl.api.elements.OutputReferenceMapping;
+
 public class RolaAlgorithm extends AbstractTransactionalAlgorithm {
 
-    private static Logger LOGGER = LoggerFactory.getLogger(RolaAlgorithm.class);
-    
-    DataTypeManager dtm = DataTypeManager.getInstance();
-    
-    private ProcessDescriptionType processDescription;
+	private static Logger LOGGER = LoggerFactory.getLogger(RolaAlgorithm.class);
 
-    public RolaAlgorithm(String algorithmID) {
-        super(algorithmID);
-        processDescription = initializeDescription();
-    }
+	DataTypeManager dtm = DataTypeManager.getInstance();
+	private IProcessManager deployManager;
+	private ProcessDescriptionType processDescription;
 
-    @Override
-    public Map<String, IData> run(Map<String, List<IData>> inputData)
-            throws ExceptionReport {
-        // TODO Auto-generated method stub
-        return null;
-    }
+	public RolaAlgorithm(String algorithmID) {
+		super(algorithmID);
+		processDescription = initializeDescription();
+	}
 
-    @Override
-    public List<String> getErrors() {
-        // TODO Auto-generated method stub
-        return null;
-    }
+	@Override
+	public Map<String, IData> run(Map<String, List<IData>> inputData)
+			throws ExceptionReport {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
-    @Override
-    public String getWellKnownName() {
-        // TODO Auto-generated method stub
-        return null;
-    }
+	@Override
+	public List<String> getErrors() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
-    @Override
-    public ProcessDescriptionType getDescription() {
-        return processDescription;
-    }
+	@Override
+	public String getWellKnownName() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
-    @Override
-    public boolean processDescriptionIsValid() {
-        // TODO Auto-generated method stub
-        return false;
-    }
+	@Override
+	public ProcessDescriptionType getDescription() {
+		return processDescription;
+	}
 
-    @Override
-    public Class<?> getInputDataType(String id) {
-        InputDescriptionType[] inputs = processDescription.getDataInputs().getInputArray();
-        for (InputDescriptionType input : inputs) {
-            if (input.getIdentifier().getStringValue().equals(id)) {
-                return dtm.getBindingForInputType(input);
-            }
-        }
-        throw new RuntimeException("Could not determie internal inputDataType");
-    }
+	@Override
+	public boolean processDescriptionIsValid() {
+		// TODO Auto-generated method stub
+		return false;
+	}
 
-    @Override
-    public Class<?> getOutputDataType(String id) {
-        OutputDescriptionType[] outputs = processDescription.getProcessOutputs().getOutputArray();
-        for (OutputDescriptionType output : outputs) {
-        	if (output.getIdentifier().getStringValue().equals(id)) {
-                return dtm.getBindingForOutputType(output);
-            }
-        }
-        throw new RuntimeException("Could not determie internal inputDataType");
-    }
+	@Override
+	public Class<?> getInputDataType(String id) {
+		InputDescriptionType[] inputs = processDescription.getDataInputs()
+				.getInputArray();
+		for (InputDescriptionType input : inputs) {
+			if (input.getIdentifier().getStringValue().equals(id)) {
+				return dtm.getBindingForInputType(input);
+			}
+		}
+		throw new RuntimeException("Could not determie internal inputDataType");
+	}
 
-    @Override
-    public Map<String, IData> run(ExecuteDocument document) {
-        try {
-            //FIXME switch to app-wide constant.
-            IProcessManager deployManager = TransactionalHelper.getProcessManagerForSchema("rola");
-            return deployManager.invoke(document, getAlgorithmID());
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
+	@Override
+	public Class<?> getOutputDataType(String id) {
+		OutputDescriptionType[] outputs = processDescription
+				.getProcessOutputs().getOutputArray();
+		for (OutputDescriptionType output : outputs) {
+			if (output.getIdentifier().getStringValue().equals(id)) {
+				return dtm.getBindingForOutputType(output);
+			}
+		}
+		throw new RuntimeException("Could not determie internal inputDataType");
+	}
 
-    public ProcessDescriptionType initializeDescription() {
-        // TODO use generate method from transactionalrequesthandler
-        String fullPath = GenericTransactionalAlgorithm.class.getProtectionDomain().getCodeSource().getLocation().toString();
-        int searchIndex = fullPath.indexOf("WEB-INF");
-        String subPath = fullPath.substring(0, searchIndex);
-        String processID = getAlgorithmID();
-        // sanitize processID: strip version number and namespace if passed in
-        if (processID.contains("-")) {
-            processID = processID.split("-")[0];
-        }
-        if (processID.contains("}")) {
-            processID = processID.split("}")[1];
-        }
-        try {
-            URI fileUri = new URL(subPath + "WEB-INF" + File.separator + "ProcessDescriptions" + File.separator + processID + ".xml").toURI();
-            File xmlDesc = new File(fileUri);
-            XmlOptions options = new XmlOptions();
-            options.setLoadTrimTextBuffer();          
-            ProcessDescriptionType doc = ProcessDescriptionType.Factory.parse(xmlDesc, options);
-//            ProcessDescriptionsDocument doc = ProcessDescriptionsDocument.Factory.parse(xmlDesc, option);
-//            if (doc.getProcessDescriptions().getProcessDescriptionArray().length == 0) {
-//                LOGGER.warn("ProcessDescription does not contain any description");
-//                return null;
-//            }
-//            doc.getIdentifier().setStringValue(processID);
+	@Override
+	public Map<String, IData> run(ExecuteDocument document) {
+		try {
+			// FIXME switch to app-wide constant.
+			IProcessManager deployManager = TransactionalHelper
+					.getProcessManagerForSchema("rola");
+			return deployManager.invoke(document, getAlgorithmID());
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
 
-            return doc;
-            
-        } catch (IOException e) {
-            LOGGER.warn("Could not initialize algorithm, parsing error: " + getAlgorithmID(), e);
-        } catch (XmlException e) {
-            LOGGER.warn("Could not initialize algorithm, parsing error: " + getAlgorithmID(), e);
-        } catch (URISyntaxException e) {
-            LOGGER.warn("Could not initialize algorithm, parsing error: " + getAlgorithmID(), e);
-        }
-        return null;
-    }
+	@Override
+	public Map<String, IData> testRun(ExecuteDocument document) {
+		try {
+			// FIXME switch to app-wide constant.
+			deployManager = TransactionalHelper
+					.getProcessManagerForSchema("rola");
+			return deployManager.testInvoke(document, getAlgorithmID());
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	/**
+	 * Returns Process-handle with ProcessId, related Outputnames and
+	 * Variablenames in this order.
+	 * 
+	 * @return
+	 */
+	@Override
+	public List<OutputReferenceMapping> getOutputReferenceMappings() {
+		return (List<OutputReferenceMapping>) deployManager
+				.getOutputReferenceMappings();
+	}
+
+	public ProcessDescriptionType initializeDescription() {
+		// TODO use generate method from transactionalrequesthandler
+		String fullPath = GenericTransactionalAlgorithm.class
+				.getProtectionDomain().getCodeSource().getLocation().toString();
+		int searchIndex = fullPath.indexOf("WEB-INF");
+		String subPath = fullPath.substring(0, searchIndex);
+		String processID = getAlgorithmID();
+		// sanitize processID: strip version number and namespace if passed in
+		if (processID.contains("-")) {
+			processID = processID.split("-")[0];
+		}
+		if (processID.contains("}")) {
+			processID = processID.split("}")[1];
+		}
+		try {
+			URI fileUri = new URL(subPath + "WEB-INF" + File.separator
+					+ "ProcessDescriptions" + File.separator + processID
+					+ ".xml").toURI();
+			File xmlDesc = new File(fileUri);
+			XmlOptions options = new XmlOptions();
+			options.setLoadTrimTextBuffer();
+			ProcessDescriptionType doc = ProcessDescriptionType.Factory.parse(
+					xmlDesc, options);
+			// ProcessDescriptionsDocument doc =
+			// ProcessDescriptionsDocument.Factory.parse(xmlDesc, option);
+			// if
+			// (doc.getProcessDescriptions().getProcessDescriptionArray().length
+			// == 0) {
+			// LOGGER.warn("ProcessDescription does not contain any description");
+			// return null;
+			// }
+			// doc.getIdentifier().setStringValue(processID);
+
+			return doc;
+
+		} catch (IOException e) {
+			LOGGER.warn("Could not initialize algorithm, parsing error: "
+					+ getAlgorithmID(), e);
+		} catch (XmlException e) {
+			LOGGER.warn("Could not initialize algorithm, parsing error: "
+					+ getAlgorithmID(), e);
+		} catch (URISyntaxException e) {
+			LOGGER.warn("Could not initialize algorithm, parsing error: "
+					+ getAlgorithmID(), e);
+		}
+		return null;
+	}
+
+	@Override
+	public Object profileRun(ExecuteDocument document) {
+		try {
+			// FIXME switch to app-wide constant.
+			deployManager = TransactionalHelper
+					.getProcessManagerForSchema("rola");
+			return deployManager.profileInvoke(document, getAlgorithmID());
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
 
 }
