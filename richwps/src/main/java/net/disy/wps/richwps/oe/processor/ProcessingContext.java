@@ -30,7 +30,7 @@ public class ProcessingContext {
 
 	private final Map<String, IData> outputData = new HashMap<String, IData>();
 
-	private final TimeMeasurement timeMeasurement = new TimeMeasurement();
+	private final TimeMeasurements timeMeasurement = new TimeMeasurements();
 
 	public ProcessingContext(ExecuteDocument executeDocument) {
 		Validate.notNull(executeDocument);
@@ -65,7 +65,7 @@ public class ProcessingContext {
 		return outputData;
 	}
 
-	public TimeMeasurement getTimeMeasurement() {
+	public TimeMeasurements getTimeMeasurement() {
 		return timeMeasurement;
 	}
 

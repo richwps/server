@@ -2,22 +2,13 @@ package net.disy.wps.richwps.request;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringWriter;
-import java.io.Writer;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.TransformerFactoryConfigurationError;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 
 import net.disy.wps.richwps.response.TestProcessResponse;
 import net.disy.wps.richwps.response.TestProcessResponseBuilder;
@@ -26,6 +17,7 @@ import net.opengis.wps.x100.DeployProcessDocument;
 import net.opengis.wps.x100.DeployProcessDocument.DeployProcess;
 import net.opengis.wps.x100.ExecuteDocument;
 import net.opengis.wps.x100.ExecuteDocument.Execute;
+import net.opengis.wps.x100.InputDescriptionType;
 import net.opengis.wps.x100.InputType;
 import net.opengis.wps.x100.ProcessDescriptionType;
 import net.opengis.wps.x100.StatusType;
@@ -62,12 +54,18 @@ import org.n52.wps.transactional.response.ITransactionalResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
-import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import de.hsos.richwps.dsl.api.elements.OutputReferenceMapping;
+import de.hsos.richwps.dsl.api.elements.ReferenceOutputMapping;
 
 /**
+ * This implementation represents information about a transferred
+ * TestProcessRequest.
+ * 
+ * <p>
+ * Furthermore it provides functionality for building the response. Therefore it
+ * is callable by a caller where the invoked method handles the procedure to
+ * calculate information und building the response with this information. <\p>
  * 
  * @author faltin
  *
@@ -84,8 +82,18 @@ public class TestProcessRequest extends Request implements IRichWPSRequest,
 	private ExecuteDocument execDoc;
 	private DeployProcessDocument deployProcessDocument;
 	private UndeployProcessDocument undeployProcessDocument;
-	private List<OutputReferenceMapping> outputReferenceMappings;
+	private List<ReferenceOutputMapping> referenceOutputMappings;
 
+	/**
+	 * Constructs a new TestProcessRequest.
+	 * 
+	 * @param doc
+	 *            the request document
+	 * @throws ExceptionReport
+	 * @throws ParserConfigurationException
+	 * @throws TransformerFactoryConfigurationError
+	 * @throws TransformerException
+	 */
 	public TestProcessRequest(Document doc) throws ExceptionReport,
 			ParserConfigurationException, TransformerFactoryConfigurationError,
 			TransformerException, SAXException, IOException {
@@ -103,6 +111,7 @@ public class TestProcessRequest extends Request implements IRichWPSRequest,
 
 			processDescription = testDoc.getTestProcess()
 					.getProcessDescription();
+			validate();
 			processId = processDescription.getIdentifier().getStringValue()
 					.trim();
 			XmlObject execUnit = testDoc.getTestProcess().getExecutionUnit();
@@ -205,78 +214,93 @@ public class TestProcessRequest extends Request implements IRichWPSRequest,
 		return (Document) execDoc.getDomNode();
 	}
 
-	public static Document newDocumentFromInputStream(InputStream in) {
-		DocumentBuilderFactory factory = null;
-		DocumentBuilder builder = null;
-		Document ret = null;
-
-		try {
-			factory = DocumentBuilderFactory.newInstance();
-			builder = factory.newDocumentBuilder();
-		} catch (ParserConfigurationException e) {
-			e.printStackTrace();
-		}
-
-		try {
-			ret = builder.parse(new InputSource(in));
-		} catch (SAXException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return ret;
-	}
-
-	public static final void prettyPrint(Document xml)
-			throws TransformerFactoryConfigurationError, TransformerException {
-		Transformer tf = TransformerFactory.newInstance().newTransformer();
-		tf.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-		tf.setOutputProperty(OutputKeys.INDENT, "yes");
-		Writer out = new StringWriter();
-		tf.transform(new DOMSource(xml), new StreamResult(out));
-		System.out.println(out.toString());
-	}
-
+	/**
+	 * Returns the TestProcessResponseBuilder
+	 * 
+	 * @return the TestProcessResponseBuilder
+	 * 
+	 */
 	public TestProcessResponseBuilder getTestProcessResponseBuilder() {
 		return responseBuilder;
 	}
 
+	/**
+	 * Returns the TestProcess part of the document
+	 * 
+	 * @return the TestProcess part
+	 */
 	public TestProcess getTestProcess() {
 		return testDoc.getTestProcess();
 	}
 
+	/**
+	 * Returns the TestProcessDocument
+	 * 
+	 * @return the TestProcessDocument
+	 */
 	public TestProcessDocument getTestDoc() {
 		return testDoc;
 	}
 
+	/**
+	 * Returns the process identifier
+	 * 
+	 * @return the process identifier
+	 */
 	public String getProcessId() {
 		return processId;
 	}
 
+	/**
+	 * Returns the schema
+	 * 
+	 * @return the schema
+	 */
 	public String getSchema() {
 		return schema;
 	}
 
+	/**
+	 * Returns the execution unit
+	 * 
+	 * @return the execution unit
+	 */
 	public String getExecutionUnit() {
 		return executionUnit;
 	}
 
+	/**
+	 * Returns the ProcessDescription part of the document
+	 * 
+	 * @return the ProcessDescription part
+	 */
 	public ProcessDescriptionType getProcessDescription() {
 		return processDescription;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.n52.wps.server.request.Request#getAttachedResult()
+	 */
 	public Map<String, IData> getAttachedResult() {
 		return returnResults;
 	}
 
 	/**
+	 * Returns the mappings of output reference on output identifier
 	 * 
-	 * @return
+	 * @return the mappings
 	 */
-	public List<OutputReferenceMapping> getOutputReferenceMappings() {
-		return outputReferenceMappings;
+	public List<ReferenceOutputMapping> getOutputReferenceMappings() {
+		return referenceOutputMappings;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.n52.wps.server.request.Request#call()
+	 */
 	@Override
 	public Response call() throws ExceptionReport {
 		IAlgorithm algorithm = null;
@@ -333,10 +357,10 @@ public class TestProcessRequest extends Request implements IRichWPSRequest,
 
 			if (algorithm instanceof AbstractTransactionalAlgorithm) {
 				returnResults = ((AbstractTransactionalAlgorithm) algorithm)
-						.testRun(execDoc);
+						.runTest(execDoc);
 				// FIXME Don't do this cast
-				outputReferenceMappings = (List<OutputReferenceMapping>) ((AbstractTransactionalAlgorithm) algorithm)
-						.getOutputReferenceMappings();
+				referenceOutputMappings = (List<ReferenceOutputMapping>) ((AbstractTransactionalAlgorithm) algorithm)
+						.getReferenceOutputMappings();
 			} else {
 				// TODO Not verified! Verify!
 				inputMap = parser.getParsedInputData();
@@ -408,12 +432,109 @@ public class TestProcessRequest extends Request implements IRichWPSRequest,
 		return testProcessResponse;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.n52.wps.server.request.Request#validate()
+	 */
 	@Override
 	public boolean validate() throws ExceptionReport {
-		// TODO Auto-generated method stub
-		return false;
+		TestProcessDocument.TestProcess testProcess = testDoc.getTestProcess();
+		if (!testProcess.getVersion().equals(SUPPORTED_VERSION)) {
+			throw new ExceptionReport("Specified version is not supported.",
+					ExceptionReport.INVALID_PARAMETER_VALUE, "version="
+							+ testProcess.getVersion());
+		}
+
+		if (processDescription == null) {
+			throw new ExceptionReport("No process description supplied.",
+					ExceptionReport.MISSING_PARAMETER_VALUE,
+					"process description");
+		}
+
+		// Get the inputdescriptions of the algorithm
+		if (processDescription.getDataInputs() != null) {
+			InputDescriptionType[] inputDescs = processDescription
+					.getDataInputs().getInputArray();
+
+			// prevent NullPointerException for zero input values in execute
+			// request (if only default values are used)
+			InputType[] inputs;
+			if (testProcess.getDataInputs() == null)
+				inputs = new InputType[0];
+			else
+				inputs = testProcess.getDataInputs().getInputArray();
+
+			// For each input supplied by the client
+			for (InputType input : inputs) {
+				boolean identifierMatched = false;
+				// Try to match the input with one of the descriptions
+				for (InputDescriptionType inputDesc : inputDescs) {
+					// If found, then process:
+					if (inputDesc.getIdentifier().getStringValue()
+							.equals(input.getIdentifier().getStringValue())) {
+						identifierMatched = true;
+						// If it is a literal value,
+						if (input.getData() != null
+								&& input.getData().getLiteralData() != null) {
+							// then check if the desription is also of type
+							// literal
+							if (inputDesc.getLiteralData() == null) {
+								throw new ExceptionReport(
+										"Inputtype LiteralData is not supported",
+										ExceptionReport.INVALID_PARAMETER_VALUE);
+							}
+							// literalValue.getDataType ist optional
+							if (input.getData().getLiteralData().getDataType() != null) {
+								if (inputDesc.getLiteralData() != null)
+									if (inputDesc.getLiteralData()
+											.getDataType() != null)
+										if (inputDesc.getLiteralData()
+												.getDataType().getReference() != null)
+											if (!input
+													.getData()
+													.getLiteralData()
+													.getDataType()
+													.equals(inputDesc
+															.getLiteralData()
+															.getDataType()
+															.getReference())) {
+												throw new ExceptionReport(
+														"Specified dataType is not supported "
+																+ input.getData()
+																		.getLiteralData()
+																		.getDataType()
+																+ " for input "
+																+ input.getIdentifier()
+																		.getStringValue(),
+														ExceptionReport.INVALID_PARAMETER_VALUE);
+											}
+							}
+						}
+						break;
+					}
+				}
+				// if the identifier did not match one of the descriptions, it
+				// is
+				// invalid
+				if (!identifierMatched) {
+					throw new ExceptionReport("Input Identifier is not valid: "
+							+ input.getIdentifier().getStringValue(),
+							ExceptionReport.INVALID_PARAMETER_VALUE,
+							"input identifier");
+				}
+			}
+		}
+		return true;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.n52.wps.server.observerpattern.IObserver#update(org.n52.wps.server
+	 * .observerpattern.ISubject)
+	 */
 	@Override
 	public void update(ISubject subject) {
 		Object state = subject.getState();
@@ -431,6 +552,9 @@ public class TestProcessRequest extends Request implements IRichWPSRequest,
 
 	}
 
+	/**
+	 * Updates status to started.
+	 */
 	public void updateStatusStarted() {
 		StatusType status = StatusType.Factory.newInstance();
 		status.addNewProcessStarted().setPercentCompleted(0);
@@ -459,6 +583,13 @@ public class TestProcessRequest extends Request implements IRichWPSRequest,
 		}
 	}
 
+	/**
+	 * Returns <code>true<\code> if the Response has to be stored.
+	 * 
+	 * @return <code>true<\code> if the Response has to be stored;
+	 *         <code>false<\code> otherwise.
+	 */
+
 	public boolean isStoreResponse() {
 		TestProcess testProcess = testDoc.getTestProcess();
 		if (testProcess.getResponseForm() == null) {
@@ -471,6 +602,12 @@ public class TestProcessRequest extends Request implements IRichWPSRequest,
 				.getStoreExecuteResponse();
 	}
 
+	/**
+	 * Returns the identifier of the algorithm.
+	 * 
+	 * @return the identifier of the algorithm.
+	 */
+
 	public String getAlgorithmIdentifier() {
 		ProcessDescriptionType processDescription = testDoc.getTestProcess()
 				.getProcessDescription();
@@ -479,6 +616,13 @@ public class TestProcessRequest extends Request implements IRichWPSRequest,
 		}
 		return null;
 	}
+
+	/**
+	 * Updates the status to Error-status.
+	 * 
+	 * @param errorMessage
+	 *            the error message
+	 */
 
 	public void updateStatusError(String errorMessage) {
 		StatusType status = StatusType.Factory.newInstance();
@@ -491,11 +635,19 @@ public class TestProcessRequest extends Request implements IRichWPSRequest,
 		updateStatus(status);
 	}
 
+	/**
+	 * Updates status to Success-status.
+	 */
+
 	public void updateStatusSuccess() {
 		StatusType status = StatusType.Factory.newInstance();
 		status.setProcessSucceeded("Process successful");
 		updateStatus(status);
 	}
+
+	/**
+	 * Updates status to Accepted-status.
+	 */
 
 	public void updateStatusAccepted() {
 		StatusType status = StatusType.Factory.newInstance();
@@ -503,6 +655,12 @@ public class TestProcessRequest extends Request implements IRichWPSRequest,
 		updateStatus(status);
 	}
 
+	/**
+	 * Returns <code>true<\code> if the Response has to be returned as raw-data.
+	 * 
+	 * @return <code>true<\code> if the Response has to be returned as raw-data;
+	 *         <code>false<\code> otherwise.
+	 */
 	public boolean isRawData() {
 		TestProcess testProcess = testDoc.getTestProcess();
 		if (testProcess.getResponseForm() == null) {

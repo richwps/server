@@ -14,7 +14,17 @@ public interface IWorkflowProcessor {
 
 	ProcessingContext getProcessingContext();
 
-	ProfilingOutputs examineProcess(ExecuteDocument executeDocument,
+	/**
+	 * Executes process and gathers runtime information.
+	 * 
+	 * @param executeDocument
+	 *            the ExecuteDocument
+	 * @param workflow
+	 *            the Workflow
+	 * @return the calculated results of the process
+	 * @author faltin
+	 */
+	Map<String, IData> examineProcess(ExecuteDocument executeDocument,
 			Workflow workflow);
 
 }

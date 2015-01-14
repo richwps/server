@@ -1,16 +1,17 @@
 package net.disy.wps.richwps.request;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Observer;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 
-import net.disy.wps.richwps.oe.processor.ProfilingOutputs;
-import net.disy.wps.richwps.oe.processor.TimeMeasurement;
+import net.disy.wps.richwps.oe.processor.TimeMeasurements;
 import net.disy.wps.richwps.response.ProfileProcessResponse;
 import net.disy.wps.richwps.response.ProfileProcessResponseBuilder;
 import net.opengis.ows.x11.ExceptionType;
@@ -18,6 +19,7 @@ import net.opengis.wps.x100.DeployProcessDocument;
 import net.opengis.wps.x100.DeployProcessDocument.DeployProcess;
 import net.opengis.wps.x100.ExecuteDocument;
 import net.opengis.wps.x100.ExecuteDocument.Execute;
+import net.opengis.wps.x100.InputDescriptionType;
 import net.opengis.wps.x100.InputType;
 import net.opengis.wps.x100.ProcessDescriptionType;
 import net.opengis.wps.x100.ProfileProcessDocument;
@@ -57,7 +59,7 @@ import org.w3c.dom.Document;
 
 /**
  * This implementation represents information about a transferred
- * ProfileProcess-Request.
+ * ProfileProcessRequest.
  * 
  * <p>
  * Furthermore it provides functionality for building the response. Therefore it
@@ -72,20 +74,20 @@ public class ProfileProcessRequest extends Request implements IRichWPSRequest,
 	private static Logger LOGGER = LoggerFactory
 			.getLogger(ProfileProcessRequest.class);
 	protected ProfileProcessDocument profileDoc;
-	protected String processId, schema, executionUnit;
+	protected String processId, schema, executionUnit, deploymentProfileName;
 	protected ProcessDescriptionType processDescription;
 	private ProfileProcessResponseBuilder responseBuilder;
 	private Map<String, IData> returnResults;
 	private ExecuteDocument execDoc;
 	private DeployProcessDocument deployProcessDocument;
 	private UndeployProcessDocument undeployProcessDocument;
-	private TimeMeasurement timeMeasurement;
+	private TimeMeasurements timeMeasurements;
 
 	/**
 	 * Constructs a new ProfileProcessRequest.
 	 * 
 	 * @param doc
-	 *            the request-document
+	 *            the request document
 	 * @throws ExceptionReport
 	 * @throws ParserConfigurationException
 	 * @throws TransformerFactoryConfigurationError
@@ -108,6 +110,9 @@ public class ProfileProcessRequest extends Request implements IRichWPSRequest,
 
 			processDescription = profileDoc.getProfileProcess()
 					.getProcessDescription();
+			validate();
+			deploymentProfileName = profileDoc.getProfileProcess()
+					.getDeploymentProfileName();
 			processId = processDescription.getIdentifier().getStringValue()
 					.trim();
 			XmlObject execUnit = profileDoc.getProfileProcess()
@@ -231,18 +236,18 @@ public class ProfileProcessRequest extends Request implements IRichWPSRequest,
 	}
 
 	/**
-	 * Returns the ProfileProcess-Document
+	 * Returns the ProfileProcessDocument
 	 * 
-	 * @return the ProfileProcess-Document.
+	 * @return the ProfileProcessDocument.
 	 */
 	public ProfileProcessDocument getProfileDoc() {
 		return profileDoc;
 	}
 
 	/**
-	 * Returns the process-identifier.
+	 * Returns the process identifier.
 	 * 
-	 * @return the process-identifier.
+	 * @return the process identifier.
 	 */
 	public String getProcessId() {
 		return processId;
@@ -294,6 +299,13 @@ public class ProfileProcessRequest extends Request implements IRichWPSRequest,
 		IAlgorithm algorithm = null;
 		Map<String, List<IData>> inputMap = null;
 		try {
+			timeMeasurements = new TimeMeasurements();
+			timeMeasurements.setDeploymentProfileName(deploymentProfileName);
+			timeMeasurements.start("Process "
+					+ profileDoc.getProfileProcess().getProcessDescription()
+							.getIdentifier().getStringValue(), true);
+			LOGGER.debug("started with time measuring");
+
 			deployProcess();
 			ExecutionContext context;
 			ProfileProcess profileProcess = profileDoc.getProfileProcess();
@@ -317,23 +329,19 @@ public class ProfileProcessRequest extends Request implements IRichWPSRequest,
 			updateStatusStarted();
 
 			// parse the input
+			List<Observer> observers = new ArrayList<Observer>();
+			observers.add(timeMeasurements);
+
 			InputType[] inputs = new InputType[0];
 			if (profileProcess.getDataInputs() != null) {
 				inputs = profileProcess.getDataInputs().getInputArray();
 			}
 			InputHandler parser = new InputHandler.Builder(inputs,
-					getAlgorithmIdentifier()).build();
+					getAlgorithmIdentifier()).buildWithTimeMeasuring(observers);
 
 			// we got so far:
 			// get the algorithm, and run it with the clients input
 
-			/*
-			 * IAlgorithm algorithm =
-			 * RepositoryManager.getInstance().getAlgorithm
-			 * (getAlgorithmIdentifier()); returnResults =
-			 * algorithm.run((Map)parser.getParsedInputLayers(),
-			 * (Map)parser.getParsedInputParameters());
-			 */
 			algorithm = RepositoryManager.getInstance().getAlgorithm(
 					getAlgorithmIdentifier());
 
@@ -344,11 +352,8 @@ public class ProfileProcessRequest extends Request implements IRichWPSRequest,
 			}
 
 			if (algorithm instanceof AbstractTransactionalAlgorithm) {
-				Object result = ((AbstractTransactionalAlgorithm) algorithm)
-						.profileRun(execDoc);
-				ProfilingOutputs profilingOutputs = (ProfilingOutputs) result;
-				returnResults = profilingOutputs.getOutputData();
-				timeMeasurement = profilingOutputs.getTimeMeasurement();
+				returnResults = ((AbstractTransactionalAlgorithm) algorithm)
+						.runProfiling(execDoc, observers);
 			} else {
 				// TODO Not verified! Verify!
 				inputMap = parser.getParsedInputData();
@@ -363,8 +368,10 @@ public class ProfileProcessRequest extends Request implements IRichWPSRequest,
 				updateStatusError(errorMessage);
 			} else {
 				updateStatusSuccess();
+
 			}
 			undeployProcess();
+
 		} catch (Throwable e) {
 			String errorMessage = null;
 			if (algorithm != null && algorithm.getErrors() != null
@@ -428,8 +435,94 @@ public class ProfileProcessRequest extends Request implements IRichWPSRequest,
 	 */
 	@Override
 	public boolean validate() throws ExceptionReport {
-		// TODO Auto-generated method stub
-		return false;
+		ProfileProcessDocument.ProfileProcess profileProcess = profileDoc
+				.getProfileProcess();
+		if (!profileProcess.getVersion().equals(SUPPORTED_VERSION)) {
+			throw new ExceptionReport("Specified version is not supported.",
+					ExceptionReport.INVALID_PARAMETER_VALUE, "version="
+							+ profileProcess.getVersion());
+		}
+
+		if (processDescription == null) {
+			throw new ExceptionReport("No process description supplied.",
+					ExceptionReport.MISSING_PARAMETER_VALUE,
+					"process description");
+		}
+
+		// Get the inputdescriptions of the algorithm
+		if (processDescription.getDataInputs() != null) {
+			InputDescriptionType[] inputDescs = processDescription
+					.getDataInputs().getInputArray();
+
+			// prevent NullPointerException for zero input values in execute
+			// request (if only default values are used)
+			InputType[] inputs;
+			if (profileProcess.getDataInputs() == null)
+				inputs = new InputType[0];
+			else
+				inputs = profileProcess.getDataInputs().getInputArray();
+
+			// For each input supplied by the client
+			for (InputType input : inputs) {
+				boolean identifierMatched = false;
+				// Try to match the input with one of the descriptions
+				for (InputDescriptionType inputDesc : inputDescs) {
+					// If found, then process:
+					if (inputDesc.getIdentifier().getStringValue()
+							.equals(input.getIdentifier().getStringValue())) {
+						identifierMatched = true;
+						// If it is a literal value,
+						if (input.getData() != null
+								&& input.getData().getLiteralData() != null) {
+							// then check if the desription is also of type
+							// literal
+							if (inputDesc.getLiteralData() == null) {
+								throw new ExceptionReport(
+										"Inputtype LiteralData is not supported",
+										ExceptionReport.INVALID_PARAMETER_VALUE);
+							}
+							// literalValue.getDataType ist optional
+							if (input.getData().getLiteralData().getDataType() != null) {
+								if (inputDesc.getLiteralData() != null)
+									if (inputDesc.getLiteralData()
+											.getDataType() != null)
+										if (inputDesc.getLiteralData()
+												.getDataType().getReference() != null)
+											if (!input
+													.getData()
+													.getLiteralData()
+													.getDataType()
+													.equals(inputDesc
+															.getLiteralData()
+															.getDataType()
+															.getReference())) {
+												throw new ExceptionReport(
+														"Specified dataType is not supported "
+																+ input.getData()
+																		.getLiteralData()
+																		.getDataType()
+																+ " for input "
+																+ input.getIdentifier()
+																		.getStringValue(),
+														ExceptionReport.INVALID_PARAMETER_VALUE);
+											}
+							}
+						}
+						break;
+					}
+				}
+				// if the identifier did not match one of the descriptions, it
+				// is
+				// invalid
+				if (!identifierMatched) {
+					throw new ExceptionReport("Input Identifier is not valid: "
+							+ input.getIdentifier().getStringValue(),
+							ExceptionReport.INVALID_PARAMETER_VALUE,
+							"input identifier");
+				}
+			}
+		}
+		return true;
 	}
 
 	/*
@@ -571,6 +664,15 @@ public class ProfileProcessRequest extends Request implements IRichWPSRequest,
 		} else {
 			return false;
 		}
+	}
+
+	/**
+	 * Returns the TimeMeasurement-object.
+	 * 
+	 * @return the TimeMeasurment-object
+	 */
+	public TimeMeasurements getTimeMeasurements() {
+		return timeMeasurements;
 	}
 
 }

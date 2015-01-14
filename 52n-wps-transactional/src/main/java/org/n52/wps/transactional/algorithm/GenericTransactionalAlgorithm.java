@@ -39,6 +39,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Observer;
 
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;
@@ -419,20 +420,42 @@ public class GenericTransactionalAlgorithm extends
 		return null;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.n52.wps.server.AbstractTransactionalAlgorithm#runTest(net.opengis
+	 * .wps.x100.ExecuteDocument)
+	 */
 	@Override
-	public Map<String, IData> testRun(ExecuteDocument document) {
+	public Map<String, IData> runTest(ExecuteDocument document) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.n52.wps.server.AbstractTransactionalAlgorithm#getReferenceOutputMappings
+	 * ()
+	 */
 	@Override
-	public Object getOutputReferenceMappings() {
+	public Object getReferenceOutputMappings() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.n52.wps.server.AbstractTransactionalAlgorithm#runProfiling(net.opengis
+	 * .wps.x100.ExecuteDocument, java.util.List)
+	 */
 	@Override
-	public Map<String, IData> profileRun(ExecuteDocument execDoc) {
+	public Map<String, IData> runProfiling(ExecuteDocument execDoc,
+			List<Observer> observers) {
 		// TODO Auto-generated method stub
 		return null;
 	}

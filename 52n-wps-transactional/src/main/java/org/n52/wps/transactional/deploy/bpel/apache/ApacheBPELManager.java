@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Observer;
 
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
@@ -575,22 +576,43 @@ public class ApacheBPELManager extends AbstractProcessManager {
 
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.n52.wps.transactional.deploy.IProcessManager#invokeTest(net.opengis
+	 * .wps.x100.ExecuteDocument, java.lang.String)
+	 */
 	@Override
-	public Map<String, IData> testInvoke(ExecuteDocument payload,
+	public Map<String, IData> invokeTest(ExecuteDocument document,
 			String algorithmID) throws Exception {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.n52.wps.transactional.deploy.IProcessManager#getReferenceOutputMappings
+	 * ()
+	 */
 	@Override
-	public Object getOutputReferenceMappings() {
+	public Object getReferenceOutputMappings() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.n52.wps.transactional.deploy.IProcessManager#invokeProfiling(net.
+	 * opengis.wps.x100.ExecuteDocument, java.lang.String, java.util.List)
+	 */
 	@Override
-	public Map<String, IData> profileInvoke(ExecuteDocument document,
-			String algorithmID) {
+	public Map<String, IData> invokeProfiling(ExecuteDocument document,
+			String algorithmID, List<Observer> observers) throws Exception {
 		// TODO Auto-generated method stub
 		return null;
 	}

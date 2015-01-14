@@ -9,44 +9,44 @@ import org.n52.wps.io.data.IData;
  * 
  * <p>
  * Besides the output data of the profiled process there is another element
- * which contains information of runtime-information of the parts of the process
+ * which contains information of runtime information of the parts of the process
  * and the process itself. <\p>
  * 
  * @author faltin
  *
  */
 public class ProfilingOutputs {
-	private final TimeMeasurement timeMeasurement;
+	private final TimeMeasurements timeMeasurement;
 	private final Map<String, IData> outputData;
 
 	/**
-	 * Constructs an new ProfilingOutput with an TimeMeasurement-object
-	 * containing runtime-information and a map containing process-output-data.
+	 * Constructs an new ProfilingOutput with an TimeMeasurement object
+	 * containing runtime information and a map containing process output data.
 	 * 
 	 * @param timeMeasurement
 	 *            the Object containing runtime-information.
 	 * @param outputData
-	 *            the process-output-data.
+	 *            the process output data.
 	 */
-	public ProfilingOutputs(TimeMeasurement timeMeasurement,
+	public ProfilingOutputs(TimeMeasurements timeMeasurement,
 			Map<String, IData> outputData) {
 		this.timeMeasurement = timeMeasurement;
 		this.outputData = outputData;
 	}
 
 	/**
-	 * Returns the runtime-information-object.
+	 * Returns the runtime information object.
 	 * 
-	 * @return the runtime-information-object.
+	 * @return the runtime information object.
 	 */
-	public TimeMeasurement getTimeMeasurement() {
+	public TimeMeasurements getTimeMeasurement() {
 		return timeMeasurement;
 	}
 
 	/**
-	 * Returns the process-output-data.
+	 * Returns the process output data.
 	 * 
-	 * @return the process-output-data.
+	 * @return the process output data.
 	 */
 	public Map<String, IData> getOutputData() {
 		return outputData;

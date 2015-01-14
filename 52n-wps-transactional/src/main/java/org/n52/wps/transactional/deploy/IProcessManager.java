@@ -31,7 +31,9 @@ is extensible in terms of processes and data handlers.
 package org.n52.wps.transactional.deploy;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import java.util.Observer;
 
 import net.opengis.wps.x100.ExecuteDocument;
 
@@ -52,12 +54,39 @@ public interface IProcessManager {
 
 	boolean deployProcess(DeployProcessRequest request) throws Exception;
 
-	Map<String, IData> testInvoke(ExecuteDocument payload, String algorithmID)
+	/**
+	 * Performs the test of the given process.
+	 * 
+	 * @param payload
+	 *            the execution document.
+	 * @param algorithmID
+	 *            the process identifier.
+	 * @return the results of the calculation.
+	 * @throws Exception
+	 */
+	Map<String, IData> invokeTest(ExecuteDocument document, String algorithmID)
 			throws Exception;
 
-	Object getOutputReferenceMappings();
+	/**
+	 * Returns the output reference on output identifier mappings.
+	 * 
+	 * @return the output reference on output identifier mappings.
+	 */
+	Object getReferenceOutputMappings();
 
-	Object profileInvoke(ExecuteDocument document, String algorithmID)
-			throws Exception;
+	/**
+	 * Performs the profiling of the given process.
+	 * 
+	 * @param document
+	 *            the execution document.
+	 * @param algorithmID
+	 *            the process identifier.
+	 * @param observers
+	 *            the observers of the calculation process.
+	 * @return the results of the calculation.
+	 * @throws Exception
+	 */
+	Map<String, IData> invokeProfiling(ExecuteDocument document,
+			String algorithmID, List<Observer> observers) throws Exception;
 
 }

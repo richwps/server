@@ -1,39 +1,51 @@
 package net.disy.wps.richwps.response;
 
 import net.opengis.wps.x100.OutputDescriptionType;
-import de.hsos.richwps.dsl.api.elements.OutputReferenceMapping;
+import de.hsos.richwps.dsl.api.elements.ReferenceOutputMapping;
 
+/**
+ * This implementation combines the mapping of output reference on output
+ * identifier and the description of the corresponding output identifier.
+ * 
+ * @author faltin
+ *
+ */
 public class OutputReferenceDescription {
 
-	private OutputReferenceMapping processOutputOnVariableMapping;
+	private ReferenceOutputMapping referenceOutputMapping;
 	private OutputDescriptionType outputDescription;
 
-	public OutputReferenceDescription() {
-
-	}
-
+	/**
+	 * Creates new OutputReferenceDescription
+	 * 
+	 * @param referenceOutputMapping
+	 *            the mapping of output reference on output identifier
+	 * @param outputDescription
+	 *            the description of the output identifier
+	 */
 	public OutputReferenceDescription(
-			OutputReferenceMapping processOutputOnVariableMapping,
+			ReferenceOutputMapping referenceOutputMapping,
 			OutputDescriptionType outputDescription) {
-		this.processOutputOnVariableMapping = processOutputOnVariableMapping;
+		this.referenceOutputMapping = referenceOutputMapping;
 		this.outputDescription = outputDescription;
 	}
 
-	public OutputReferenceMapping getProcessOutputOnVariableMapping() {
-		return processOutputOnVariableMapping;
+	/**
+	 * Returns the ReferenceOutputMapping
+	 * 
+	 * @return the ReferenceOutputMapping
+	 */
+	public ReferenceOutputMapping getReferenceOutputMapping() {
+		return referenceOutputMapping;
 	}
 
-	public void setProcessOutputOnVariableMapping(
-			OutputReferenceMapping processOutputOnVariableMapping) {
-		this.processOutputOnVariableMapping = processOutputOnVariableMapping;
-	}
-
+	/**
+	 * Returns the OutputDescription
+	 * 
+	 * @return the OutputDescription
+	 */
 	public OutputDescriptionType getDescription() {
 		return outputDescription;
-	}
-
-	public void setDescription(OutputDescriptionType description) {
-		this.outputDescription = description;
 	}
 
 }

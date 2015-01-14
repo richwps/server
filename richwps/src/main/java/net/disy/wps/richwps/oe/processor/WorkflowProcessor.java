@@ -3,6 +3,8 @@ package net.disy.wps.richwps.oe.processor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Observable;
+import java.util.Observer;
 
 import net.opengis.wps.x100.ExecuteDocument;
 import net.opengis.wps.x100.InputType;
@@ -15,12 +17,19 @@ import org.n52.wps.server.request.InputHandler;
 import de.hsos.richwps.dsl.api.elements.IOperation;
 import de.hsos.richwps.dsl.api.elements.Workflow;
 
-public class WorkflowProcessor implements IWorkflowProcessor {
+public class WorkflowProcessor extends Observable implements IWorkflowProcessor {
 
 	private List<IOperationHandler> operationHandlers = new ArrayList<IOperationHandler>();
 	private ProcessingContext processingContext;
 
 	public WorkflowProcessor() {
+		initOperationHandlers();
+	}
+
+	public WorkflowProcessor(List<Observer> observers) {
+		for (Observer observer : observers) {
+			addObserver(observer);
+		}
 		initOperationHandlers();
 	}
 
@@ -45,22 +54,31 @@ public class WorkflowProcessor implements IWorkflowProcessor {
 		return processingContext.getOutputData();
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * net.disy.wps.richwps.oe.processor.IWorkflowProcessor#examineProcess(net
+	 * .opengis.wps.x100.ExecuteDocument,
+	 * de.hsos.richwps.dsl.api.elements.Workflow)
+	 */
 	@Override
-	public ProfilingOutputs examineProcess(ExecuteDocument executeDocument,
+	public Map<String, IData> examineProcess(ExecuteDocument executeDocument,
 			Workflow workflow) {
 		Validate.notNull(executeDocument);
 		Validate.notNull(workflow);
+
 		processingContext = createProcessingContext(executeDocument);
-		TimeMeasurement timeMeasurement = processingContext
-				.getTimeMeasurement();
+
 		for (IOperation operation : workflow) {
-			timeMeasurement.start(operation);
+			setChanged();
+			notifyObservers(operation);
 			IOperationHandler handler = getHandlerForOperation(operation);
 			handler.handleOperation(operation, processingContext);
-			timeMeasurement.stop();
+			setChanged();
+			notifyObservers(null);
 		}
-		return new ProfilingOutputs(timeMeasurement,
-				processingContext.getOutputData());
+		return processingContext.getOutputData();
 	}
 
 	@Override

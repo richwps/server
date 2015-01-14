@@ -15,9 +15,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Observer;
 
 import net.disy.wps.richwps.oe.processor.IWorkflowProcessor;
-import net.disy.wps.richwps.oe.processor.ProfilingOutputs;
 import net.disy.wps.richwps.oe.processor.WorkflowProcessor;
 import net.opengis.wps.x100.ExecuteDocument;
 
@@ -32,7 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.hsos.richwps.dsl.api.Reader;
-import de.hsos.richwps.dsl.api.elements.OutputReferenceMapping;
+import de.hsos.richwps.dsl.api.elements.ReferenceOutputMapping;
 import de.hsos.richwps.dsl.api.elements.Workflow;
 
 public class RolaLocalProcessManager extends AbstractProcessManager {
@@ -102,13 +102,20 @@ public class RolaLocalProcessManager extends AbstractProcessManager {
 		return worksequenceProcessor.process(payload, worksequence);
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.n52.wps.transactional.deploy.IProcessManager#invokeTest(net.opengis
+	 * .wps.x100.ExecuteDocument, java.lang.String)
+	 */
 	@Override
-	public Map<String, IData> testInvoke(ExecuteDocument payload,
+	public Map<String, IData> invokeTest(ExecuteDocument document,
 			String algorithmID) throws Exception {
 		workflow = getWorksequenceById(algorithmID);
 		IWorkflowProcessor workflowProcessor = new WorkflowProcessor();
 
-		Map<String, IData> outputs = workflowProcessor.process(payload,
+		Map<String, IData> outputs = workflowProcessor.process(document,
 				workflow);
 		Map<String, IData> variables = workflowProcessor.getProcessingContext()
 				.getVariables();
@@ -136,49 +143,35 @@ public class RolaLocalProcessManager extends AbstractProcessManager {
 		return outputs;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.n52.wps.transactional.deploy.IProcessManager#invokeProfiling(net.
+	 * opengis.wps.x100.ExecuteDocument, java.lang.String, java.util.List)
+	 */
 	@Override
-	public ProfilingOutputs profileInvoke(ExecuteDocument payload,
-			String algorithmID) throws Exception {
+	public Map<String, IData> invokeProfiling(ExecuteDocument payload,
+			String algorithmID, List<Observer> observers) throws Exception {
 		workflow = getWorksequenceById(algorithmID);
-		IWorkflowProcessor workflowProcessor = new WorkflowProcessor();
+		IWorkflowProcessor workflowProcessor = new WorkflowProcessor(observers);
 
-		ProfilingOutputs outputs = workflowProcessor.examineProcess(payload,
+		Map<String, IData> outputs = workflowProcessor.examineProcess(payload,
 				workflow);
-		// Map<String, IData> variables =
-		// workflowProcessor.getProcessingContext()
-		// .getVariables();
-		// Iterator<Entry<String, IData>> variablesIt = variables.entrySet()
-		// .iterator();
-		// Map<String, IData> variablesExtended = new HashMap<String, IData>();
-		// variableNames = new ArrayList<String>();
-		// while (variablesIt.hasNext()) {
-		// Entry<String, IData> currentEntry = variablesIt.next();
-		//
-		// variableNames.add(currentEntry.getKey());
-		// variablesExtended.put("var." + currentEntry.getKey(),
-		// currentEntry.getValue());
-		// }
-		//
-		// Iterator<Entry<String, IData>> variablesExtendedIt =
-		// variablesExtended
-		// .entrySet().iterator();
-		// while (variablesExtendedIt.hasNext()) {
-		// Entry<String, IData> currentEntry = variablesExtendedIt.next();
-		// outputs.put((String) currentEntry.getKey(),
-		// (IData) currentEntry.getValue());
-		// }
+
 		return outputs;
 	}
 
-	/**
-	 * Returns Process-handle with ProcessId, related Outputnames and
-	 * Output-Reference-names in this order.
+	/*
+	 * (non-Javadoc)
 	 * 
-	 * @return
+	 * @see
+	 * org.n52.wps.transactional.deploy.IProcessManager#getReferenceOutputMappings
+	 * ()
 	 */
 	@Override
-	public List<OutputReferenceMapping> getOutputReferenceMappings() {
-		return workflow.getOutputReferenceMappings(outputReferenceNames);
+	public List<ReferenceOutputMapping> getReferenceOutputMappings() {
+		return workflow.getReferenceOutputMappings(outputReferenceNames);
 	}
 
 	private Workflow getWorksequenceById(String algorithmID) throws Exception {

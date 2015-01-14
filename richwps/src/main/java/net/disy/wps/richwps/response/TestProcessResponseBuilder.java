@@ -38,7 +38,7 @@ import org.n52.wps.util.XMLBeansHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.hsos.richwps.dsl.api.elements.OutputReferenceMapping;
+import de.hsos.richwps.dsl.api.elements.ReferenceOutputMapping;
 
 /**
  * This implementation provides functionality for building the Response on a
@@ -174,42 +174,29 @@ public class TestProcessResponseBuilder {
 		ExecuteResponse executeResponseElem = executeResponseDocument
 				.getExecuteResponse();
 
-		// if status succeeded, update reponse with result
 		if (testProcessResponseElem.getStatus().isSetProcessSucceeded()) {
-			// FIXME Importing WPSConfiguration produces weird behaviour. (No
-			// autocompletion available)
-
-			// the response only include dataInputs, if the property is set to
-			// true;
-			// if(Boolean.getBoolean(WPSConfiguration.getInstance().getProperty(WebProcessingService.PROPERTY_NAME_INCLUDE_DATAINPUTS_IN_RESPONSE)))
-			// {
-			// if (new
-			// Boolean(WPSConfig.getInstance().getWPSConfig().getServer()
-			// .getIncludeDataInputsInResponse())) {
 			dataInputs = request.getTestProcess().getDataInputs();
 			testProcessResponseElem.setDataInputs(dataInputs);
 			executeResponseElem.setDataInputs(dataInputs);
-			// }
 			testProcessResponseElem.addNewProcessOutputs();
 			executeResponseElem.addNewProcessOutputs();
-			// has the client specified the outputs?
+
 			outputReferenceDescs = new ArrayList<OutputReferenceDescription>();
-			List<OutputReferenceMapping> outputReferenceMappings = request
+			List<ReferenceOutputMapping> outputReferenceMappings = request
 					.getOutputReferenceMappings();
 			OutputDescriptionType[] outputDescs = description
 					.getProcessOutputs().getOutputArray();
 			if (request.getTestProcess().isSetResponseForm()) {
-				// Get the outputdescriptions from the algorithm
 
 				for (int i = 0; i < outputReferenceMappings.size(); i++) {
 					String outputIdentifier = outputReferenceMappings.get(i)
 							.getOutputIdentifier();
-					// Get OutputDescriptions of current Process
+
 					OutputDescriptionType[] descs = RepositoryManager
 							.getInstance()
 							.getProcessDescription(
 									outputReferenceMappings.get(i)
-											.getProcessId())
+											.getProcessIdentifier())
 							.getProcessOutputs().getOutputArray();
 					for (OutputDescriptionType desc : descs) {
 						if (desc.getIdentifier().getStringValue()
@@ -321,7 +308,7 @@ public class TestProcessResponseBuilder {
 				// SPEC.
 				for (int i = 0; i < outputReferenceMappings.size(); i++) {
 					String currentProcessId = outputReferenceMappings.get(i)
-							.getProcessId();
+							.getProcessIdentifier();
 					OutputDescriptionType[] descs = RepositoryManager
 							.getInstance()
 							.getProcessDescription(currentProcessId)
@@ -380,14 +367,14 @@ public class TestProcessResponseBuilder {
 								.getDescription().getComplexOutput()
 								.getDefault().getFormat().getMimeType();
 						generateComplexDataOutput(outputReferenceDescs.get(i)
-								.getProcessOutputOnVariableMapping()
+								.getReferenceOutputMapping()
 								.getOutputReference(), false, false, schema,
 								mimeType, encoding, outputReferenceDescs.get(i)
 										.getDescription().getTitle());
 					} else if (outputReferenceDescs.get(i).getDescription()
 							.isSetLiteralOutput()) {
 						generateLiteralDataOutput(outputReferenceDescs.get(i)
-								.getProcessOutputOnVariableMapping()
+								.getReferenceOutputMapping()
 								.getOutputReference(), false,
 								outputReferenceDescs.get(i).getDescription()
 										.getLiteralOutput().getDataType()
@@ -398,7 +385,6 @@ public class TestProcessResponseBuilder {
 
 				}
 			}
-			// }
 		} else if (request.isStoreResponse()) {
 			testProcessResponseElem.setStatusLocation(DatabaseFactory
 					.getDatabase().generateRetrieveResultURL(
@@ -410,9 +396,9 @@ public class TestProcessResponseBuilder {
 		for (int i = 0; i < outputReferenceDescs.size(); i++) {
 			if (outputReferenceDescs
 					.get(i)
-					.getProcessOutputOnVariableMapping()
+					.getReferenceOutputMapping()
 					.getOutputReference()
-					.equals(varOutDesc.getProcessOutputOnVariableMapping()
+					.equals(varOutDesc.getReferenceOutputMapping()
 							.getOutputReference())) {
 				return true;
 			}
@@ -423,7 +409,7 @@ public class TestProcessResponseBuilder {
 	private OutputDescriptionType getDescOfVariable(String definedOutputId) {
 		OutputDescriptionType outputDescription = null;
 		for (OutputReferenceDescription varOutDescription : outputReferenceDescs) {
-			if (varOutDescription.getProcessOutputOnVariableMapping()
+			if (varOutDescription.getReferenceOutputMapping()
 					.getOutputReference().equals(definedOutputId)) {
 				outputDescription = varOutDescription.getDescription();
 			}
@@ -435,7 +421,7 @@ public class TestProcessResponseBuilder {
 			String varReferenceId) {
 		OutputReferenceDescription varOutDescription = null;
 		for (int i = 0; i < outputReferenceDescs.size(); i++) {
-			if (outputReferenceDescs.get(i).getProcessOutputOnVariableMapping()
+			if (outputReferenceDescs.get(i).getReferenceOutputMapping()
 					.getOutputReference().equals(varReferenceId)) {
 				varOutDescription = outputReferenceDescs.get(i);
 			}
@@ -586,7 +572,7 @@ public class TestProcessResponseBuilder {
 					encoding, mimeType, this.identifier, description);
 		} else {
 			OutputDataItem outputDataItem = new OutputDataItem(obj,
-					getOutputIdOfRelatedOutput(definedOutputId),
+					getOutputIdOfDefinedOutput(definedOutputId),
 					definedOutputId, schema, encoding, mimeType, title,
 					getProcessIdOfRelatedOutput(definedOutputId),
 					getProcessDescriptionOfRelatedOutput(definedOutputId));
@@ -604,13 +590,13 @@ public class TestProcessResponseBuilder {
 
 	}
 
-	private String getOutputIdOfRelatedOutput(String definedOutputId) {
+	private String getOutputIdOfDefinedOutput(String definedOutputId) {
 		String outputIdentifier = null;
 		for (OutputReferenceDescription varOutDescription : outputReferenceDescs) {
-			if (varOutDescription.getProcessOutputOnVariableMapping()
+			if (varOutDescription.getReferenceOutputMapping()
 					.getOutputReference().equals(definedOutputId)) {
 				outputIdentifier = varOutDescription
-						.getProcessOutputOnVariableMapping()
+						.getReferenceOutputMapping()
 						.getOutputIdentifier();
 			}
 		}
@@ -623,10 +609,11 @@ public class TestProcessResponseBuilder {
 	private String getProcessIdOfRelatedOutput(String definedOutputId) {
 		String processId = null;
 		for (OutputReferenceDescription varOutDescription : outputReferenceDescs) {
-			if (varOutDescription.getProcessOutputOnVariableMapping()
+			if (varOutDescription.getReferenceOutputMapping()
 					.getOutputReference().equals(definedOutputId)) {
 				processId = varOutDescription
-						.getProcessOutputOnVariableMapping().getProcessId();
+						.getReferenceOutputMapping()
+						.getProcessIdentifier();
 			}
 		}
 		if (processId == null) {
@@ -639,10 +626,11 @@ public class TestProcessResponseBuilder {
 			String definedOutputId) {
 		ProcessDescriptionType processDescription = null;
 		for (OutputReferenceDescription varOutDescription : outputReferenceDescs) {
-			if (varOutDescription.getProcessOutputOnVariableMapping()
+			if (varOutDescription.getReferenceOutputMapping()
 					.getOutputReference().equals(definedOutputId)) {
 				String processId = varOutDescription
-						.getProcessOutputOnVariableMapping().getProcessId();
+						.getReferenceOutputMapping()
+						.getProcessIdentifier();
 				processDescription = RepositoryManager.getInstance()
 						.getProcessDescription(processId);
 			}
@@ -676,7 +664,7 @@ public class TestProcessResponseBuilder {
 					encoding, mimeType, this.identifier, description);
 		} else {
 			OutputDataItem handler = new OutputDataItem(obj,
-					getOutputIdOfRelatedOutput(definedOutputId),
+					getOutputIdOfDefinedOutput(definedOutputId),
 					definedOutputId, schema, encoding, mimeType, title,
 					getProcessIdOfRelatedOutput(definedOutputId),
 					getProcessDescriptionOfRelatedOutput(definedOutputId));
@@ -696,7 +684,7 @@ public class TestProcessResponseBuilder {
 					null, this.identifier, description);
 		} else {
 			OutputDataItem handler = new OutputDataItem(obj,
-					getOutputIdOfRelatedOutput(definedOutputId),
+					getOutputIdOfDefinedOutput(definedOutputId),
 					definedOutputId, null, null, null, title,
 					getProcessIdOfRelatedOutput(definedOutputId),
 					getProcessDescriptionOfRelatedOutput(definedOutputId));

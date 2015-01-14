@@ -7,6 +7,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
+import java.util.Observer;
 
 import net.disy.wps.richwps.dtm.DataTypeManager;
 import net.opengis.wps.x100.ExecuteDocument;
@@ -25,7 +26,7 @@ import org.n52.wps.transactional.service.TransactionalHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.hsos.richwps.dsl.api.elements.OutputReferenceMapping;
+import de.hsos.richwps.dsl.api.elements.ReferenceOutputMapping;
 
 public class RolaAlgorithm extends AbstractTransactionalAlgorithm {
 
@@ -106,28 +107,36 @@ public class RolaAlgorithm extends AbstractTransactionalAlgorithm {
 		}
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.n52.wps.server.AbstractTransactionalAlgorithm#runTest(net.opengis
+	 * .wps.x100.ExecuteDocument)
+	 */
 	@Override
-	public Map<String, IData> testRun(ExecuteDocument document) {
+	public Map<String, IData> runTest(ExecuteDocument document) {
 		try {
 			// FIXME switch to app-wide constant.
 			deployManager = TransactionalHelper
 					.getProcessManagerForSchema("rola");
-			return deployManager.testInvoke(document, getAlgorithmID());
+			return deployManager.invokeTest(document, getAlgorithmID());
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	/**
-	 * Returns Process-handle with ProcessId, related Outputnames and
-	 * Variablenames in this order.
+	/*
+	 * (non-Javadoc)
 	 * 
-	 * @return
+	 * @see
+	 * org.n52.wps.server.AbstractTransactionalAlgorithm#getReferenceOutputMappings
+	 * ()
 	 */
 	@Override
-	public List<OutputReferenceMapping> getOutputReferenceMappings() {
-		return (List<OutputReferenceMapping>) deployManager
-				.getOutputReferenceMappings();
+	public List<ReferenceOutputMapping> getReferenceOutputMappings() {
+		return (List<ReferenceOutputMapping>) deployManager
+				.getReferenceOutputMappings();
 	}
 
 	public ProcessDescriptionType initializeDescription() {
@@ -178,13 +187,22 @@ public class RolaAlgorithm extends AbstractTransactionalAlgorithm {
 		return null;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.n52.wps.server.AbstractTransactionalAlgorithm#runProfiling(net.opengis
+	 * .wps.x100.ExecuteDocument, java.util.List)
+	 */
 	@Override
-	public Object profileRun(ExecuteDocument document) {
+	public Map<String, IData> runProfiling(ExecuteDocument document,
+			List<Observer> observers) {
 		try {
 			// FIXME switch to app-wide constant.
 			deployManager = TransactionalHelper
 					.getProcessManagerForSchema("rola");
-			return deployManager.profileInvoke(document, getAlgorithmID());
+			return deployManager.invokeProfiling(document, getAlgorithmID(),
+					observers);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}

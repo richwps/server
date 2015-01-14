@@ -65,9 +65,9 @@ import org.w3c.dom.Node;
 
 import com.google.common.primitives.Doubles;
 
-/*
+/**
  * @author foerster
- *
+ * @author faltin
  */
 public class OutputDataItem extends ResponseData {
 
@@ -98,16 +98,41 @@ public class OutputDataItem extends ResponseData {
 		this.title = title;
 	}
 
-	public OutputDataItem(IData obj, String outputIdOfRelatedOutput,
+	/**
+	 * Creates new OutputDataItem
+	 * 
+	 * @param obj
+	 *            data
+	 * @param outputIdentifier
+	 *            output identifier (of corresponding output reference if it is
+	 *            one)
+	 * @param definedOutputId
+	 *            output reference or output identifier
+	 * @param schema
+	 * @param encoding
+	 * @param mimeType
+	 * @param title
+	 * @param processId
+	 *            process identifier corresponding to output reference (if
+	 *            output reference is not distinct from output identifier its
+	 *            the process identifier corresponding to the output identifier)
+	 * @param processDescription
+	 *            process description corresponding to output reference (if
+	 *            output reference is not distinct from output identifier its
+	 *            the process description corresponding to the output
+	 *            identifier)
+	 * @throws ExceptionReport
+	 * @author faltin
+	 */
+	public OutputDataItem(IData obj, String outputIdentifier,
 			String definedOutputId, String schema, String encoding,
-			String mimeType, LanguageStringType title2,
-			String processIdOfRelatedOutput,
-			ProcessDescriptionType processDescriptionOfRelatedOutput)
-			throws ExceptionReport {
-		super(obj, outputIdOfRelatedOutput, schema, encoding, mimeType,
-				processIdOfRelatedOutput, processDescriptionOfRelatedOutput);
+			String mimeType, LanguageStringType title, String processId,
+			ProcessDescriptionType processDescription) throws ExceptionReport {
+		super(obj, outputIdentifier, schema, encoding, mimeType, processId,
+				processDescription);
 
 		this.varId = definedOutputId;
+		this.title = title;
 	}
 
 	/**

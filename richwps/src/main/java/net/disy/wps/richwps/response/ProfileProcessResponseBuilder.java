@@ -1,13 +1,15 @@
 package net.disy.wps.richwps.response;
 
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.List;
+import java.util.GregorianCalendar;
+import java.util.Iterator;
 
 import javax.xml.XMLConstants;
 import javax.xml.namespace.QName;
 
+import net.disy.wps.richwps.oe.processor.TimeMeasurements;
+import net.disy.wps.richwps.oe.processor.TimeMeasurements.Measurement;
 import net.disy.wps.richwps.request.ProfileProcessRequest;
 import net.opengis.ows.x11.DomainMetadataType;
 import net.opengis.ows.x11.LanguageStringType;
@@ -21,9 +23,14 @@ import net.opengis.wps.x100.OutputDescriptionType;
 import net.opengis.wps.x100.ProcessDescriptionType;
 import net.opengis.wps.x100.ProfileProcessResponseDocument;
 import net.opengis.wps.x100.ProfileProcessResponseDocument.ProfileProcessResponse;
+import net.opengis.wps.x100.ProfileType;
+import net.opengis.wps.x100.RuntimeInfoType;
 import net.opengis.wps.x100.StatusType;
 
+import org.apache.xmlbeans.GDurationBuilder;
 import org.apache.xmlbeans.XmlCursor;
+import org.joda.time.DateTime;
+import org.joda.time.Duration;
 import org.n52.wps.io.data.IBBOXData;
 import org.n52.wps.io.data.IData;
 import org.n52.wps.server.CapabilitiesConfiguration;
@@ -37,8 +44,6 @@ import org.n52.wps.server.response.RawData;
 import org.n52.wps.util.XMLBeansHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import de.hsos.richwps.dsl.api.elements.OutputReferenceMapping;
 
 /**
  * This implementation provides functionality for building the Response on a
@@ -61,7 +66,6 @@ public class ProfileProcessResponseBuilder {
 	private RawData rawDataElement;
 	private ProcessDescriptionType description;
 	private Calendar creationTime;
-	private List<OutputReferenceDescription> varOutDescs;
 
 	/**
 	 * Constructs a new ProfileProcessResponseBuilder
@@ -102,6 +106,7 @@ public class ProfileProcessResponseBuilder {
 		profileProcessResponse.getProcess().setProcessVersion(
 				description.getProcessVersion());
 		profileProcessResponse.getProcess().setTitle(description.getTitle());
+		profileProcessResponse.addNewProfiles();
 		initializeExecuteResponseDocument();
 		creationTime = Calendar.getInstance();
 	}
@@ -170,75 +175,35 @@ public class ProfileProcessResponseBuilder {
 
 	public void update() throws ExceptionReport {
 
-		net.opengis.wps.x100.ProfileProcessResponseDocument.ProfileProcessResponse profileProcessResponseElem = profileProcessResponseDocument
+		ProfileProcessResponseDocument.ProfileProcessResponse profileProcessResponseElem = profileProcessResponseDocument
 				.getProfileProcessResponse();
 		ExecuteResponse executeResponseElem = executeResponseDocument
 				.getExecuteResponse();
 
-		// if status succeeded, update reponse with result
 		if (profileProcessResponseElem.getStatus().isSetProcessSucceeded()) {
-			// FIXME Importing WPSConfiguration produces weird behaviour. (No
-			// autocompletion available)
-
-			// the response only include dataInputs, if the property is set to
-			// true;
-			// if(Boolean.getBoolean(WPSConfiguration.getInstance().getProperty(WebProcessingService.PROPERTY_NAME_INCLUDE_DATAINPUTS_IN_RESPONSE)))
-			// {
-			// if (new
-			// Boolean(WPSConfig.getInstance().getWPSConfig().getServer()
-			// .getIncludeDataInputsInResponse())) {
 			dataInputs = request.getProfileProcess().getDataInputs();
 			profileProcessResponseElem.setDataInputs(dataInputs);
 			executeResponseElem.setDataInputs(dataInputs);
-			// }
 			profileProcessResponseElem.addNewProcessOutputs();
 			executeResponseElem.addNewProcessOutputs();
-			// has the client specified the outputs?
-			varOutDescs = new ArrayList<OutputReferenceDescription>();
-			List<OutputReferenceMapping> processOutputsOnVariablesMapping = null;
-			OutputDescriptionType[] outputDescs = description
-					.getProcessOutputs().getOutputArray();
+			TimeMeasurements timeMeasurements = request.getTimeMeasurements();
+
 			if (request.getProfileProcess().isSetResponseForm()) {
-				// Get the outputdescriptions from the algorithm
-
-				for (int i = 0; i < processOutputsOnVariablesMapping.size(); i++) {
-					String outputIdentifier = processOutputsOnVariablesMapping
-							.get(i).getOutputIdentifier();
-					// Get OutputDescriptions of current Process
-					OutputDescriptionType[] descs = RepositoryManager
-							.getInstance()
-							.getProcessDescription(
-									processOutputsOnVariablesMapping.get(i)
-											.getProcessId())
-							.getProcessOutputs().getOutputArray();
-					for (OutputDescriptionType desc : descs) {
-						if (desc.getIdentifier().getStringValue()
-								.equals(outputIdentifier)) {
-							varOutDescs.add(new OutputReferenceDescription(
-									processOutputsOnVariablesMapping.get(i),
-									desc));
-						}
-					}
-				}
-
+				OutputDescriptionType[] outputDescs = description
+						.getProcessOutputs().getOutputArray();
 				if (request.isRawData()) {
-					// TODO Not verified! Verify!
 					OutputDefinitionType rawDataOutput = request
 							.getProfileProcess().getResponseForm()
 							.getRawDataOutput();
-					String definedOutputId = rawDataOutput.getIdentifier()
-							.getStringValue();
+					String id = rawDataOutput.getIdentifier().getStringValue();
 					OutputDescriptionType desc = XMLBeansHelper.findOutputByID(
-							definedOutputId, outputDescs);
+							id, outputDescs);
 					if (desc.isSetComplexOutput()) {
-						String encoding = ProfileProcessResponseBuilder
-								.getEncoding(desc, rawDataOutput);
-						String schema = ProfileProcessResponseBuilder
-								.getSchema(desc, rawDataOutput);
-						String responseMimeType = getMimeType(rawDataOutput,
-								null);
-						generateComplexDataOutput(definedOutputId, false, true,
-								schema, responseMimeType, encoding, null);
+						String encoding = getEncoding(desc, rawDataOutput);
+						String schema = getSchema(desc, rawDataOutput);
+						String responseMimeType = getMimeType(rawDataOutput);
+						generateComplexDataOutput(id, false, true, schema,
+								responseMimeType, encoding, null);
 					}
 
 					else if (desc.isSetLiteralOutput()) {
@@ -249,51 +214,37 @@ public class ProfileProcessResponseBuilder {
 								.getDataType();
 						String reference = dataType != null ? dataType
 								.getReference() : null;
-						generateLiteralDataOutput(definedOutputId, true,
-								reference, schema, mimeType, encoding,
-								desc.getTitle());
+						generateLiteralDataOutput(id, true, reference, schema,
+								mimeType, encoding, desc.getTitle());
 					} else if (desc.isSetBoundingBoxOutput()) {
-						generateBBOXOutput(definedOutputId, true,
-								desc.getTitle());
+						generateBBOXOutput(id, true, desc.getTitle());
 					}
 					return;
 				}
-				// Get the outputdefinitions from the clients request
-				// For each request of output
 				for (int i = 0; i < request.getProfileProcess()
 						.getResponseForm().getResponseDocument()
 						.getOutputArray().length; i++) {
 					OutputDefinitionType definition = request
 							.getProfileProcess().getResponseForm()
 							.getResponseDocument().getOutputArray(i);
-					String definedOutputId = definition.getIdentifier()
+					DocumentOutputDefinitionType documentDef = request
+							.getProfileProcess().getResponseForm()
+							.getResponseDocument().getOutputArray(i);
+					String responseID = definition.getIdentifier()
 							.getStringValue();
-					OutputReferenceDescription varOutDescription = getVarOutDescriptionOfDefinedOutput(definedOutputId);
-					OutputDescriptionType desc = null;
-					if (varOutDescription != null) {
-						desc = getDescOfVariable(definedOutputId);
-					} else {
-						desc = XMLBeansHelper.findOutputByID(definedOutputId,
-								outputDescs);
-					}
+					OutputDescriptionType desc = XMLBeansHelper.findOutputByID(
+							responseID, outputDescs);
 					if (desc == null) {
 						throw new ExceptionReport(
-								"Could not find the output id "
-										+ definedOutputId,
+								"Could not find the output id " + responseID,
 								ExceptionReport.INVALID_PARAMETER_VALUE);
 					}
 					if (desc.isSetComplexOutput()) {
-
-						String mimeType = getMimeType(definition,
-								varOutDescription);
-						String schema = ProfileProcessResponseBuilder
-								.getSchema(desc, definition);
-						String encoding = ProfileProcessResponseBuilder
-								.getEncoding(desc, definition);
-
-						generateComplexDataOutput(definedOutputId,
-								((DocumentOutputDefinitionType) definition)
-										.getAsReference(), false, schema,
+						String mimeType = getMimeType(definition);
+						String schema = getSchema(desc, definition);
+						String encoding = getEncoding(desc, definition);
+						generateComplexDataOutput(responseID,
+								documentDef.getAsReference(), false, schema,
 								mimeType, encoding, desc.getTitle());
 					} else if (desc.isSetLiteralOutput()) {
 						String mimeType = null;
@@ -303,44 +254,27 @@ public class ProfileProcessResponseBuilder {
 								.getDataType();
 						String reference = dataType != null ? dataType
 								.getReference() : null;
-						generateLiteralDataOutput(definedOutputId, false,
-								reference, schema, mimeType, encoding,
-								desc.getTitle());
+						generateLiteralDataOutput(responseID, false, reference,
+								schema, mimeType, encoding, desc.getTitle());
 					} else if (desc.isSetBoundingBoxOutput()) {
-						generateBBOXOutput(definedOutputId, false,
-								desc.getTitle());
+						generateBBOXOutput(responseID, false, desc.getTitle());
 					} else {
 						throw new ExceptionReport(
 								"Requested type not supported: BBOX",
 								ExceptionReport.INVALID_PARAMETER_VALUE);
 					}
 				}
+
 			} else {
 				LOGGER.info("OutputDefinitions are not stated explicitly in request");
-				// THIS IS A WORKAROUND AND ACTUALLY NOT COMPLIANT TO THE
-				// SPEC.
-				for (int i = 0; i < processOutputsOnVariablesMapping.size(); i++) {
-					String currentProcessId = processOutputsOnVariablesMapping
-							.get(i).getProcessId();
-					OutputDescriptionType[] descs = RepositoryManager
-							.getInstance()
-							.getProcessDescription(currentProcessId)
-							.getProcessOutputs().getOutputArray();
-					for (OutputDescriptionType desc : descs) {
-						if (desc.getIdentifier()
-								.getStringValue()
-								.equals(processOutputsOnVariablesMapping.get(i)
-										.getOutputIdentifier())) {
-							OutputReferenceDescription varOutDesc = new OutputReferenceDescription(
-									processOutputsOnVariablesMapping.get(i),
-									desc);
-							if (!varOutDescsContains(varOutDesc)) {
-								varOutDescs.add(varOutDesc);
-							}
-						}
-					}
-				}
 
+				// THIS IS A WORKAROUND AND ACTUALLY NOT COMPLIANT TO THE SPEC.
+
+				ProcessDescriptionType description = RepositoryManager
+						.getInstance().getProcessDescription(
+								request.getProfileProcess()
+										.getProcessDescription()
+										.getIdentifier().getStringValue());
 				if (description == null) {
 					throw new RuntimeException(
 							"Error while accessing the process description for "
@@ -348,100 +282,45 @@ public class ProfileProcessResponseBuilder {
 											.getProcessDescription()
 											.getIdentifier().getStringValue());
 				}
-				for (int i = 0; i < outputDescs.length; i++) {
-					if (outputDescs[i].isSetComplexOutput()) {
-						String schema = outputDescs[i].getComplexOutput()
-								.getDefault().getFormat().getSchema();
-						String encoding = outputDescs[i].getComplexOutput()
-								.getDefault().getFormat().getEncoding();
-						String mimeType = outputDescs[i].getComplexOutput()
-								.getDefault().getFormat().getMimeType();
-						generateComplexDataOutput(outputDescs[i]
-								.getIdentifier().getStringValue(), false,
-								false, schema, mimeType, encoding,
-								outputDescs[i].getTitle());
-					} else if (outputDescs[i].isSetLiteralOutput()) {
-						generateLiteralDataOutput(outputDescs[i]
-								.getIdentifier().getStringValue(), false,
-								outputDescs[i].getLiteralOutput().getDataType()
-										.getReference(), null, null, null,
-								outputDescs[i].getTitle());
-					}
-				}
-				for (int i = 0; i < varOutDescs.size(); i++) {
-					if (varOutDescs.get(i).getDescription()
-							.isSetComplexOutput()) {
-						String schema = varOutDescs.get(i).getDescription()
-								.getComplexOutput().getDefault().getFormat()
-								.getSchema();
-						String encoding = varOutDescs.get(i).getDescription()
-								.getComplexOutput().getDefault().getFormat()
-								.getEncoding();
-						String mimeType = varOutDescs.get(i).getDescription()
-								.getComplexOutput().getDefault().getFormat()
-								.getMimeType();
-						generateComplexDataOutput(varOutDescs.get(i)
-								.getProcessOutputOnVariableMapping()
-								.getOutputReference(), false, false, schema,
-								mimeType, encoding, varOutDescs.get(i)
-										.getDescription().getTitle());
-					} else if (varOutDescs.get(i).getDescription()
-							.isSetLiteralOutput()) {
-						generateLiteralDataOutput(varOutDescs.get(i)
-								.getProcessOutputOnVariableMapping()
-								.getOutputReference(), false, varOutDescs
-								.get(i).getDescription().getLiteralOutput()
-								.getDataType().getReference(), null, null,
-								null, varOutDescs.get(i).getDescription()
-										.getTitle());
-					}
 
+				OutputDescriptionType[] d = description.getProcessOutputs()
+						.getOutputArray();
+				for (int i = 0; i < d.length; i++) {
+					if (d[i].isSetComplexOutput()) {
+						String schema = d[i].getComplexOutput().getDefault()
+								.getFormat().getSchema();
+						String encoding = d[i].getComplexOutput().getDefault()
+								.getFormat().getEncoding();
+						String mimeType = d[i].getComplexOutput().getDefault()
+								.getFormat().getMimeType();
+						generateComplexDataOutput(d[i].getIdentifier()
+								.getStringValue(), false, false, schema,
+								mimeType, encoding, d[i].getTitle());
+					} else if (d[i].isSetLiteralOutput()) {
+						generateLiteralDataOutput(d[i].getIdentifier()
+								.getStringValue(), false, d[i]
+								.getLiteralOutput().getDataType()
+								.getReference(), null, null, null,
+								d[i].getTitle());
+					}
 				}
 			}
-			// }
+			updateProfiles(timeMeasurements);
 		} else if (request.isStoreResponse()) {
 			profileProcessResponseElem.setStatusLocation(DatabaseFactory
 					.getDatabase().generateRetrieveResultURL(
 							(request.getUniqueId()).toString()));
 		}
-
 	}
 
-	private boolean varOutDescsContains(OutputReferenceDescription varOutDesc) {
-		for (int i = 0; i < varOutDescs.size(); i++) {
-			if (varOutDescs
-					.get(i)
-					.getProcessOutputOnVariableMapping()
-					.getOutputReference()
-					.equals(varOutDesc.getProcessOutputOnVariableMapping()
-							.getOutputReference())) {
-				return true;
-			}
+	private void updateProfiles(TimeMeasurements timeMeasurements) {
+		timeMeasurements.fullStop();
+		Iterator<Measurement> measurementIterator = timeMeasurements
+				.getIterator();
+		while (measurementIterator.hasNext()) {
+			Measurement measurement = measurementIterator.next();
+			generateProfileProcess(measurement);
 		}
-		return false;
-	}
-
-	private OutputDescriptionType getDescOfVariable(String definedOutputId) {
-		OutputDescriptionType outputDescription = null;
-		for (OutputReferenceDescription varOutDescription : varOutDescs) {
-			if (varOutDescription.getProcessOutputOnVariableMapping()
-					.getOutputReference().equals(definedOutputId)) {
-				outputDescription = varOutDescription.getDescription();
-			}
-		}
-		return outputDescription;
-	}
-
-	private OutputReferenceDescription getVarOutDescriptionOfDefinedOutput(
-			String varReferenceId) {
-		OutputReferenceDescription varOutDescription = null;
-		for (int i = 0; i < varOutDescs.size(); i++) {
-			if (varOutDescs.get(i).getProcessOutputOnVariableMapping()
-					.getOutputReference().equals(varReferenceId)) {
-				varOutDescription = varOutDescs.get(i);
-			}
-		}
-		return varOutDescription;
 	}
 
 	/**
@@ -485,7 +364,7 @@ public class ProfileProcessResponseBuilder {
 	 */
 
 	public String getMimeType() {
-		return getMimeType(null, null);
+		return getMimeType(null);
 	}
 
 	/**
@@ -498,84 +377,80 @@ public class ProfileProcessResponseBuilder {
 	 * @return the mime-type
 	 */
 
-	public String getMimeType(OutputDefinitionType def,
-			OutputReferenceDescription outputReferenceDescription) {
+	public String getMimeType(OutputDefinitionType def) {
 
 		String mimeType = "";
 		OutputDescriptionType[] outputDescs = description.getProcessOutputs()
 				.getOutputArray();
-		boolean isSetResponseForm = request.getProfileProcess()
+
+		boolean isResponseForm = request.getProfileProcess()
 				.isSetResponseForm();
 
-		String definedOutputId = "";
+		String inputID = "";
 
 		if (def != null) {
-			definedOutputId = def.getIdentifier().getStringValue();
-		} else if (isSetResponseForm) {
+			inputID = def.getIdentifier().getStringValue();
+		} else if (isResponseForm) {
 
 			if (request.getProfileProcess().getResponseForm()
 					.isSetRawDataOutput()) {
-				definedOutputId = request.getProfileProcess().getResponseForm()
+				inputID = request.getProfileProcess().getResponseForm()
 						.getRawDataOutput().getIdentifier().getStringValue();
 			} else if (request.getProfileProcess().getResponseForm()
 					.isSetResponseDocument()) {
-				definedOutputId = request.getProfileProcess().getResponseForm()
+				inputID = request.getProfileProcess().getResponseForm()
 						.getResponseDocument().getOutputArray(0)
 						.getIdentifier().getStringValue();
 			}
 		}
 
-		OutputDescriptionType outputDesc = null;
-		if (outputReferenceDescription != null) {
-			outputDesc = outputReferenceDescription.getDescription();
-		} else {
-			for (OutputDescriptionType tmpOutputDes : outputDescs) {
-				if (definedOutputId.equalsIgnoreCase(tmpOutputDes
-						.getIdentifier().getStringValue())) {
-					outputDesc = tmpOutputDes;
-					break;
-				}
+		OutputDescriptionType outputDes = null;
+
+		for (OutputDescriptionType tmpOutputDes : outputDescs) {
+			if (inputID.equalsIgnoreCase(tmpOutputDes.getIdentifier()
+					.getStringValue())) {
+				outputDes = tmpOutputDes;
+				break;
 			}
 		}
 
-		if (isSetResponseForm) {
+		if (isResponseForm) {
 			// Get the outputdescriptions from the algorithm
 			if (request.isRawData()) {
-				// TODO Not verified! Verify!
 				mimeType = request.getProfileProcess().getResponseForm()
 						.getRawDataOutput().getMimeType();
 			} else {
 				// mimeType = "text/xml";
 				// MSS 03/02/2009 defaulting to text/xml doesn't work when the
 				// data is a complex raster
-				if (outputDesc.isSetLiteralOutput()) {
+				if (outputDes.isSetLiteralOutput()) {
 					mimeType = "text/plain";
-				} else if (outputDesc.isSetBoundingBoxOutput()) {
+				} else if (outputDes.isSetBoundingBoxOutput()) {
 					mimeType = "text/xml";
 				} else {
 					if (def != null) {
 						mimeType = def.getMimeType();
 					} else {
-						if (outputDesc.isSetComplexOutput()) {
-							mimeType = outputDesc.getComplexOutput()
+						if (outputDes.isSetComplexOutput()) {
+							mimeType = outputDes.getComplexOutput()
 									.getDefault().getFormat().getMimeType();
 							LOGGER.warn("Using default mime type: " + mimeType
-									+ " for input: " + definedOutputId);
+									+ " for input: " + inputID);
 						}
 					}
 				}
 			}
 		}
 		if (mimeType == null) {
-			if (outputDesc.isSetLiteralOutput()) {
+			if (outputDes.isSetLiteralOutput()) {
 				mimeType = "text/plain";
-			} else if (outputDesc.isSetBoundingBoxOutput()) {
+			} else if (outputDes.isSetBoundingBoxOutput()) {
 				mimeType = "text/xml";
-			} else if (outputDesc.isSetComplexOutput()) {
-				mimeType = outputDesc.getComplexOutput().getDefault()
+			} else if (outputDes.isSetComplexOutput()) {
+				mimeType = outputDes.getComplexOutput().getDefault()
 						.getFormat().getMimeType();
 				LOGGER.warn("Using default mime type: " + mimeType
-						+ " for input: " + definedOutputId);
+						+ " for input: " + inputID);
 			}
 		}
 
@@ -586,16 +461,16 @@ public class ProfileProcessResponseBuilder {
 			boolean asReference, boolean rawData, String schema,
 			String mimeType, String encoding, LanguageStringType title)
 			throws ExceptionReport {
+		request.getTimeMeasurements().start(
+				"Generating Output " + definedOutputId, false);
 		IData obj = request.getAttachedResult().get(definedOutputId);
 		if (rawData) {
 			rawDataElement = new RawData(obj, definedOutputId, schema,
 					encoding, mimeType, this.identifier, description);
 		} else {
 			OutputDataItem outputDataItem = new OutputDataItem(obj,
-					getOutputIdOfRelatedOutput(definedOutputId),
 					definedOutputId, schema, encoding, mimeType, title,
-					getProcessIdOfRelatedOutput(definedOutputId),
-					getProcessDescriptionOfRelatedOutput(definedOutputId));
+					this.identifier, description);
 			if (asReference) {
 				outputDataItem.updateResponseAsReference(
 						executeResponseDocument,
@@ -607,56 +482,30 @@ public class ProfileProcessResponseBuilder {
 				updateProfileProcessResponse(definedOutputId);
 			}
 		}
+		request.getTimeMeasurements().stop();
 
 	}
 
-	private String getOutputIdOfRelatedOutput(String definedOutputId) {
-		String outputIdentifier = null;
-		for (OutputReferenceDescription varOutDescription : varOutDescs) {
-			if (varOutDescription.getProcessOutputOnVariableMapping()
-					.getOutputReference().equals(definedOutputId)) {
-				outputIdentifier = varOutDescription
-						.getProcessOutputOnVariableMapping()
-						.getOutputIdentifier();
-			}
+	private void generateProfileProcess(Measurement measurement) {
+		ProfileType processProfile = profileProcessResponseDocument
+				.getProfileProcessResponse().getProfiles().addNewProfile();
+		processProfile.addNewIdentifier().setStringValue(
+				measurement.getMeasurementId());
+		if (measurement.getDescription() != null) {
+			processProfile.addNewTitle().setStringValue(
+					measurement.getDescription());
 		}
-		if (outputIdentifier == null) {
-			outputIdentifier = definedOutputId;
-		}
-		return outputIdentifier;
-	}
+		DateTime startTime = measurement.getStartTime();
+		RuntimeInfoType runtimeInfo = processProfile.addNewRuntimeInfo();
+		Calendar calendar = new GregorianCalendar();
+		calendar.setTime(startTime.toDate());
+		runtimeInfo.setStarttime(calendar);
+		long runtime = measurement.getRuntime();
+		Duration duration = new Duration(runtime);
+		GDurationBuilder gdurationBuilder = new GDurationBuilder(
+				duration.toString());
+		runtimeInfo.setRuntime(gdurationBuilder.toGDuration());
 
-	private String getProcessIdOfRelatedOutput(String definedOutputId) {
-		String processId = null;
-		for (OutputReferenceDescription varOutDescription : varOutDescs) {
-			if (varOutDescription.getProcessOutputOnVariableMapping()
-					.getOutputReference().equals(definedOutputId)) {
-				processId = varOutDescription
-						.getProcessOutputOnVariableMapping().getProcessId();
-			}
-		}
-		if (processId == null) {
-			processId = identifier;
-		}
-		return processId;
-	}
-
-	private ProcessDescriptionType getProcessDescriptionOfRelatedOutput(
-			String definedOutputId) {
-		ProcessDescriptionType processDescription = null;
-		for (OutputReferenceDescription varOutDescription : varOutDescs) {
-			if (varOutDescription.getProcessOutputOnVariableMapping()
-					.getOutputReference().equals(definedOutputId)) {
-				String processId = varOutDescription
-						.getProcessOutputOnVariableMapping().getProcessId();
-				processDescription = RepositoryManager.getInstance()
-						.getProcessDescription(processId);
-			}
-		}
-		if (processDescription == null) {
-			processDescription = description;
-		}
-		return processDescription;
 	}
 
 	private void updateProfileProcessResponse(String responseID) {
@@ -676,24 +525,27 @@ public class ProfileProcessResponseBuilder {
 			boolean rawData, String dataTypeReference, String schema,
 			String mimeType, String encoding, LanguageStringType title)
 			throws ExceptionReport {
+		request.getTimeMeasurements().start(
+				"Generating Output " + definedOutputId, false);
 		IData obj = request.getAttachedResult().get(definedOutputId);
 		if (rawData) {
 			rawDataElement = new RawData(obj, definedOutputId, schema,
 					encoding, mimeType, this.identifier, description);
 		} else {
-			OutputDataItem handler = new OutputDataItem(obj,
-					getOutputIdOfRelatedOutput(definedOutputId),
-					definedOutputId, schema, encoding, mimeType, title,
-					getProcessIdOfRelatedOutput(definedOutputId),
-					getProcessDescriptionOfRelatedOutput(definedOutputId));
+			OutputDataItem handler = new OutputDataItem(obj, definedOutputId,
+					schema, encoding, mimeType, title, this.identifier,
+					description);
 			handler.updateResponseForLiteralData(executeResponseDocument,
 					dataTypeReference);
 			updateProfileProcessResponse(definedOutputId);
 		}
+		request.getTimeMeasurements().stop();
 	}
 
 	private void generateBBOXOutput(String definedOutputId, boolean rawData,
 			LanguageStringType title) throws ExceptionReport {
+		request.getTimeMeasurements().start(
+				"Generating Output " + definedOutputId, false);
 		IBBOXData obj = (IBBOXData) request.getAttachedResult().get(
 				definedOutputId);
 		if (rawData) {
@@ -701,15 +553,12 @@ public class ProfileProcessResponseBuilder {
 			rawDataElement = new RawData(obj, definedOutputId, null, null,
 					null, this.identifier, description);
 		} else {
-			OutputDataItem handler = new OutputDataItem(obj,
-					getOutputIdOfRelatedOutput(definedOutputId),
-					definedOutputId, null, null, null, title,
-					getProcessIdOfRelatedOutput(definedOutputId),
-					getProcessDescriptionOfRelatedOutput(definedOutputId));
+			OutputDataItem handler = new OutputDataItem(obj, definedOutputId,
+					null, null, null, title, this.identifier, description);
 			// TODO Not verified! Verify!
 			handler.updateResponseForBBOXData(executeResponseDocument, obj);
 			updateProfileProcessResponse(definedOutputId);
 		}
-
+		request.getTimeMeasurements().stop();
 	}
 }

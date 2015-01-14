@@ -16,7 +16,9 @@
  */
 package org.n52.wps.server;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Observer;
 
 import net.opengis.wps.x100.ExecuteDocument;
 
@@ -37,10 +39,33 @@ public abstract class AbstractTransactionalAlgorithm implements IAlgorithm {
 
 	public abstract Map<String, IData> run(ExecuteDocument document);
 
-	public abstract Map<String, IData> testRun(ExecuteDocument document);
+	/**
+	 * Starts testing of the given process.
+	 * 
+	 * @param document
+	 *            the execution document.
+	 * @return the results of the calculations.
+	 */
+	public abstract Map<String, IData> runTest(ExecuteDocument document);
 
-	public abstract Object getOutputReferenceMappings();
+	/**
+	 * Returns Process-handle with ProcessId, related Outputnames and
+	 * Variablenames in this order.
+	 * 
+	 * @return
+	 */
+	public abstract Object getReferenceOutputMappings();
 
-	public abstract Object profileRun(ExecuteDocument execDoc);
+	/**
+	 * Starts profiling of the given process.
+	 * 
+	 * @param execDoc
+	 *            the execution document.
+	 * @param observers
+	 *            the observers observing the processing.
+	 * @return the results of the calculations.
+	 */
+	public abstract Map<String, IData> runProfiling(ExecuteDocument execDoc,
+			List<Observer> observers);
 
 }

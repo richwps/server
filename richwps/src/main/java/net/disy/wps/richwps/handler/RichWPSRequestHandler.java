@@ -139,6 +139,14 @@ public class RichWPSRequestHandler {
 		}
 	}
 
+	/**
+	 * Handles a TestProcessRequest.
+	 * 
+	 * @param testProcessRequest
+	 *            the TestProcessRequest
+	 * @return the response on the request
+	 * @throws ExceptionReport
+	 */
 	private IRichWPSResponse handleTest(TestProcessRequest testProcessRequest)
 			throws ExceptionReport {
 
@@ -211,6 +219,14 @@ public class RichWPSRequestHandler {
 		return new TestProcessResponse(testProcessRequest);
 	}
 
+	/**
+	 * Handles a ProfileProcessRequest.
+	 * 
+	 * @param profileProcessRequest
+	 *            the request
+	 * @return the response on the request
+	 * @throws ExceptionReport
+	 */
 	private IRichWPSResponse handleProfile(
 			ProfileProcessRequest profileProcessRequest) throws ExceptionReport {
 
