@@ -1,4 +1,4 @@
-package net.disy.wps.richwps.oe.processor;
+package net.disy.wps.richwps.response;
 
 import java.util.Map;
 

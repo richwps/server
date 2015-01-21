@@ -17,13 +17,10 @@ import javax.servlet.http.HttpServletResponse;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import net.disy.wps.richwps.handler.RichWPSRequestHandler;
-import net.disy.wps.richwps.response.IRichWPSResponse;
-
 import org.apache.commons.io.IOUtils;
 import org.n52.wps.server.ExceptionReport;
-import org.n52.wps.transactional.handler.TransactionalRequestHandler;
-import org.n52.wps.transactional.response.ITransactionalResponse;
+import org.n52.wps.server.handler.IHandler;
+import org.n52.wps.server.response.IResponse;
 import org.n52.wps.util.XMLBeansHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,44 +29,43 @@ import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 
 /**
+ * A WebProcessingService reveives Http-Get and -Post-Requests containing
+ * instructions for execution of RichWPS-Requests.
+ * 
+ * <p>
+ * These requests can be DeployProcess-, UndeployProcess-, TestProcess- and
+ * ProfileProcess-Requests. GetSupportedTypesRequests is not yet supported. <\p>
  * 
  * @author woessner
+ * @author faltin
  *
  */
 public class RichWebProcessingService extends HttpServlet {
 
 	public static String SERVLET_PATH = "WebProcessingService";
-
 	private static final String XML_CONTENT_TYPE = "text/xml";
-
 	public static final String DEPLOYPROCESS_REQUEST = "DeployProcess";
 	public static final String UNDEPLOYPROCESS_REQUEST = "UndeployProcess";
 	public static final String TESTPROCESS_REQUEST = "TestProcess";
 	public static final String PROFILEPROCESS_REQUEST = "ProfileProcess";
 	public static final String GETSUPPORTEDTYPES_REQUEST = "GetSupportedTypes";
-
 	private static final long serialVersionUID = 1L;
-	private static Logger LOGGER = LoggerFactory
-			.getLogger(RichWebProcessingService.class);
+	private static Logger LOGGER = LoggerFactory.getLogger(RichWebProcessingService.class);
 
-	protected void doPost(HttpServletRequest req, HttpServletResponse res)
-			throws ServletException, IOException {
+	protected void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException,
+			IOException {
 
 		LOGGER.info("Inbound HTTP-POST RichWPS Request. " + new Date());
 		Document doc;
-
 		InputStream resIs = null;
-
+		InputStream is = null;
 		try {
-			InputStream is = req.getInputStream();
+			is = req.getInputStream();
 			if (req.getParameterMap().containsKey("request")) {
-				is = new ByteArrayInputStream(req.getParameter("request")
-						.getBytes("UTF-8"));
+				is = new ByteArrayInputStream(req.getParameter("request").getBytes("UTF-8"));
 			}
 
-			// WORKAROUND cut the parameter name "request" of the stream
-			BufferedReader br = new BufferedReader(new InputStreamReader(is,
-					"UTF-8"));
+			BufferedReader br = new BufferedReader(new InputStreamReader(is, "UTF-8"));
 			StringWriter writer = new StringWriter();
 			int k;
 			while ((k = br.read()) != -1) {
@@ -82,8 +78,7 @@ public class RichWebProcessingService extends HttpServlet {
 				if (reqContentType.equalsIgnoreCase("text/plain")) {
 					documentString = writer.toString().substring(8);
 				} else {
-					documentString = URLDecoder.decode(writer.toString()
-							.substring(8), "UTF-8");
+					documentString = URLDecoder.decode(writer.toString().substring(8), "UTF-8");
 				}
 				LOGGER.debug(documentString);
 			} else {
@@ -91,62 +86,54 @@ public class RichWebProcessingService extends HttpServlet {
 			}
 
 			DocumentBuilderFactory fac = DocumentBuilderFactory.newInstance();
-			fac.setNamespaceAware(true);// this prevents "xmlns="""
+			fac.setNamespaceAware(true);
 			fac.setIgnoringElementContentWhitespace(true);
-
 			DocumentBuilder documentBuilder = fac.newDocumentBuilder();
-			doc = documentBuilder.parse(new ByteArrayInputStream(documentString
-					.getBytes("UTF-8")));
-
+			doc = documentBuilder.parse(new ByteArrayInputStream(documentString.getBytes("UTF-8")));
 			Node child = doc.getFirstChild();
 
 			while (child.getNodeName().compareTo("#comment") == 0) {
 				child = child.getNextSibling();
 			}
 
-			// determine requestType and switch to WPS-T or RichWPS handler
 			String requestType = getRequestType(doc.getFirstChild());
+			RequestHandlerBuilder requestHandlerBuilder = RequestHandlerBuilder.newInstance();
+			requestHandlerBuilder.setRequestType(requestType);
+			requestHandlerBuilder.setDocumentString(documentString);
+			IHandler handler = requestHandlerBuilder.getResult();
+			IResponse resp = handler.handle();
 
-			if (requestType == RichWebProcessingService.DEPLOYPROCESS_REQUEST
-					|| requestType == RichWebProcessingService.UNDEPLOYPROCESS_REQUEST) {
-				TransactionalRequestHandler handler = new TransactionalRequestHandler(
-						new ByteArrayInputStream(
-								documentString.getBytes("UTF-8")),
-						res.getOutputStream());
-
-				ITransactionalResponse response = handler.handle();
-				resIs = response.getAsStream();
-			} else {
-				RichWPSRequestHandler handler = new RichWPSRequestHandler(
-						new ByteArrayInputStream(
-								documentString.getBytes("UTF-8")),
-						res.getOutputStream());
-				IRichWPSResponse response = handler.handle();
-				resIs = response.getAsStream();
-			}
-
+			resIs = resp.getAsStream();
 			OutputStream resOs = res.getOutputStream();
 			IOUtils.copy(resIs, resOs);
-			is.close();
 			res.setStatus(HttpServletResponse.SC_OK);
 		} catch (SAXException e) {
-			System.out.println(e.getMessage());
+			LOGGER.warn(e.getMessage());
 		} catch (ExceptionReport exception) {
 			handleException(exception, res);
 		} catch (Throwable t) {
 			handleException(new ExceptionReport("Unexpected error",
 					ExceptionReport.NO_APPLICABLE_CODE), res);
+		} finally {
+			IOUtils.closeQuietly(is);
 		}
 	}
 
-	protected void doGet(HttpServletRequest req, HttpServletResponse res)
-			throws ServletException, IOException {
-		ExceptionReport er = new ExceptionReport(
-				"HTTP GET is not supported at this endpoint",
+	protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException,
+			IOException {
+		ExceptionReport er = new ExceptionReport("HTTP GET is not supported at this endpoint",
 				ExceptionReport.NO_APPLICABLE_CODE);
 		handleException(er, res);
 	}
 
+	/**
+	 * Returns the type of the request, which is contained in a Node-object. The
+	 * types are named in the class documentation.
+	 * 
+	 * @param node
+	 *            the Node-object containing the request-type.
+	 * @return the request-type
+	 */
 	public static String getRequestType(Node node) {
 		String localName = node.getLocalName();
 		if (localName.equalsIgnoreCase("undeployprocess")) {
@@ -162,18 +149,14 @@ public class RichWebProcessingService extends HttpServlet {
 		} else {
 			return null;
 		}
-
 	}
 
-	private static void handleException(ExceptionReport exception,
-			HttpServletResponse res) {
+	private static void handleException(ExceptionReport exception, HttpServletResponse res) {
 		res.setContentType(XML_CONTENT_TYPE);
 		try {
 			LOGGER.debug(exception.toString());
-			// DO NOT MIX getWriter and getOuputStream!
 			exception.getExceptionDocument().save(res.getOutputStream(),
 					XMLBeansHelper.getXmlOptions());
-
 			res.setStatus(HttpServletResponse.SC_OK);
 		} catch (IOException e) {
 			LOGGER.warn("exception occured while writing ExceptionReport to stream");

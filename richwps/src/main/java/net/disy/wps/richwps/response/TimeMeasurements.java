@@ -1,4 +1,4 @@
-package net.disy.wps.richwps.oe.processor;
+package net.disy.wps.richwps.response;
 
 import java.util.ArrayList;
 import java.util.EmptyStackException;
@@ -8,6 +8,7 @@ import java.util.Observable;
 import java.util.Observer;
 import java.util.Stack;
 
+import net.disy.wps.richwps.oe.processor.WorkflowProcessor;
 import net.opengis.wps.x100.InputType;
 
 import org.joda.time.DateTime;
@@ -48,9 +49,9 @@ public class TimeMeasurements implements Observer {
 	}
 
 	/**
-	 * Returns the next Measurement of all Measurements.
+	 * Returns an iterator for the data structure containing all Measurements.
 	 * 
-	 * @return the next Measurement
+	 * @return the iterator
 	 */
 	public Iterator<Measurement> getIterator() {
 		return measurements.iterator();
@@ -68,55 +69,45 @@ public class TimeMeasurements implements Observer {
 		currentMeasurement.setStartTime(new DateTime());
 		if (isRolaOperation) {
 			String dslType = null;
-			if (deploymentProfileName != null
-					&& !deploymentProfileName.isEmpty()) {
+			if (deploymentProfileName != null && !deploymentProfileName.isEmpty()) {
 				dslType = deploymentProfileName + "-Operation #";
 			} else {
 				dslType = "Operation #";
 			}
 			if (operation instanceof Assignment) {
-				currentMeasurement.setMeasurementId(dslType
-						+ rolaOperationCounter);
+				currentMeasurement.setMeasurementId(dslType + rolaOperationCounter);
 				currentMeasurement.setDescription("Assignment: "
-						+ ((Assignment) operation).getLefthand().getId()
-						+ " = " + ((Assignment) operation).getStringvalue());
+						+ ((Assignment) operation).getLefthand().getId() + " = "
+						+ ((Assignment) operation).getStringvalue());
 			} else if (operation instanceof Binding) {
-				currentMeasurement.setMeasurementId(dslType
-						+ rolaOperationCounter);
+				currentMeasurement.setMeasurementId(dslType + rolaOperationCounter);
 				currentMeasurement.setDescription("Binding: "
 						+ ((Binding) operation).getProcessId() + " to "
 						+ ((Binding) operation).getHandle());
 			} else if (operation instanceof Execute) {
-				currentMeasurement.setMeasurementId(dslType
-						+ rolaOperationCounter);
-				currentMeasurement.setDescription("Execute: "
-						+ ((Execute) operation).getHandle());
+				currentMeasurement.setMeasurementId(dslType + rolaOperationCounter);
+				currentMeasurement.setDescription("Execute: " + ((Execute) operation).getHandle());
 			} else if (operation instanceof IfStatement) {
-				currentMeasurement.setMeasurementId(dslType
-						+ rolaOperationCounter);
+				currentMeasurement.setMeasurementId(dslType + rolaOperationCounter);
 				currentMeasurement.setDescription("IfStatement: "
-						+ ((IfStatement) operation).getLefthand().getId()
-						+ ", "
+						+ ((IfStatement) operation).getLefthand().getId() + ", "
 						+ ((IfStatement) operation).getRighthand().getId());
 			} else if (operation instanceof String) {
 				currentMeasurement.setMeasurementId((String) operation);
 			} else {
-				currentMeasurement.setMeasurementId(dslType
-						+ rolaOperationCounter);
+				currentMeasurement.setMeasurementId(dslType + rolaOperationCounter);
 			}
 			rolaOperationCounter++;
 		} else {
 			if (operation instanceof InputType) {
 				currentMeasurement.setMeasurementId("Parsing Input "
-						+ ((InputType) operation).getIdentifier()
-								.getStringValue());
+						+ ((InputType) operation).getIdentifier().getStringValue());
 			} else if (operation instanceof String) {
 				currentMeasurement.setMeasurementId((String) operation);
 			} else {
 				currentMeasurement.setMeasurementId("Unknown Measurement #"
 						+ nonRolaOperationCounter);
-				currentMeasurement.setDescription(operation.getClass()
-						.getName());
+				currentMeasurement.setDescription(operation.getClass().getName());
 				nonRolaOperationCounter++;
 			}
 		}
@@ -130,8 +121,7 @@ public class TimeMeasurements implements Observer {
 		Measurement recentlyStartedMeasurement = null;
 		try {
 			recentlyStartedMeasurement = operationStack.pop();
-			recentlyStartedMeasurement.setRuntime(calcRuntime(
-					System.nanoTime(),
+			recentlyStartedMeasurement.setRuntime(calcRuntime(System.nanoTime(),
 					recentlyStartedMeasurement.getElapseStart()));
 			measurements.add(recentlyStartedMeasurement);
 		} catch (EmptyStackException e) {
@@ -263,11 +253,6 @@ public class TimeMeasurements implements Observer {
 
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.util.Observer#update(java.util.Observable, java.lang.Object)
-	 */
 	@Override
 	public void update(Observable o, Object arg) {
 		if (o instanceof InputHandler) {

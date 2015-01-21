@@ -50,8 +50,7 @@ import de.hsos.richwps.dsl.api.elements.ReferenceOutputMapping;
  *
  */
 public class TestProcessResponseBuilder {
-	private static Logger LOGGER = LoggerFactory
-			.getLogger(TestProcessResponseBuilder.class);
+	private static Logger LOGGER = LoggerFactory.getLogger(TestProcessResponseBuilder.class);
 
 	private String identifier;
 	private DataInputsType dataInputs;
@@ -74,33 +73,28 @@ public class TestProcessResponseBuilder {
 		description = this.request.getProcessDescription();
 		identifier = description.getIdentifier().getStringValue().trim();
 		if (description == null) {
-			throw new RuntimeException(
-					"Error while accessing the process description for "
-							+ identifier);
+			throw new RuntimeException("Error while accessing the process description for "
+					+ identifier);
 		}
-		testProcessResponseDocument = TestProcessResponseDocument.Factory
-				.newInstance();
+		testProcessResponseDocument = TestProcessResponseDocument.Factory.newInstance();
 		testProcessResponseDocument.addNewTestProcessResponse();
 		XmlCursor c = testProcessResponseDocument.newCursor();
 		c.toFirstChild();
 		c.toLastAttribute();
-		c.setAttributeText(new QName(
-				XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI, "schemaLocation"),
+		c.setAttributeText(
+				new QName(XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI, "schemaLocation"),
 				"./wpsTestProcess_response.xsd");
 		TestProcessResponse testProcessResponse = testProcessResponseDocument
 				.getTestProcessResponse();
-		testProcessResponse
-				.setServiceInstance(CapabilitiesConfiguration.WPS_ENDPOINT_URL
-						+ "?REQUEST=GetCapabilities&SERVICE=WPS");
+		testProcessResponse.setServiceInstance(CapabilitiesConfiguration.WPS_ENDPOINT_URL
+				+ "?REQUEST=GetCapabilities&SERVICE=WPS");
 		testProcessResponse.setLang(WebProcessingService.DEFAULT_LANGUAGE);
 		testProcessResponse.setService("WPS");
 		testProcessResponse.setVersion(Request.SUPPORTED_VERSION);
 
 		testProcessResponse.addNewProcess();
-		testProcessResponse.getProcess().addNewIdentifier()
-				.setStringValue(identifier);
-		testProcessResponse.getProcess().setProcessVersion(
-				description.getProcessVersion());
+		testProcessResponse.getProcess().addNewIdentifier().setStringValue(identifier);
+		testProcessResponse.getProcess().setProcessVersion(description.getProcessVersion());
 		testProcessResponse.getProcess().setTitle(description.getTitle());
 		initializeExecuteResponseDocument();
 		creationTime = Calendar.getInstance();
@@ -114,25 +108,20 @@ public class TestProcessResponseBuilder {
 		c.toFirstChild();
 		c.toLastAttribute();
 		c.setAttributeText(
-				new QName(XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI,
-						"schemaLocation"),
+				new QName(XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI, "schemaLocation"),
 				"http://www.opengis.net/wps/1.0.0 http://schemas.opengis.net/wps/1.0.0/wpsExecute_response.xsd");
-		executeResponseDocument.getExecuteResponse().setServiceInstance(
-				CapabilitiesConfiguration.WPS_ENDPOINT_URL
-						+ "?REQUEST=GetCapabilities&SERVICE=WPS");
-		executeResponseDocument.getExecuteResponse().setLang(
-				WebProcessingService.DEFAULT_LANGUAGE);
+		executeResponseDocument.getExecuteResponse()
+				.setServiceInstance(
+						CapabilitiesConfiguration.WPS_ENDPOINT_URL
+								+ "?REQUEST=GetCapabilities&SERVICE=WPS");
+		executeResponseDocument.getExecuteResponse().setLang(WebProcessingService.DEFAULT_LANGUAGE);
 		executeResponseDocument.getExecuteResponse().setService("WPS");
-		executeResponseDocument.getExecuteResponse().setVersion(
-				Request.SUPPORTED_VERSION);
+		executeResponseDocument.getExecuteResponse().setVersion(Request.SUPPORTED_VERSION);
 
-		ExecuteResponse responseElem = executeResponseDocument
-				.getExecuteResponse();
-		responseElem.addNewProcess().addNewIdentifier()
-				.setStringValue(identifier);
+		ExecuteResponse responseElem = executeResponseDocument.getExecuteResponse();
+		responseElem.addNewProcess().addNewIdentifier().setStringValue(identifier);
 		responseElem.getProcess().setTitle(description.getTitle());
-		responseElem.getProcess().setProcessVersion(
-				description.getProcessVersion());
+		responseElem.getProcess().setProcessVersion(description.getProcessVersion());
 	}
 
 	/**
@@ -147,14 +136,11 @@ public class TestProcessResponseBuilder {
 		}
 		if (request.isStoreResponse()) {
 			String id = request.getUniqueId().toString();
-			String statusLocation = DatabaseFactory.getDatabase()
-					.generateRetrieveResultURL(id);
-			testProcessResponseDocument.getTestProcessResponse()
-					.setStatusLocation(statusLocation);
+			String statusLocation = DatabaseFactory.getDatabase().generateRetrieveResultURL(id);
+			testProcessResponseDocument.getTestProcessResponse().setStatusLocation(statusLocation);
 		}
 		try {
-			return testProcessResponseDocument.newInputStream(XMLBeansHelper
-					.getXmlOptions());
+			return testProcessResponseDocument.newInputStream(XMLBeansHelper.getXmlOptions());
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -171,8 +157,7 @@ public class TestProcessResponseBuilder {
 
 		net.opengis.wps.x100.TestProcessResponseDocument.TestProcessResponse testProcessResponseElem = testProcessResponseDocument
 				.getTestProcessResponse();
-		ExecuteResponse executeResponseElem = executeResponseDocument
-				.getExecuteResponse();
+		ExecuteResponse executeResponseElem = executeResponseDocument.getExecuteResponse();
 
 		if (testProcessResponseElem.getStatus().isSetProcessSucceeded()) {
 			dataInputs = request.getTestProcess().getDataInputs();
@@ -184,140 +169,102 @@ public class TestProcessResponseBuilder {
 			outputReferenceDescs = new ArrayList<OutputReferenceDescription>();
 			List<ReferenceOutputMapping> outputReferenceMappings = request
 					.getOutputReferenceMappings();
-			OutputDescriptionType[] outputDescs = description
-					.getProcessOutputs().getOutputArray();
+			OutputDescriptionType[] outputDescs = description.getProcessOutputs().getOutputArray();
 			if (request.getTestProcess().isSetResponseForm()) {
 
 				for (int i = 0; i < outputReferenceMappings.size(); i++) {
-					String outputIdentifier = outputReferenceMappings.get(i)
-							.getOutputIdentifier();
+					String outputIdentifier = outputReferenceMappings.get(i).getOutputIdentifier();
 
 					OutputDescriptionType[] descs = RepositoryManager
 							.getInstance()
 							.getProcessDescription(
-									outputReferenceMappings.get(i)
-											.getProcessIdentifier())
+									outputReferenceMappings.get(i).getProcessIdentifier())
 							.getProcessOutputs().getOutputArray();
 					for (OutputDescriptionType desc : descs) {
-						if (desc.getIdentifier().getStringValue()
-								.equals(outputIdentifier)) {
-							outputReferenceDescs
-									.add(new OutputReferenceDescription(
-											outputReferenceMappings.get(i),
-											desc));
+						if (desc.getIdentifier().getStringValue().equals(outputIdentifier)) {
+							outputReferenceDescs.add(new OutputReferenceDescription(
+									outputReferenceMappings.get(i), desc));
 						}
 					}
 				}
 
 				if (request.isRawData()) {
-					// TODO Not verified! Verify!
-					OutputDefinitionType rawDataOutput = request
-							.getTestProcess().getResponseForm()
+					OutputDefinitionType rawDataOutput = request.getTestProcess().getResponseForm()
 							.getRawDataOutput();
-					String definedOutputId = rawDataOutput.getIdentifier()
-							.getStringValue();
-					OutputDescriptionType desc = XMLBeansHelper.findOutputByID(
-							definedOutputId, outputDescs);
+					String definedOutputId = rawDataOutput.getIdentifier().getStringValue();
+					OutputDescriptionType desc = getOutputDescription(outputDescs, definedOutputId);
 					if (desc.isSetComplexOutput()) {
-						String encoding = TestProcessResponseBuilder
-								.getEncoding(desc, rawDataOutput);
-						String schema = TestProcessResponseBuilder.getSchema(
-								desc, rawDataOutput);
-						String responseMimeType = getMimeType(rawDataOutput,
-								null);
-						generateComplexDataOutput(definedOutputId, false, true,
-								schema, responseMimeType, encoding, null);
-					}
+						String encoding = TestProcessResponseBuilder.getEncoding(desc,
+								rawDataOutput);
+						String schema = TestProcessResponseBuilder.getSchema(desc, rawDataOutput);
+						String responseMimeType = getMimeType(rawDataOutput, null);
 
-					else if (desc.isSetLiteralOutput()) {
+						generateComplexDataOutput(definedOutputId, false, true, schema,
+								responseMimeType, encoding, null);
+					} else if (desc.isSetLiteralOutput()) {
 						String mimeType = null;
 						String schema = null;
 						String encoding = null;
-						DomainMetadataType dataType = desc.getLiteralOutput()
-								.getDataType();
-						String reference = dataType != null ? dataType
-								.getReference() : null;
-						generateLiteralDataOutput(definedOutputId, true,
-								reference, schema, mimeType, encoding,
-								desc.getTitle());
+						DomainMetadataType dataType = desc.getLiteralOutput().getDataType();
+						String reference = dataType != null ? dataType.getReference() : null;
+						generateLiteralDataOutput(definedOutputId, true, reference, schema,
+								mimeType, encoding, desc.getTitle());
 					} else if (desc.isSetBoundingBoxOutput()) {
-						generateBBOXOutput(definedOutputId, true,
-								desc.getTitle());
+						generateBBOXOutput(definedOutputId, true, desc.getTitle());
 					}
 					return;
 				}
-				// Get the outputdefinitions from the clients request
-				// For each request of output
 				for (int i = 0; i < request.getTestProcess().getResponseForm()
 						.getResponseDocument().getOutputArray().length; i++) {
-					OutputDefinitionType definition = request.getTestProcess()
-							.getResponseForm().getResponseDocument()
-							.getOutputArray(i);
-					String definedOutputId = definition.getIdentifier()
-							.getStringValue();
+					OutputDefinitionType definition = request.getTestProcess().getResponseForm()
+							.getResponseDocument().getOutputArray(i);
+					String definedOutputId = definition.getIdentifier().getStringValue();
 					OutputReferenceDescription varOutDescription = getVarOutDescriptionOfDefinedOutput(definedOutputId);
 					OutputDescriptionType desc = null;
 					if (varOutDescription != null) {
 						desc = getDescOfVariable(definedOutputId);
 					} else {
-						desc = XMLBeansHelper.findOutputByID(definedOutputId,
-								outputDescs);
+						desc = XMLBeansHelper.findOutputByID(definedOutputId, outputDescs);
 					}
 					if (desc == null) {
 						throw new ExceptionReport(
-								"Could not find the output id "
-										+ definedOutputId,
+								"Could not find the output id " + definedOutputId,
 								ExceptionReport.INVALID_PARAMETER_VALUE);
 					}
 					if (desc.isSetComplexOutput()) {
 
-						String mimeType = getMimeType(definition,
-								varOutDescription);
-						String schema = TestProcessResponseBuilder.getSchema(
-								desc, definition);
-						String encoding = TestProcessResponseBuilder
-								.getEncoding(desc, definition);
+						String mimeType = getMimeType(definition, varOutDescription);
+						String schema = TestProcessResponseBuilder.getSchema(desc, definition);
+						String encoding = TestProcessResponseBuilder.getEncoding(desc, definition);
 
 						generateComplexDataOutput(definedOutputId,
-								((DocumentOutputDefinitionType) definition)
-										.getAsReference(), false, schema,
-								mimeType, encoding, desc.getTitle());
+								((DocumentOutputDefinitionType) definition).getAsReference(),
+								false, schema, mimeType, encoding, desc.getTitle());
 					} else if (desc.isSetLiteralOutput()) {
 						String mimeType = null;
 						String schema = null;
 						String encoding = null;
-						DomainMetadataType dataType = desc.getLiteralOutput()
-								.getDataType();
-						String reference = dataType != null ? dataType
-								.getReference() : null;
-						generateLiteralDataOutput(definedOutputId, false,
-								reference, schema, mimeType, encoding,
-								desc.getTitle());
+						DomainMetadataType dataType = desc.getLiteralOutput().getDataType();
+						String reference = dataType != null ? dataType.getReference() : null;
+						generateLiteralDataOutput(definedOutputId, false, reference, schema,
+								mimeType, encoding, desc.getTitle());
 					} else if (desc.isSetBoundingBoxOutput()) {
-						generateBBOXOutput(definedOutputId, false,
-								desc.getTitle());
+						generateBBOXOutput(definedOutputId, false, desc.getTitle());
 					} else {
-						throw new ExceptionReport(
-								"Requested type not supported: BBOX",
+						throw new ExceptionReport("Requested type not supported: BBOX",
 								ExceptionReport.INVALID_PARAMETER_VALUE);
 					}
 				}
 			} else {
 				LOGGER.info("OutputDefinitions are not stated explicitly in request");
-				// THIS IS A WORKAROUND AND ACTUALLY NOT COMPLIANT TO THE
-				// SPEC.
 				for (int i = 0; i < outputReferenceMappings.size(); i++) {
-					String currentProcessId = outputReferenceMappings.get(i)
-							.getProcessIdentifier();
-					OutputDescriptionType[] descs = RepositoryManager
-							.getInstance()
-							.getProcessDescription(currentProcessId)
-							.getProcessOutputs().getOutputArray();
+					String currentProcessId = outputReferenceMappings.get(i).getProcessIdentifier();
+					OutputDescriptionType[] descs = RepositoryManager.getInstance()
+							.getProcessDescription(currentProcessId).getProcessOutputs()
+							.getOutputArray();
 					for (OutputDescriptionType desc : descs) {
-						if (desc.getIdentifier()
-								.getStringValue()
-								.equals(outputReferenceMappings.get(i)
-										.getOutputIdentifier())) {
+						if (desc.getIdentifier().getStringValue()
+								.equals(outputReferenceMappings.get(i).getOutputIdentifier())) {
 							OutputReferenceDescription varOutDesc = new OutputReferenceDescription(
 									outputReferenceMappings.get(i), desc);
 							if (!varOutDescsContains(varOutDesc)) {
@@ -328,78 +275,68 @@ public class TestProcessResponseBuilder {
 				}
 
 				if (description == null) {
-					throw new RuntimeException(
-							"Error while accessing the process description for "
-									+ request.getTestProcess()
-											.getProcessDescription()
-											.getIdentifier().getStringValue());
+					throw new RuntimeException("Error while accessing the process description for "
+							+ request.getTestProcess().getProcessDescription().getIdentifier()
+									.getStringValue());
 				}
 				for (int i = 0; i < outputDescs.length; i++) {
 					if (outputDescs[i].isSetComplexOutput()) {
-						String schema = outputDescs[i].getComplexOutput()
-								.getDefault().getFormat().getSchema();
-						String encoding = outputDescs[i].getComplexOutput()
-								.getDefault().getFormat().getEncoding();
-						String mimeType = outputDescs[i].getComplexOutput()
-								.getDefault().getFormat().getMimeType();
-						generateComplexDataOutput(outputDescs[i]
-								.getIdentifier().getStringValue(), false,
-								false, schema, mimeType, encoding,
-								outputDescs[i].getTitle());
+						String schema = outputDescs[i].getComplexOutput().getDefault().getFormat()
+								.getSchema();
+						String encoding = outputDescs[i].getComplexOutput().getDefault()
+								.getFormat().getEncoding();
+						String mimeType = outputDescs[i].getComplexOutput().getDefault()
+								.getFormat().getMimeType();
+						generateComplexDataOutput(outputDescs[i].getIdentifier().getStringValue(),
+								false, false, schema, mimeType, encoding, outputDescs[i].getTitle());
 					} else if (outputDescs[i].isSetLiteralOutput()) {
-						generateLiteralDataOutput(outputDescs[i]
-								.getIdentifier().getStringValue(), false,
-								outputDescs[i].getLiteralOutput().getDataType()
+						generateLiteralDataOutput(outputDescs[i].getIdentifier().getStringValue(),
+								false, outputDescs[i].getLiteralOutput().getDataType()
 										.getReference(), null, null, null,
 								outputDescs[i].getTitle());
 					}
 				}
 				for (int i = 0; i < outputReferenceDescs.size(); i++) {
-					if (outputReferenceDescs.get(i).getDescription()
-							.isSetComplexOutput()) {
-						String schema = outputReferenceDescs.get(i)
-								.getDescription().getComplexOutput()
-								.getDefault().getFormat().getSchema();
-						String encoding = outputReferenceDescs.get(i)
-								.getDescription().getComplexOutput()
-								.getDefault().getFormat().getEncoding();
-						String mimeType = outputReferenceDescs.get(i)
-								.getDescription().getComplexOutput()
-								.getDefault().getFormat().getMimeType();
+					if (outputReferenceDescs.get(i).getDescription().isSetComplexOutput()) {
+						String schema = outputReferenceDescs.get(i).getDescription()
+								.getComplexOutput().getDefault().getFormat().getSchema();
+						String encoding = outputReferenceDescs.get(i).getDescription()
+								.getComplexOutput().getDefault().getFormat().getEncoding();
+						String mimeType = outputReferenceDescs.get(i).getDescription()
+								.getComplexOutput().getDefault().getFormat().getMimeType();
 						generateComplexDataOutput(outputReferenceDescs.get(i)
-								.getReferenceOutputMapping()
-								.getOutputReference(), false, false, schema,
-								mimeType, encoding, outputReferenceDescs.get(i)
+								.getReferenceOutputMapping().getOutputReference(), false, false,
+								schema, mimeType, encoding, outputReferenceDescs.get(i)
 										.getDescription().getTitle());
-					} else if (outputReferenceDescs.get(i).getDescription()
-							.isSetLiteralOutput()) {
+					} else if (outputReferenceDescs.get(i).getDescription().isSetLiteralOutput()) {
 						generateLiteralDataOutput(outputReferenceDescs.get(i)
-								.getReferenceOutputMapping()
-								.getOutputReference(), false,
-								outputReferenceDescs.get(i).getDescription()
-										.getLiteralOutput().getDataType()
-										.getReference(), null, null, null,
-								outputReferenceDescs.get(i).getDescription()
-										.getTitle());
+								.getReferenceOutputMapping().getOutputReference(), false,
+								outputReferenceDescs.get(i).getDescription().getLiteralOutput()
+										.getDataType().getReference(), null, null, null,
+								outputReferenceDescs.get(i).getDescription().getTitle());
 					}
 
 				}
 			}
 		} else if (request.isStoreResponse()) {
-			testProcessResponseElem.setStatusLocation(DatabaseFactory
-					.getDatabase().generateRetrieveResultURL(
-							(request.getUniqueId()).toString()));
+			testProcessResponseElem.setStatusLocation(DatabaseFactory.getDatabase()
+					.generateRetrieveResultURL((request.getUniqueId()).toString()));
 		}
+	}
+
+	private OutputDescriptionType getOutputDescription(OutputDescriptionType[] outputDescs,
+			String definedOutputId) {
+		OutputDescriptionType desc = XMLBeansHelper.findOutputByID(definedOutputId, outputDescs);
+		if (desc == null) {
+			desc = getDescOfVariable(definedOutputId);
+		}
+		return desc;
 	}
 
 	private boolean varOutDescsContains(OutputReferenceDescription varOutDesc) {
 		for (int i = 0; i < outputReferenceDescs.size(); i++) {
-			if (outputReferenceDescs
-					.get(i)
-					.getReferenceOutputMapping()
-					.getOutputReference()
-					.equals(varOutDesc.getReferenceOutputMapping()
-							.getOutputReference())) {
+			if (outputReferenceDescs.get(i).getReferenceOutputMapping().getOutputReference()
+					.equals(varOutDesc.getReferenceOutputMapping().getOutputReference())) {
 				return true;
 			}
 		}
@@ -409,20 +346,19 @@ public class TestProcessResponseBuilder {
 	private OutputDescriptionType getDescOfVariable(String definedOutputId) {
 		OutputDescriptionType outputDescription = null;
 		for (OutputReferenceDescription varOutDescription : outputReferenceDescs) {
-			if (varOutDescription.getReferenceOutputMapping()
-					.getOutputReference().equals(definedOutputId)) {
+			if (varOutDescription.getReferenceOutputMapping().getOutputReference()
+					.equals(definedOutputId)) {
 				outputDescription = varOutDescription.getDescription();
 			}
 		}
 		return outputDescription;
 	}
 
-	private OutputReferenceDescription getVarOutDescriptionOfDefinedOutput(
-			String varReferenceId) {
+	private OutputReferenceDescription getVarOutDescriptionOfDefinedOutput(String varReferenceId) {
 		OutputReferenceDescription varOutDescription = null;
 		for (int i = 0; i < outputReferenceDescs.size(); i++) {
-			if (outputReferenceDescs.get(i).getReferenceOutputMapping()
-					.getOutputReference().equals(varReferenceId)) {
+			if (outputReferenceDescs.get(i).getReferenceOutputMapping().getOutputReference()
+					.equals(varReferenceId)) {
 				varOutDescription = outputReferenceDescs.get(i);
 			}
 		}
@@ -436,14 +372,11 @@ public class TestProcessResponseBuilder {
 	 *            status to be set.
 	 */
 	public void setStatus(StatusType status) {
-		// workaround, should be generated either at the creation of the
-		// document or when the process has been finished.
 		status.setCreationTime(creationTime);
 		testProcessResponseDocument.getTestProcessResponse().setStatus(status);
 	}
 
-	private static String getSchema(OutputDescriptionType desc,
-			OutputDefinitionType def) {
+	private static String getSchema(OutputDescriptionType desc, OutputDefinitionType def) {
 		String schema = null;
 		if (def != null) {
 			schema = def.getSchema();
@@ -452,8 +385,7 @@ public class TestProcessResponseBuilder {
 		return schema;
 	}
 
-	private static String getEncoding(OutputDescriptionType desc,
-			OutputDefinitionType def) {
+	private static String getEncoding(OutputDescriptionType desc, OutputDefinitionType def) {
 		String encoding = null;
 		if (def != null) {
 			encoding = def.getEncoding();
@@ -483,10 +415,8 @@ public class TestProcessResponseBuilder {
 			OutputReferenceDescription outputReferenceDescription) {
 
 		String mimeType = "";
-		OutputDescriptionType[] outputDescs = description.getProcessOutputs()
-				.getOutputArray();
-		boolean isSetResponseForm = request.getTestProcess()
-				.isSetResponseForm();
+		OutputDescriptionType[] outputDescs = description.getProcessOutputs().getOutputArray();
+		boolean isSetResponseForm = request.getTestProcess().isSetResponseForm();
 
 		String definedOutputId = "";
 
@@ -495,13 +425,11 @@ public class TestProcessResponseBuilder {
 		} else if (isSetResponseForm) {
 
 			if (request.getTestProcess().getResponseForm().isSetRawDataOutput()) {
-				definedOutputId = request.getTestProcess().getResponseForm()
-						.getRawDataOutput().getIdentifier().getStringValue();
-			} else if (request.getTestProcess().getResponseForm()
-					.isSetResponseDocument()) {
-				definedOutputId = request.getTestProcess().getResponseForm()
-						.getResponseDocument().getOutputArray(0)
+				definedOutputId = request.getTestProcess().getResponseForm().getRawDataOutput()
 						.getIdentifier().getStringValue();
+			} else if (request.getTestProcess().getResponseForm().isSetResponseDocument()) {
+				definedOutputId = request.getTestProcess().getResponseForm().getResponseDocument()
+						.getOutputArray(0).getIdentifier().getStringValue();
 			}
 		}
 
@@ -510,8 +438,7 @@ public class TestProcessResponseBuilder {
 			outputDesc = outputReferenceDescription.getDescription();
 		} else {
 			for (OutputDescriptionType tmpOutputDes : outputDescs) {
-				if (definedOutputId.equalsIgnoreCase(tmpOutputDes
-						.getIdentifier().getStringValue())) {
+				if (definedOutputId.equalsIgnoreCase(tmpOutputDes.getIdentifier().getStringValue())) {
 					outputDesc = tmpOutputDes;
 					break;
 				}
@@ -519,15 +446,10 @@ public class TestProcessResponseBuilder {
 		}
 
 		if (isSetResponseForm) {
-			// Get the outputdescriptions from the algorithm
 			if (request.isRawData()) {
-				// TODO Not verified! Verify!
-				mimeType = request.getTestProcess().getResponseForm()
-						.getRawDataOutput().getMimeType();
+				mimeType = request.getTestProcess().getResponseForm().getRawDataOutput()
+						.getMimeType();
 			} else {
-				// mimeType = "text/xml";
-				// MSS 03/02/2009 defaulting to text/xml doesn't work when the
-				// data is a complex raster
 				if (outputDesc.isSetLiteralOutput()) {
 					mimeType = "text/plain";
 				} else if (outputDesc.isSetBoundingBoxOutput()) {
@@ -537,10 +459,10 @@ public class TestProcessResponseBuilder {
 						mimeType = def.getMimeType();
 					} else {
 						if (outputDesc.isSetComplexOutput()) {
-							mimeType = outputDesc.getComplexOutput()
-									.getDefault().getFormat().getMimeType();
-							LOGGER.warn("Using default mime type: " + mimeType
-									+ " for input: " + definedOutputId);
+							mimeType = outputDesc.getComplexOutput().getDefault().getFormat()
+									.getMimeType();
+							LOGGER.warn("Using default mime type: " + mimeType + " for input: "
+									+ definedOutputId);
 						}
 					}
 				}
@@ -552,38 +474,34 @@ public class TestProcessResponseBuilder {
 			} else if (outputDesc.isSetBoundingBoxOutput()) {
 				mimeType = "text/xml";
 			} else if (outputDesc.isSetComplexOutput()) {
-				mimeType = outputDesc.getComplexOutput().getDefault()
-						.getFormat().getMimeType();
-				LOGGER.warn("Using default mime type: " + mimeType
-						+ " for input: " + definedOutputId);
+				mimeType = outputDesc.getComplexOutput().getDefault().getFormat().getMimeType();
+				LOGGER.warn("Using default mime type: " + mimeType + " for input: "
+						+ definedOutputId);
 			}
 		}
 
 		return mimeType;
 	}
 
-	private void generateComplexDataOutput(String definedOutputId,
-			boolean asReference, boolean rawData, String schema,
-			String mimeType, String encoding, LanguageStringType title)
-			throws ExceptionReport {
+	private void generateComplexDataOutput(String definedOutputId, boolean asReference,
+			boolean rawData, String schema, String mimeType, String encoding,
+			LanguageStringType title) throws ExceptionReport {
 		IData obj = request.getAttachedResult().get(definedOutputId);
 		if (rawData) {
-			rawDataElement = new RawData(obj, definedOutputId, schema,
-					encoding, mimeType, this.identifier, description);
+			rawDataElement = new RawData(obj, getOutputIdOfDefinedOutput(definedOutputId), schema,
+					encoding, mimeType, getProcessIdOfRelatedOutput(definedOutputId),
+					getProcessDescriptionOfRelatedOutput(definedOutputId));
 		} else {
 			OutputDataItem outputDataItem = new OutputDataItem(obj,
-					getOutputIdOfDefinedOutput(definedOutputId),
-					definedOutputId, schema, encoding, mimeType, title,
-					getProcessIdOfRelatedOutput(definedOutputId),
+					getOutputIdOfDefinedOutput(definedOutputId), definedOutputId, schema, encoding,
+					mimeType, title, getProcessIdOfRelatedOutput(definedOutputId),
 					getProcessDescriptionOfRelatedOutput(definedOutputId));
 			if (asReference) {
-				outputDataItem.updateResponseAsReference(
-						executeResponseDocument,
+				outputDataItem.updateResponseAsReference(executeResponseDocument,
 						(request.getUniqueId()).toString(), mimeType);
 				updateTestProcessResponse(definedOutputId);
 			} else {
-				outputDataItem
-						.updateResponseForInlineComplexData(executeResponseDocument);
+				outputDataItem.updateResponseForInlineComplexData(executeResponseDocument);
 				updateTestProcessResponse(definedOutputId);
 			}
 		}
@@ -593,10 +511,9 @@ public class TestProcessResponseBuilder {
 	private String getOutputIdOfDefinedOutput(String definedOutputId) {
 		String outputIdentifier = null;
 		for (OutputReferenceDescription varOutDescription : outputReferenceDescs) {
-			if (varOutDescription.getReferenceOutputMapping()
-					.getOutputReference().equals(definedOutputId)) {
-				outputIdentifier = varOutDescription
-						.getReferenceOutputMapping()
+			if (varOutDescription.getReferenceOutputMapping().getOutputReference()
+					.equals(definedOutputId)) {
+				outputIdentifier = varOutDescription.getReferenceOutputMapping()
 						.getOutputIdentifier();
 			}
 		}
@@ -609,11 +526,9 @@ public class TestProcessResponseBuilder {
 	private String getProcessIdOfRelatedOutput(String definedOutputId) {
 		String processId = null;
 		for (OutputReferenceDescription varOutDescription : outputReferenceDescs) {
-			if (varOutDescription.getReferenceOutputMapping()
-					.getOutputReference().equals(definedOutputId)) {
-				processId = varOutDescription
-						.getReferenceOutputMapping()
-						.getProcessIdentifier();
+			if (varOutDescription.getReferenceOutputMapping().getOutputReference()
+					.equals(definedOutputId)) {
+				processId = varOutDescription.getReferenceOutputMapping().getProcessIdentifier();
 			}
 		}
 		if (processId == null) {
@@ -622,17 +537,15 @@ public class TestProcessResponseBuilder {
 		return processId;
 	}
 
-	private ProcessDescriptionType getProcessDescriptionOfRelatedOutput(
-			String definedOutputId) {
+	private ProcessDescriptionType getProcessDescriptionOfRelatedOutput(String definedOutputId) {
 		ProcessDescriptionType processDescription = null;
 		for (OutputReferenceDescription varOutDescription : outputReferenceDescs) {
-			if (varOutDescription.getReferenceOutputMapping()
-					.getOutputReference().equals(definedOutputId)) {
-				String processId = varOutDescription
-						.getReferenceOutputMapping()
+			if (varOutDescription.getReferenceOutputMapping().getOutputReference()
+					.equals(definedOutputId)) {
+				String processId = varOutDescription.getReferenceOutputMapping()
 						.getProcessIdentifier();
-				processDescription = RepositoryManager.getInstance()
-						.getProcessDescription(processId);
+				processDescription = RepositoryManager.getInstance().getProcessDescription(
+						processId);
 			}
 		}
 		if (processDescription == null) {
@@ -642,53 +555,47 @@ public class TestProcessResponseBuilder {
 	}
 
 	private void updateTestProcessResponse(String responseID) {
-		OutputDataType output = testProcessResponseDocument
-				.getTestProcessResponse().getProcessOutputs().addNewOutput();
-		OutputDataType[] outputs = executeResponseDocument.getExecuteResponse()
-				.getProcessOutputs().getOutputArray();
+		OutputDataType output = testProcessResponseDocument.getTestProcessResponse()
+				.getProcessOutputs().addNewOutput();
+		OutputDataType[] outputs = executeResponseDocument.getExecuteResponse().getProcessOutputs()
+				.getOutputArray();
 		for (OutputDataType currentOutput : outputs) {
-			if (currentOutput.getIdentifier().getStringValue()
-					.equals(responseID)) {
+			if (currentOutput.getIdentifier().getStringValue().equals(responseID)) {
 				output.set(currentOutput);
 			}
 		}
 	}
 
-	private void generateLiteralDataOutput(String definedOutputId,
-			boolean rawData, String dataTypeReference, String schema,
-			String mimeType, String encoding, LanguageStringType title)
-			throws ExceptionReport {
+	private void generateLiteralDataOutput(String definedOutputId, boolean rawData,
+			String dataTypeReference, String schema, String mimeType, String encoding,
+			LanguageStringType title) throws ExceptionReport {
 		IData obj = request.getAttachedResult().get(definedOutputId);
 		if (rawData) {
-			rawDataElement = new RawData(obj, definedOutputId, schema,
-					encoding, mimeType, this.identifier, description);
+			rawDataElement = new RawData(obj, getOutputIdOfDefinedOutput(definedOutputId), schema,
+					encoding, mimeType, getProcessIdOfRelatedOutput(definedOutputId),
+					getProcessDescriptionOfRelatedOutput(definedOutputId));
 		} else {
 			OutputDataItem handler = new OutputDataItem(obj,
-					getOutputIdOfDefinedOutput(definedOutputId),
-					definedOutputId, schema, encoding, mimeType, title,
-					getProcessIdOfRelatedOutput(definedOutputId),
+					getOutputIdOfDefinedOutput(definedOutputId), definedOutputId, schema, encoding,
+					mimeType, title, getProcessIdOfRelatedOutput(definedOutputId),
 					getProcessDescriptionOfRelatedOutput(definedOutputId));
-			handler.updateResponseForLiteralData(executeResponseDocument,
-					dataTypeReference);
+			handler.updateResponseForLiteralData(executeResponseDocument, dataTypeReference);
 			updateTestProcessResponse(definedOutputId);
 		}
 	}
 
 	private void generateBBOXOutput(String definedOutputId, boolean rawData,
 			LanguageStringType title) throws ExceptionReport {
-		IBBOXData obj = (IBBOXData) request.getAttachedResult().get(
-				definedOutputId);
+		IBBOXData obj = (IBBOXData) request.getAttachedResult().get(definedOutputId);
 		if (rawData) {
-			// TODO Not verified! Verify!
-			rawDataElement = new RawData(obj, definedOutputId, null, null,
-					null, this.identifier, description);
+			rawDataElement = new RawData(obj, getOutputIdOfDefinedOutput(definedOutputId), null,
+					null, null, getProcessIdOfRelatedOutput(definedOutputId),
+					getProcessDescriptionOfRelatedOutput(definedOutputId));
 		} else {
 			OutputDataItem handler = new OutputDataItem(obj,
-					getOutputIdOfDefinedOutput(definedOutputId),
-					definedOutputId, null, null, null, title,
-					getProcessIdOfRelatedOutput(definedOutputId),
+					getOutputIdOfDefinedOutput(definedOutputId), definedOutputId, null, null, null,
+					title, getProcessIdOfRelatedOutput(definedOutputId),
 					getProcessDescriptionOfRelatedOutput(definedOutputId));
-			// TODO Not verified! Verify!
 			handler.updateResponseForBBOXData(executeResponseDocument, obj);
 			updateTestProcessResponse(definedOutputId);
 		}

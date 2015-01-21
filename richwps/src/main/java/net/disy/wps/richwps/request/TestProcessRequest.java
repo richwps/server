@@ -12,6 +12,7 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 
 import net.disy.wps.richwps.response.TestProcessResponse;
 import net.disy.wps.richwps.response.TestProcessResponseBuilder;
+import net.disy.wps.richwps.response.TestingOutputs;
 import net.opengis.ows.x11.ExceptionType;
 import net.opengis.wps.x100.DeployProcessDocument;
 import net.opengis.wps.x100.DeployProcessDocument.DeployProcess;
@@ -44,7 +45,6 @@ import org.n52.wps.server.RepositoryManager;
 import org.n52.wps.server.database.DatabaseFactory;
 import org.n52.wps.server.observerpattern.IObserver;
 import org.n52.wps.server.observerpattern.ISubject;
-import org.n52.wps.server.request.InputHandler;
 import org.n52.wps.server.request.Request;
 import org.n52.wps.server.response.Response;
 import org.n52.wps.transactional.handler.TransactionalRequestHandler;
@@ -70,15 +70,13 @@ import de.hsos.richwps.dsl.api.elements.ReferenceOutputMapping;
  * @author faltin
  *
  */
-public class TestProcessRequest extends Request implements IRichWPSRequest,
-		IObserver {
-	private static Logger LOGGER = LoggerFactory
-			.getLogger(TestProcessRequest.class);
+public class TestProcessRequest extends Request implements IRichWPSRequest, IObserver {
+	private static Logger LOGGER = LoggerFactory.getLogger(TestProcessRequest.class);
 	protected TestProcessDocument testDoc;
 	protected String processId, schema, executionUnit;
 	protected ProcessDescriptionType processDescription;
 	private TestProcessResponseBuilder responseBuilder;
-	private Map<String, IData> returnResults;
+	private TestingOutputs returnResults;
 	private ExecuteDocument execDoc;
 	private DeployProcessDocument deployProcessDocument;
 	private UndeployProcessDocument undeployProcessDocument;
@@ -94,13 +92,13 @@ public class TestProcessRequest extends Request implements IRichWPSRequest,
 	 * @throws TransformerFactoryConfigurationError
 	 * @throws TransformerException
 	 */
-	public TestProcessRequest(Document doc) throws ExceptionReport,
-			ParserConfigurationException, TransformerFactoryConfigurationError,
-			TransformerException, SAXException, IOException {
+	public TestProcessRequest(Document doc) throws ExceptionReport, ParserConfigurationException,
+			TransformerFactoryConfigurationError, TransformerException, SAXException, IOException {
 		super(doc);
 		try {
 			XmlOptions option = new XmlOptions();
 			option.setLoadTrimTextBuffer();
+			option.setSaveNamespacesFirst();
 			this.testDoc = TestProcessDocument.Factory.parse(doc, option);
 			if (testDoc == null) {
 				LOGGER.error("TestProcessDocument is null");
@@ -109,11 +107,9 @@ public class TestProcessRequest extends Request implements IRichWPSRequest,
 			}
 			extractSubmittedExecuteDocument();
 
-			processDescription = testDoc.getTestProcess()
-					.getProcessDescription();
+			processDescription = testDoc.getTestProcess().getProcessDescription();
 			validate();
-			processId = processDescription.getIdentifier().getStringValue()
-					.trim();
+			processId = processDescription.getIdentifier().getStringValue().trim();
 			XmlObject execUnit = testDoc.getTestProcess().getExecutionUnit();
 			XmlCursor xcur = execUnit.newCursor();
 			executionUnit = xcur.getTextValue();
@@ -129,8 +125,7 @@ public class TestProcessRequest extends Request implements IRichWPSRequest,
 	private ITransactionalResponse deployProcess() throws ExceptionReport {
 		deployProcessDocument = extractDeployDocument();
 		Document deploydocument = (Document) deployProcessDocument.getDomNode();
-		DeployProcessRequest deployProcessRequest = new DeployProcessRequest(
-				deploydocument);
+		DeployProcessRequest deployProcessRequest = new DeployProcessRequest(deploydocument);
 		TransactionalRequestHandler transactionalRequestHandler = new TransactionalRequestHandler(
 				deployProcessRequest);
 		return transactionalRequestHandler.handle();
@@ -138,10 +133,8 @@ public class TestProcessRequest extends Request implements IRichWPSRequest,
 
 	private ITransactionalResponse undeployProcess() throws ExceptionReport {
 		undeployProcessDocument = extractUndeployDocument();
-		Document undeploydocument = (Document) undeployProcessDocument
-				.getDomNode();
-		UndeployProcessRequest undeployProcessRequest = new UndeployProcessRequest(
-				undeploydocument);
+		Document undeploydocument = (Document) undeployProcessDocument.getDomNode();
+		UndeployProcessRequest undeployProcessRequest = new UndeployProcessRequest(undeploydocument);
 		TransactionalRequestHandler undeployRequestHandler = new TransactionalRequestHandler(
 				undeployProcessRequest);
 		return undeployRequestHandler.handle();
@@ -150,8 +143,7 @@ public class TestProcessRequest extends Request implements IRichWPSRequest,
 	private UndeployProcessDocument extractUndeployDocument() {
 		UndeployProcessDocument undeployProcessDocument = UndeployProcessDocument.Factory
 				.newInstance();
-		UndeployProcess undeployProcess = undeployProcessDocument
-				.addNewUndeployProcess();
+		UndeployProcess undeployProcess = undeployProcessDocument.addNewUndeployProcess();
 		TestProcess testProcess = testDoc.getTestProcess();
 		undeployProcess.setService(testProcess.getService());
 		undeployProcess.setVersion(testProcess.getVersion());
@@ -159,20 +151,15 @@ public class TestProcessRequest extends Request implements IRichWPSRequest,
 			undeployProcess.setLanguage(testProcess.getLanguage());
 		}
 		undeployProcess.addNewProcess();
-		undeployProcess
-				.getProcess()
-				.addNewIdentifier()
-				.setStringValue(
-						processDescription.getIdentifier().getStringValue());
+		undeployProcess.getProcess().addNewIdentifier()
+				.setStringValue(processDescription.getIdentifier().getStringValue());
 		undeployProcess.getProcess().setKeepExecutionUnit(false);
 		return undeployProcessDocument;
 	}
 
 	private DeployProcessDocument extractDeployDocument() {
-		DeployProcessDocument deployProcessDocument = DeployProcessDocument.Factory
-				.newInstance();
-		DeployProcess deployProcess = deployProcessDocument
-				.addNewDeployProcess();
+		DeployProcessDocument deployProcessDocument = DeployProcessDocument.Factory.newInstance();
+		DeployProcess deployProcess = deployProcessDocument.addNewDeployProcess();
 		TestProcess testProcess = testDoc.getTestProcess();
 		deployProcess.setService(testProcess.getService());
 		deployProcess.setVersion(testProcess.getVersion());
@@ -180,11 +167,9 @@ public class TestProcessRequest extends Request implements IRichWPSRequest,
 			deployProcess.setLanguage(testProcess.getLanguage());
 		}
 		deployProcess.setProcessDescription(processDescription);
-		deployProcess.setExecutionUnit(XmlString.Factory
-				.newValue(executionUnit));
+		deployProcess.setExecutionUnit(XmlString.Factory.newValue(executionUnit));
 		if (testProcess.getDeploymentProfileName() != null) {
-			deployProcess.setDeploymentProfileName(testProcess
-					.getDeploymentProfileName());
+			deployProcess.setDeploymentProfileName(testProcess.getDeploymentProfileName());
 		}
 		return deployProcessDocument;
 	}
@@ -207,8 +192,7 @@ public class TestProcessRequest extends Request implements IRichWPSRequest,
 		return executeDocument;
 	}
 
-	private Document extractSubmittedExecuteDocument()
-			throws ParserConfigurationException,
+	private Document extractSubmittedExecuteDocument() throws ParserConfigurationException,
 			TransformerFactoryConfigurationError, TransformerException {
 		execDoc = extractExecuteDocument();
 		return (Document) execDoc.getDomNode();
@@ -278,11 +262,7 @@ public class TestProcessRequest extends Request implements IRichWPSRequest,
 		return processDescription;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.n52.wps.server.request.Request#getAttachedResult()
-	 */
+	@Override
 	public Map<String, IData> getAttachedResult() {
 		return returnResults;
 	}
@@ -296,86 +276,20 @@ public class TestProcessRequest extends Request implements IRichWPSRequest,
 		return referenceOutputMappings;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.n52.wps.server.request.Request#call()
-	 */
 	@Override
 	public Response call() throws ExceptionReport {
 		IAlgorithm algorithm = null;
-		Map<String, List<IData>> inputMap = null;
 		try {
 			deployProcess();
-			ExecutionContext context;
+
 			TestProcess testProcess = testDoc.getTestProcess();
-			if (testProcess.isSetResponseForm()) {
-				context = testProcess.getResponseForm().isSetRawDataOutput() ? new ExecutionContext(
-						testProcess.getResponseForm().getRawDataOutput())
-						: new ExecutionContext(Arrays.asList(testProcess
-								.getResponseForm().getResponseDocument()
-								.getOutputArray()));
-			} else {
-				context = new ExecutionContext();
-			}
-
-			// register so that any function that calls
-			// ExecuteContextFactory.getContext() gets the instance registered
-			// with this thread
-			ExecutionContextFactory.registerContext(context);
-
+			registerContext(testProcess);
 			LOGGER.debug("started with execution");
-
 			updateStatusStarted();
+			algorithm = RepositoryManager.getInstance().getAlgorithm(getAlgorithmIdentifier());
 
-			// parse the input
-			InputType[] inputs = new InputType[0];
-			if (testProcess.getDataInputs() != null) {
-				inputs = testProcess.getDataInputs().getInputArray();
-			}
-			InputHandler parser = new InputHandler.Builder(inputs,
-					getAlgorithmIdentifier()).build();
+			executeProcess(algorithm);
 
-			// we got so far:
-			// get the algorithm, and run it with the clients input
-
-			/*
-			 * IAlgorithm algorithm =
-			 * RepositoryManager.getInstance().getAlgorithm
-			 * (getAlgorithmIdentifier()); returnResults =
-			 * algorithm.run((Map)parser.getParsedInputLayers(),
-			 * (Map)parser.getParsedInputParameters());
-			 */
-			algorithm = RepositoryManager.getInstance().getAlgorithm(
-					getAlgorithmIdentifier());
-
-			if (algorithm instanceof ISubject) {
-				ISubject subject = (ISubject) algorithm;
-				subject.addObserver(this);
-
-			}
-
-			if (algorithm instanceof AbstractTransactionalAlgorithm) {
-				returnResults = ((AbstractTransactionalAlgorithm) algorithm)
-						.runTest(execDoc);
-				// FIXME Don't do this cast
-				referenceOutputMappings = (List<ReferenceOutputMapping>) ((AbstractTransactionalAlgorithm) algorithm)
-						.getReferenceOutputMappings();
-			} else {
-				// TODO Not verified! Verify!
-				inputMap = parser.getParsedInputData();
-				returnResults = algorithm.run(inputMap);
-			}
-
-			List<String> errorList = algorithm.getErrors();
-			if (errorList != null && !errorList.isEmpty()) {
-				String errorMessage = errorList.get(0);
-				LOGGER.error("Error reported while handling ExecuteRequest for "
-						+ getAlgorithmIdentifier() + ": " + errorMessage);
-				updateStatusError(errorMessage);
-			} else {
-				updateStatusSuccess();
-			}
 			undeployProcess();
 		} catch (Throwable e) {
 			String errorMessage = null;
@@ -393,32 +307,18 @@ public class TestProcessRequest extends Request implements IRichWPSRequest,
 					+ getAlgorithmIdentifier() + ": " + errorMessage);
 			updateStatusError(errorMessage);
 			if (e instanceof Error) {
-				// This is required when catching Error
 				throw (Error) e;
 			}
 			if (e instanceof ExceptionReport) {
 				throw (ExceptionReport) e;
 			} else {
-				throw new ExceptionReport(
-						"Error while executing the embedded process for: "
-								+ getAlgorithmIdentifier(),
-						ExceptionReport.NO_APPLICABLE_CODE, e);
+				throw new ExceptionReport("Error while executing the embedded process for: "
+						+ getAlgorithmIdentifier(), ExceptionReport.NO_APPLICABLE_CODE, e);
 			}
 		} finally {
-			// you ***MUST*** call this or else you will have a PermGen
-			// ClassLoader memory leak due to ThreadLocal use
 			ExecutionContextFactory.unregisterContext();
 			if (algorithm instanceof ISubject) {
 				((ISubject) algorithm).removeObserver(this);
-			}
-			if (inputMap != null) {
-				for (List<IData> l : inputMap.values()) {
-					for (IData d : l) {
-						if (d instanceof IComplexData) {
-							((IComplexData) d).dispose();
-						}
-					}
-				}
 			}
 			if (returnResults != null) {
 				for (IData d : returnResults.values()) {
@@ -428,81 +328,92 @@ public class TestProcessRequest extends Request implements IRichWPSRequest,
 				}
 			}
 		}
-		TestProcessResponse testProcessResponse = new TestProcessResponse(this);
-		return testProcessResponse;
+
+		return new TestProcessResponse(this);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.n52.wps.server.request.Request#validate()
-	 */
+	private void executeProcess(IAlgorithm algorithm) throws ExceptionReport {
+		if (algorithm instanceof ISubject) {
+			ISubject subject = (ISubject) algorithm;
+			subject.addObserver(this);
+		}
+		if (algorithm instanceof AbstractTransactionalAlgorithm) {
+			AbstractTransactionalAlgorithm abstractTransactionalAlgorithm = (AbstractTransactionalAlgorithm) algorithm;
+			returnResults = (TestingOutputs) abstractTransactionalAlgorithm.runTest(execDoc);
+			referenceOutputMappings = returnResults.getReferenceOutputMappings();
+		} else {
+			throw new ExceptionReport("Process algorithm " + algorithm.getClass()
+					+ " is not supported for testing.", ExceptionReport.OPERATION_NOT_SUPPORTED);
+		}
+		List<String> errorList = algorithm.getErrors();
+		if (errorList != null && !errorList.isEmpty()) {
+			String errorMessage = errorList.get(0);
+			LOGGER.error("Error reported while handling ExecuteRequest for "
+					+ getAlgorithmIdentifier() + ": " + errorMessage);
+			updateStatusError(errorMessage);
+		} else {
+			updateStatusSuccess();
+		}
+	}
+
+	private void registerContext(TestProcess testProcess) {
+		ExecutionContext context;
+		if (testProcess.isSetResponseForm()) {
+			context = testProcess.getResponseForm().isSetRawDataOutput() ? new ExecutionContext(
+					testProcess.getResponseForm().getRawDataOutput()) : new ExecutionContext(
+					Arrays.asList(testProcess.getResponseForm().getResponseDocument()
+							.getOutputArray()));
+		} else {
+			context = new ExecutionContext();
+		}
+		ExecutionContextFactory.registerContext(context);
+	}
+
 	@Override
 	public boolean validate() throws ExceptionReport {
 		TestProcessDocument.TestProcess testProcess = testDoc.getTestProcess();
 		if (!testProcess.getVersion().equals(SUPPORTED_VERSION)) {
 			throw new ExceptionReport("Specified version is not supported.",
-					ExceptionReport.INVALID_PARAMETER_VALUE, "version="
-							+ testProcess.getVersion());
+					ExceptionReport.INVALID_PARAMETER_VALUE, "version=" + testProcess.getVersion());
 		}
 
 		if (processDescription == null) {
 			throw new ExceptionReport("No process description supplied.",
-					ExceptionReport.MISSING_PARAMETER_VALUE,
-					"process description");
+					ExceptionReport.MISSING_PARAMETER_VALUE, "process description");
 		}
 
-		// Get the inputdescriptions of the algorithm
 		if (processDescription.getDataInputs() != null) {
-			InputDescriptionType[] inputDescs = processDescription
-					.getDataInputs().getInputArray();
-
-			// prevent NullPointerException for zero input values in execute
-			// request (if only default values are used)
+			InputDescriptionType[] inputDescs = processDescription.getDataInputs().getInputArray();
 			InputType[] inputs;
 			if (testProcess.getDataInputs() == null)
 				inputs = new InputType[0];
 			else
 				inputs = testProcess.getDataInputs().getInputArray();
 
-			// For each input supplied by the client
 			for (InputType input : inputs) {
 				boolean identifierMatched = false;
-				// Try to match the input with one of the descriptions
 				for (InputDescriptionType inputDesc : inputDescs) {
-					// If found, then process:
 					if (inputDesc.getIdentifier().getStringValue()
 							.equals(input.getIdentifier().getStringValue())) {
 						identifierMatched = true;
-						// If it is a literal value,
-						if (input.getData() != null
-								&& input.getData().getLiteralData() != null) {
-							// then check if the desription is also of type
-							// literal
+						if (input.getData() != null && input.getData().getLiteralData() != null) {
 							if (inputDesc.getLiteralData() == null) {
-								throw new ExceptionReport(
-										"Inputtype LiteralData is not supported",
+								throw new ExceptionReport("Inputtype LiteralData is not supported",
 										ExceptionReport.INVALID_PARAMETER_VALUE);
 							}
-							// literalValue.getDataType ist optional
 							if (input.getData().getLiteralData().getDataType() != null) {
 								if (inputDesc.getLiteralData() != null)
-									if (inputDesc.getLiteralData()
-											.getDataType() != null)
-										if (inputDesc.getLiteralData()
-												.getDataType().getReference() != null)
+									if (inputDesc.getLiteralData().getDataType() != null)
+										if (inputDesc.getLiteralData().getDataType().getReference() != null)
 											if (!input
 													.getData()
 													.getLiteralData()
 													.getDataType()
-													.equals(inputDesc
-															.getLiteralData()
-															.getDataType()
-															.getReference())) {
+													.equals(inputDesc.getLiteralData()
+															.getDataType().getReference())) {
 												throw new ExceptionReport(
 														"Specified dataType is not supported "
-																+ input.getData()
-																		.getLiteralData()
+																+ input.getData().getLiteralData()
 																		.getDataType()
 																+ " for input "
 																+ input.getIdentifier()
@@ -514,27 +425,16 @@ public class TestProcessRequest extends Request implements IRichWPSRequest,
 						break;
 					}
 				}
-				// if the identifier did not match one of the descriptions, it
-				// is
-				// invalid
 				if (!identifierMatched) {
 					throw new ExceptionReport("Input Identifier is not valid: "
 							+ input.getIdentifier().getStringValue(),
-							ExceptionReport.INVALID_PARAMETER_VALUE,
-							"input identifier");
+							ExceptionReport.INVALID_PARAMETER_VALUE, "input identifier");
 				}
 			}
 		}
 		return true;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.n52.wps.server.observerpattern.IObserver#update(org.n52.wps.server
-	 * .observerpattern.ISubject)
-	 */
 	@Override
 	public void update(ISubject subject) {
 		Object state = subject.getState();
@@ -566,13 +466,11 @@ public class TestProcessRequest extends Request implements IRichWPSRequest,
 		try {
 			responseBuilder.update();
 			if (isStoreResponse()) {
-				TestProcessResponse testProcessResponse = new TestProcessResponse(
-						this);
+				TestProcessResponse testProcessResponse = new TestProcessResponse(this);
 				InputStream is = null;
 				try {
 					is = testProcessResponse.getAsStream();
-					DatabaseFactory.getDatabase().storeResponse(
-							getUniqueId().toString(), is);
+					DatabaseFactory.getDatabase().storeResponse(getUniqueId().toString(), is);
 				} finally {
 					IOUtils.closeQuietly(is);
 				}
@@ -598,8 +496,7 @@ public class TestProcessRequest extends Request implements IRichWPSRequest,
 		if (testProcess.getResponseForm().getRawDataOutput() != null) {
 			return false;
 		}
-		return testProcess.getResponseForm().getResponseDocument()
-				.getStoreExecuteResponse();
+		return testProcess.getResponseForm().getResponseDocument().getStoreExecuteResponse();
 	}
 
 	/**

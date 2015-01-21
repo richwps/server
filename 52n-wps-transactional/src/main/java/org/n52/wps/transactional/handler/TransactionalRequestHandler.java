@@ -30,6 +30,7 @@ is extensible in terms of processes and data handlers.
 
 package org.n52.wps.transactional.handler;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -60,6 +61,7 @@ import org.n52.wps.server.ExceptionReport;
 import org.n52.wps.server.IAlgorithmRepository;
 import org.n52.wps.server.ITransactionalAlgorithmRepository;
 import org.n52.wps.server.RepositoryManager;
+import org.n52.wps.server.handler.IHandler;
 import org.n52.wps.transactional.algorithm.GenericTransactionalAlgorithm;
 import org.n52.wps.transactional.request.DeployProcessRequest;
 import org.n52.wps.transactional.request.ITransactionalRequest;
@@ -74,26 +76,22 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 
-public class TransactionalRequestHandler {
+public class TransactionalRequestHandler implements IHandler {
 
-	private static Logger LOGGER = LoggerFactory
-			.getLogger(TransactionalRequestHandler.class);
+	private static Logger LOGGER = LoggerFactory.getLogger(TransactionalRequestHandler.class);
 
 	protected OutputStream os;
 
 	protected ITransactionalRequest req;
 
-	public TransactionalRequestHandler(ITransactionalRequest request)
-			throws ExceptionReport {
+	public TransactionalRequestHandler(ITransactionalRequest request) throws ExceptionReport {
 		if (request == null) {
-			throw new ExceptionReport("Request not valid",
-					ExceptionReport.OPERATION_NOT_SUPPORTED);
+			throw new ExceptionReport("Request not valid", ExceptionReport.OPERATION_NOT_SUPPORTED);
 		} else if (request instanceof DeployProcessRequest
 				|| request instanceof UndeployProcessRequest) {
 			this.req = request;
 		} else {
-			throw new ExceptionReport("Request type unknown ("
-					+ request.getClass().toString()
+			throw new ExceptionReport("Request type unknown (" + request.getClass().toString()
 					+ ") Must be DeployProcess or UnDeployProcess",
 					ExceptionReport.OPERATION_NOT_SUPPORTED);
 		}
@@ -101,8 +99,7 @@ public class TransactionalRequestHandler {
 		req = request;
 	}
 
-	public TransactionalRequestHandler(InputStream is, OutputStream os)
-			throws ExceptionReport {
+	public TransactionalRequestHandler(InputStream is, OutputStream os) throws ExceptionReport {
 
 		Document doc;
 		this.os = os;
@@ -136,24 +133,19 @@ public class TransactionalRequestHandler {
 			} else if (requestType.equals("UnDeployProcess")) {
 				this.req = new UndeployProcessRequest(doc);
 			} else {
-				throw new ExceptionReport("Request type unknown ("
-						+ requestType
+				throw new ExceptionReport("Request type unknown (" + requestType
 						+ ") Must be DeployProcess or UnDeployProcess",
 						ExceptionReport.OPERATION_NOT_SUPPORTED);
 			}
 
 		} catch (SAXException e) {
-			throw new ExceptionReport(
-					"There went something wrong with parsing the POST data: "
-							+ e.getMessage(),
-					ExceptionReport.NO_APPLICABLE_CODE, e);
+			throw new ExceptionReport("There went something wrong with parsing the POST data: "
+					+ e.getMessage(), ExceptionReport.NO_APPLICABLE_CODE, e);
 		} catch (IOException e) {
-			throw new ExceptionReport(
-					"There went something wrong with the network connection.",
+			throw new ExceptionReport("There went something wrong with the network connection.",
 					ExceptionReport.NO_APPLICABLE_CODE, e);
 		} catch (ParserConfigurationException e) {
-			throw new ExceptionReport(
-					"There is a internal parser configuration error",
+			throw new ExceptionReport("There is a internal parser configuration error",
 					ExceptionReport.NO_APPLICABLE_CODE, e);
 		}
 
@@ -183,16 +175,14 @@ public class TransactionalRequestHandler {
 		}
 	}
 
-	private DeployProcessResponse handleDeploy(DeployProcessRequest request)
-			throws ExceptionReport {
+	private DeployProcessResponse handleDeploy(DeployProcessRequest request) throws ExceptionReport {
 
 		DeployProcessResponse response;
 		saveProcessDescription(request);
 
 		try {
 			ITransactionalAlgorithmRepository repository = TransactionalHelper
-					.getMatchingTransactionalRepository(request
-							.getDeploymentProfileName());
+					.getMatchingTransactionalRepository(request.getDeploymentProfileName());
 
 			if (repository == null) {
 				throw new ExceptionReport("Could not find matching repository",
@@ -233,13 +223,12 @@ public class TransactionalRequestHandler {
 	}
 
 	// TODO
-	private static ITransactionalResponse handleUnDeploy(
-			UndeployProcessRequest request) throws ExceptionReport {
+	private static ITransactionalResponse handleUnDeploy(UndeployProcessRequest request)
+			throws ExceptionReport {
 		UndeployProcessResponse response;
 
 		try {
-			if (RepositoryManager.getInstance().getAlgorithm(
-					request.getProcessID()) == null) {
+			if (RepositoryManager.getInstance().getAlgorithm(request.getProcessID()) == null) {
 				throw new ExceptionReport("The process does not exist",
 						ExceptionReport.INVALID_PARAMETER_VALUE);
 			}
@@ -257,9 +246,8 @@ public class TransactionalRequestHandler {
 					return response;
 				}
 			} else {
-				throw new ExceptionReport(
-						"The process is not in a transactional "
-								+ "repository and cannot be undeployed",
+				throw new ExceptionReport("The process is not in a transactional "
+						+ "repository and cannot be undeployed",
 						ExceptionReport.INVALID_PARAMETER_VALUE);
 			}
 		} catch (RuntimeException e) {
@@ -269,15 +257,14 @@ public class TransactionalRequestHandler {
 	}
 
 	public static URI generateProcessDescriptionFileUri(String processId) {
-		String fullPath = GenericTransactionalAlgorithm.class
-				.getProtectionDomain().getCodeSource().getLocation().toString();
+		String fullPath = GenericTransactionalAlgorithm.class.getProtectionDomain().getCodeSource()
+				.getLocation().toString();
 		int searchIndex = fullPath.indexOf("WEB-INF");
 		String subPath = fullPath.substring(0, searchIndex);
 
 		URI directoryUri;
 		try {
-			directoryUri = new URL(subPath + "WEB-INF/ProcessDescriptions/")
-					.toURI();
+			directoryUri = new URL(subPath + "WEB-INF/ProcessDescriptions/").toURI();
 			File directory = new File(directoryUri);
 			if (!directory.exists()) {
 				directory.mkdirs();
@@ -354,6 +341,11 @@ public class TransactionalRequestHandler {
 		} else {
 			return null;
 		}
+	}
+
+	public static IHandler newInstance(ByteArrayInputStream is, OutputStream os)
+			throws ExceptionReport {
+		return new TransactionalRequestHandler(is, os);
 	}
 
 }

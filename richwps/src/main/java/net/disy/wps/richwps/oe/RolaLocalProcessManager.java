@@ -19,6 +19,7 @@ import java.util.Observer;
 
 import net.disy.wps.richwps.oe.processor.IWorkflowProcessor;
 import net.disy.wps.richwps.oe.processor.WorkflowProcessor;
+import net.disy.wps.richwps.response.TestingOutputs;
 import net.opengis.wps.x100.ExecuteDocument;
 
 import org.apache.commons.io.FileUtils;
@@ -37,20 +38,15 @@ import de.hsos.richwps.dsl.api.elements.Workflow;
 
 public class RolaLocalProcessManager extends AbstractProcessManager {
 
-	private static Logger LOGGER = LoggerFactory
-			.getLogger(RolaLocalProcessManager.class);
+	private static Logger LOGGER = LoggerFactory.getLogger(RolaLocalProcessManager.class);
 	private static String EXT = "dsl";
-	private Workflow workflow;
-	private List<String> outputReferenceNames;
 
-	public RolaLocalProcessManager(
-			ITransactionalAlgorithmRepository parentRepository) {
+	public RolaLocalProcessManager(ITransactionalAlgorithmRepository parentRepository) {
 		super(parentRepository);
 	}
 
 	@Override
-	public boolean unDeployProcess(UndeployProcessRequest request)
-			throws Exception {
+	public boolean unDeployProcess(UndeployProcessRequest request) throws Exception {
 		String processId = request.getProcessID();
 		if (!request.getKeepExecutionUnit()) {
 			deleteRola(processId);
@@ -64,8 +60,7 @@ public class RolaLocalProcessManager extends AbstractProcessManager {
 	public boolean containsProcess(String processID) throws Exception {
 		URI rolaDirectory = getRolaDirectory();
 		File directory = new File(rolaDirectory);
-		Collection<File> files = FileUtils.listFiles(directory,
-				new String[] { EXT }, false);
+		Collection<File> files = FileUtils.listFiles(directory, new String[] { EXT }, false);
 		for (File file : files) {
 			String baseName = FilenameUtils.getBaseName(file.getAbsolutePath());
 			if (baseName.equals(processID)) {
@@ -77,8 +72,6 @@ public class RolaLocalProcessManager extends AbstractProcessManager {
 
 	@Override
 	public Collection<String> getAllProcesses() throws Exception {
-		// Iterate over all WD files and take their prefix as the processId
-		// (convention used in this implementation)
 		return getAllProcessesFromWdDirectory();
 	}
 
@@ -86,8 +79,7 @@ public class RolaLocalProcessManager extends AbstractProcessManager {
 		final Collection<String> processIds = new ArrayList<String>();
 		URI rolaDirectory = getRolaDirectory();
 		File directory = new File(rolaDirectory);
-		Collection<File> files = FileUtils.listFiles(directory,
-				new String[] { EXT }, false);
+		Collection<File> files = FileUtils.listFiles(directory, new String[] { EXT }, false);
 		for (File file : files) {
 			processIds.add(FilenameUtils.getBaseName(file.getAbsolutePath()));
 		}
@@ -95,83 +87,51 @@ public class RolaLocalProcessManager extends AbstractProcessManager {
 	}
 
 	@Override
-	public Map<String, IData> invoke(ExecuteDocument payload, String algorithmID)
-			throws Exception {
+	public Map<String, IData> invoke(ExecuteDocument payload, String algorithmID) throws Exception {
 		Workflow worksequence = getWorksequenceById(algorithmID);
 		IWorkflowProcessor worksequenceProcessor = new WorkflowProcessor();
 		return worksequenceProcessor.process(payload, worksequence);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.n52.wps.transactional.deploy.IProcessManager#invokeTest(net.opengis
-	 * .wps.x100.ExecuteDocument, java.lang.String)
-	 */
 	@Override
-	public Map<String, IData> invokeTest(ExecuteDocument document,
-			String algorithmID) throws Exception {
-		workflow = getWorksequenceById(algorithmID);
+	public TestingOutputs invokeTest(ExecuteDocument document, String algorithmID) throws Exception {
+		Workflow workflow = getWorksequenceById(algorithmID);
 		IWorkflowProcessor workflowProcessor = new WorkflowProcessor();
-
-		Map<String, IData> outputs = workflowProcessor.process(document,
-				workflow);
-		Map<String, IData> variables = workflowProcessor.getProcessingContext()
-				.getVariables();
-		Iterator<Entry<String, IData>> outputReferencesIt = variables
-				.entrySet().iterator();
+		Map<String, IData> outputData = workflowProcessor.process(document, workflow);
+		Map<String, IData> variables = workflowProcessor.getProcessingContext().getVariables();
+		Iterator<Entry<String, IData>> outputReferencesIterator = variables.entrySet().iterator();
 		Map<String, IData> outputReferencesExtended = new HashMap<String, IData>();
-		outputReferenceNames = new ArrayList<String>();
-		while (outputReferencesIt.hasNext()) {
-			Entry<String, IData> currentEntry = outputReferencesIt.next();
+		List<String> outputReferenceNames = new ArrayList<String>();
+
+		while (outputReferencesIterator.hasNext()) {
+			Entry<String, IData> currentEntry = outputReferencesIterator.next();
 
 			outputReferenceNames.add(currentEntry.getKey());
-			outputReferencesExtended.put("var." + currentEntry.getKey(),
-					currentEntry.getValue());
+			outputReferencesExtended.put("var." + currentEntry.getKey(), currentEntry.getValue());
 		}
 
-		Iterator<Entry<String, IData>> outputReferencesExtendedIt = outputReferencesExtended
+		Iterator<Entry<String, IData>> outputReferencesExtendedIterator = outputReferencesExtended
 				.entrySet().iterator();
-		while (outputReferencesExtendedIt.hasNext()) {
-			Entry<String, IData> currentEntry = outputReferencesExtendedIt
-					.next();
-			outputs.put((String) currentEntry.getKey(),
-					(IData) currentEntry.getValue());
+
+		while (outputReferencesExtendedIterator.hasNext()) {
+			Entry<String, IData> currentEntry = outputReferencesExtendedIterator.next();
+			outputData.put((String) currentEntry.getKey(), (IData) currentEntry.getValue());
 		}
 
-		return outputs;
+		List<ReferenceOutputMapping> referenceOutputMappings = workflow
+				.getReferenceOutputMappings(outputReferenceNames);
+
+		return new TestingOutputs(outputData, referenceOutputMappings);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.n52.wps.transactional.deploy.IProcessManager#invokeProfiling(net.
-	 * opengis.wps.x100.ExecuteDocument, java.lang.String, java.util.List)
-	 */
 	@Override
-	public Map<String, IData> invokeProfiling(ExecuteDocument payload,
-			String algorithmID, List<Observer> observers) throws Exception {
-		workflow = getWorksequenceById(algorithmID);
+	public Map<String, IData> invokeProfiling(ExecuteDocument payload, String algorithmID,
+			List<Observer> observers) throws Exception {
+		Workflow workflow = getWorksequenceById(algorithmID);
 		IWorkflowProcessor workflowProcessor = new WorkflowProcessor(observers);
-
-		Map<String, IData> outputs = workflowProcessor.examineProcess(payload,
-				workflow);
+		Map<String, IData> outputs = workflowProcessor.profileProcess(payload, workflow);
 
 		return outputs;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.n52.wps.transactional.deploy.IProcessManager#getReferenceOutputMappings
-	 * ()
-	 */
-	@Override
-	public List<ReferenceOutputMapping> getReferenceOutputMappings() {
-		return workflow.getReferenceOutputMappings(outputReferenceNames);
 	}
 
 	private Workflow getWorksequenceById(String algorithmID) throws Exception {
@@ -185,22 +145,11 @@ public class RolaLocalProcessManager extends AbstractProcessManager {
 
 	@Override
 	public boolean deployProcess(DeployProcessRequest request) throws Exception {
-		// final DeploymentProfile deploymentProfile =
-		// request.getDeploymentProfile();
-		// if (!(deploymentProfile instanceof WdDeploymentProfile)) {
-		// throw new
-		// IllegalArgumentException(WdLocalProcessManager.class.getSimpleName()
-		// + " only supports " + WdDeploymentProfile.class.getSimpleName());
-		// }
-		// final WdDeploymentProfile wdDeploymentProfile = (WdDeploymentProfile)
-		// deploymentProfile;
-		saveWorksequenceDescription(request.getProcessId(),
-				request.getExecutionUnit());
+		saveWorksequenceDescription(request.getProcessId(), request.getExecutionUnit());
 		return true;
 	}
 
-	private File saveWorksequenceDescription(String processId,
-			String worksequenceDescription) {
+	private File saveWorksequenceDescription(String processId, String worksequenceDescription) {
 		File wdFile = null;
 		try {
 			URI fileUri = buildRolaFileUri(processId);
@@ -239,8 +188,7 @@ public class RolaLocalProcessManager extends AbstractProcessManager {
 
 	private URI buildRolaFileUri(String processId) {
 		try {
-			return new URI(getRolaDirectory().toString() + processId + "."
-					+ EXT);
+			return new URI(getRolaDirectory().toString() + processId + "." + EXT);
 		} catch (URISyntaxException e) {
 			throw new RuntimeException(e);
 		}
@@ -255,8 +203,7 @@ public class RolaLocalProcessManager extends AbstractProcessManager {
 	}
 
 	private URI getRolaDirectory() {
-		String fullPath = getClass().getProtectionDomain().getCodeSource()
-				.getLocation().toString();
+		String fullPath = getClass().getProtectionDomain().getCodeSource().getLocation().toString();
 		int searchIndex = fullPath.indexOf("WEB-INF");
 		String subPath = fullPath.substring(0, searchIndex);
 

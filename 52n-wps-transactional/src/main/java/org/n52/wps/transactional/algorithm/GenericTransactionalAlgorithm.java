@@ -437,19 +437,6 @@ public class GenericTransactionalAlgorithm extends
 	 * (non-Javadoc)
 	 * 
 	 * @see
-	 * org.n52.wps.server.AbstractTransactionalAlgorithm#getReferenceOutputMappings
-	 * ()
-	 */
-	@Override
-	public Object getReferenceOutputMappings() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
 	 * org.n52.wps.server.AbstractTransactionalAlgorithm#runProfiling(net.opengis
 	 * .wps.x100.ExecuteDocument, java.util.List)
 	 */

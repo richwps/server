@@ -24,7 +24,7 @@ public interface IWorkflowProcessor {
 	 * @return the calculated results of the process
 	 * @author faltin
 	 */
-	Map<String, IData> examineProcess(ExecuteDocument executeDocument,
+	Map<String, IData> profileProcess(ExecuteDocument executeDocument,
 			Workflow workflow);
 
 }

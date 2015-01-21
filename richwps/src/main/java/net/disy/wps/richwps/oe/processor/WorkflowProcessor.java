@@ -21,12 +21,14 @@ public class WorkflowProcessor extends Observable implements IWorkflowProcessor 
 
 	private List<IOperationHandler> operationHandlers = new ArrayList<IOperationHandler>();
 	private ProcessingContext processingContext;
+	private List<Observer> observers;
 
 	public WorkflowProcessor() {
 		initOperationHandlers();
 	}
 
 	public WorkflowProcessor(List<Observer> observers) {
+		this.observers = observers;
 		for (Observer observer : observers) {
 			addObserver(observer);
 		}
@@ -41,8 +43,7 @@ public class WorkflowProcessor extends Observable implements IWorkflowProcessor 
 	}
 
 	@Override
-	public Map<String, IData> process(ExecuteDocument executeDocument,
-			Workflow workflow) {
+	public Map<String, IData> process(ExecuteDocument executeDocument, Workflow workflow) {
 		Validate.notNull(executeDocument);
 		Validate.notNull(workflow);
 		processingContext = createProcessingContext(executeDocument);
@@ -54,21 +55,12 @@ public class WorkflowProcessor extends Observable implements IWorkflowProcessor 
 		return processingContext.getOutputData();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * net.disy.wps.richwps.oe.processor.IWorkflowProcessor#examineProcess(net
-	 * .opengis.wps.x100.ExecuteDocument,
-	 * de.hsos.richwps.dsl.api.elements.Workflow)
-	 */
 	@Override
-	public Map<String, IData> examineProcess(ExecuteDocument executeDocument,
-			Workflow workflow) {
+	public Map<String, IData> profileProcess(ExecuteDocument executeDocument, Workflow workflow) {
 		Validate.notNull(executeDocument);
 		Validate.notNull(workflow);
 
-		processingContext = createProcessingContext(executeDocument);
+		processingContext = createProcessingContextWithTimeMeasurement(executeDocument);
 
 		for (IOperation operation : workflow) {
 			setChanged();
@@ -86,18 +78,33 @@ public class WorkflowProcessor extends Observable implements IWorkflowProcessor 
 		return processingContext;
 	}
 
-	private ProcessingContext createProcessingContext(
-			ExecuteDocument executeDocument) {
+	private ProcessingContext createProcessingContext(ExecuteDocument executeDocument) {
 		ProcessingContext context = new ProcessingContext(executeDocument);
-		InputType[] outerProcessInputs = executeDocument.getExecute()
-				.getDataInputs().getInputArray();
+		InputType[] outerProcessInputs = executeDocument.getExecute().getDataInputs()
+				.getInputArray();
 		Map<String, List<IData>> outerProcessInputData = null;
 		try {
-			InputHandler outerProcessInputHandler = new InputHandler.Builder(
-					outerProcessInputs, executeDocument.getExecute()
-							.getIdentifier().getStringValue()).build();
-			outerProcessInputData = outerProcessInputHandler
-					.getParsedInputData();
+			InputHandler outerProcessInputHandler = new InputHandler.Builder(outerProcessInputs,
+					executeDocument.getExecute().getIdentifier().getStringValue()).build();
+			outerProcessInputData = outerProcessInputHandler.getParsedInputData();
+			context.getInputData().putAll(outerProcessInputData);
+		} catch (ExceptionReport e) {
+			throw new RuntimeException("Could not parse input data", e);
+		}
+		return context;
+	}
+
+	private ProcessingContext createProcessingContextWithTimeMeasurement(
+			ExecuteDocument executeDocument) {
+		ProcessingContext context = new ProcessingContext(executeDocument);
+		InputType[] outerProcessInputs = executeDocument.getExecute().getDataInputs()
+				.getInputArray();
+		Map<String, List<IData>> outerProcessInputData = null;
+		try {
+			InputHandler outerProcessInputHandler = new InputHandler.Builder(outerProcessInputs,
+					executeDocument.getExecute().getIdentifier().getStringValue())
+					.buildWithTimeMeasuring(observers);
+			outerProcessInputData = outerProcessInputHandler.getParsedInputData();
 			context.getInputData().putAll(outerProcessInputData);
 		} catch (ExceptionReport e) {
 			throw new RuntimeException("Could not parse input data", e);

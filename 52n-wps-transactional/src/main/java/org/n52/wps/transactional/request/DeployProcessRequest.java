@@ -49,9 +49,10 @@ import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 
 public class DeployProcessRequest implements ITransactionalRequest {
-	
-	private static Logger LOGGER = LoggerFactory.getLogger(DeployProcessRequest.class);
-	
+
+	private static Logger LOGGER = LoggerFactory
+			.getLogger(DeployProcessRequest.class);
+
 	protected DeployProcessDocument deployDoc;
 	protected String processId, schema, executionUnit;
 	protected ProcessDescriptionType processDescription;
@@ -60,40 +61,41 @@ public class DeployProcessRequest implements ITransactionalRequest {
 	private DeployProcessResponseBuilder responseBuilder;
 
 	public DeployProcessRequest(Document doc) throws ExceptionReport {
-		
+
 		// Create initial response
 		responseBuilder = new DeployProcessResponseBuilder(this);
-		
+
 		try {
 			XmlOptions option = new XmlOptions();
 			option.setLoadTrimTextBuffer();
-			this.deployDoc = DeployProcessDocument.Factory.parse(doc,option);
+			this.deployDoc = DeployProcessDocument.Factory.parse(doc, option);
 			if (deployDoc == null) {
 				LOGGER.error("DeployProcessDocument is null");
 				throw new ExceptionReport("Error while parsing post data",
 						ExceptionReport.MISSING_PARAMETER_VALUE);
 			}
-		}
-		catch (XmlException e){
+		} catch (XmlException e) {
 			throw new ExceptionReport("Error while parsing post data",
 					ExceptionReport.MISSING_PARAMETER_VALUE, e);
 		}
-				
-		
-		processDescription = deployDoc.getDeployProcess().getProcessDescription();
+
+		processDescription = deployDoc.getDeployProcess()
+				.getProcessDescription();
 		processId = processDescription.getIdentifier().getStringValue().trim();
-		executionUnit = clearExecutionUnit(((SimpleValue) deployDoc.getDeployProcess().getExecutionUnit()).getStringValue());
-		deploymentProfileName = deployDoc.getDeployProcess().getDeploymentProfileName().trim();
-		
+		executionUnit = clearExecutionUnit(((SimpleValue) deployDoc
+				.getDeployProcess().getExecutionUnit()).getStringValue());
+		deploymentProfileName = deployDoc.getDeployProcess()
+				.getDeploymentProfileName().trim();
+
 		responseBuilder.updateDeployment(true);
-		
+
 		LOGGER.info("Deployment of process with processId: " + processId);
 	}
 
 	public String getProcessId() {
 		return processId;
 	}
-	
+
 	public ProcessDescriptionType getProcessDescription() {
 		return processDescription;
 	}
@@ -105,29 +107,30 @@ public class DeployProcessRequest implements ITransactionalRequest {
 	public String getDeploymentProfileName() {
 		return deploymentProfileName;
 	}
-	
+
 	public DeploymentProfile getDeploymentProfile() {
 		// TODO
 		return null;
 	}
-	
+
 	private String clearExecutionUnit(String execUnit) {
 		String clearedExecUnit = execUnit.replaceAll("\t", "").trim();
 		return clearedExecUnit;
 	}
 
-	public void updateResponseProcessDescriptions (ITransactionalAlgorithmRepository repository) {
+	public void updateResponseProcessDescriptions(
+			ITransactionalAlgorithmRepository repository) {
 		Map<String, ProcessDescriptionType> processDescriptions = new HashMap<String, ProcessDescriptionType>();
 		Collection<String> identifiers = repository.getAlgorithmNames();
 		ProcessDescriptionType processDescr;
-		
+
 		for (String identifier : identifiers) {
 			processDescr = repository.getProcessDescription(identifier);
 			processDescriptions.put(identifier, processDescr);
 		}
 		this.responseBuilder.updateProcessOfferings(processDescriptions);
 	}
-	
+
 	public DeployProcessResponseBuilder getDeployResponseBuilder() {
 		return this.responseBuilder;
 	}

@@ -11,9 +11,9 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 
-import net.disy.wps.richwps.oe.processor.TimeMeasurements;
 import net.disy.wps.richwps.response.ProfileProcessResponse;
 import net.disy.wps.richwps.response.ProfileProcessResponseBuilder;
+import net.disy.wps.richwps.response.TimeMeasurements;
 import net.opengis.ows.x11.ExceptionType;
 import net.opengis.wps.x100.DeployProcessDocument;
 import net.opengis.wps.x100.DeployProcessDocument.DeployProcess;
@@ -69,10 +69,8 @@ import org.w3c.dom.Document;
  * @author faltin
  *
  */
-public class ProfileProcessRequest extends Request implements IRichWPSRequest,
-		IObserver {
-	private static Logger LOGGER = LoggerFactory
-			.getLogger(ProfileProcessRequest.class);
+public class ProfileProcessRequest extends Request implements IRichWPSRequest, IObserver {
+	private static Logger LOGGER = LoggerFactory.getLogger(ProfileProcessRequest.class);
 	protected ProfileProcessDocument profileDoc;
 	protected String processId, schema, executionUnit, deploymentProfileName;
 	protected ProcessDescriptionType processDescription;
@@ -108,15 +106,11 @@ public class ProfileProcessRequest extends Request implements IRichWPSRequest,
 			}
 			extractSubmittedExecuteDocument();
 
-			processDescription = profileDoc.getProfileProcess()
-					.getProcessDescription();
+			processDescription = profileDoc.getProfileProcess().getProcessDescription();
 			validate();
-			deploymentProfileName = profileDoc.getProfileProcess()
-					.getDeploymentProfileName();
-			processId = processDescription.getIdentifier().getStringValue()
-					.trim();
-			XmlObject execUnit = profileDoc.getProfileProcess()
-					.getExecutionUnit();
+			deploymentProfileName = profileDoc.getProfileProcess().getDeploymentProfileName();
+			processId = processDescription.getIdentifier().getStringValue().trim();
+			XmlObject execUnit = profileDoc.getProfileProcess().getExecutionUnit();
 			XmlCursor xcur = execUnit.newCursor();
 			executionUnit = xcur.getTextValue();
 		} catch (XmlException e) {
@@ -132,8 +126,7 @@ public class ProfileProcessRequest extends Request implements IRichWPSRequest,
 	private ITransactionalResponse deployProcess() throws ExceptionReport {
 		deployProcessDocument = extractDeployDocument();
 		Document deploydocument = (Document) deployProcessDocument.getDomNode();
-		DeployProcessRequest deployProcessRequest = new DeployProcessRequest(
-				deploydocument);
+		DeployProcessRequest deployProcessRequest = new DeployProcessRequest(deploydocument);
 		TransactionalRequestHandler transactionalRequestHandler = new TransactionalRequestHandler(
 				deployProcessRequest);
 		return transactionalRequestHandler.handle();
@@ -141,10 +134,8 @@ public class ProfileProcessRequest extends Request implements IRichWPSRequest,
 
 	private ITransactionalResponse undeployProcess() throws ExceptionReport {
 		undeployProcessDocument = extractUndeployDocument();
-		Document undeploydocument = (Document) undeployProcessDocument
-				.getDomNode();
-		UndeployProcessRequest undeployProcessRequest = new UndeployProcessRequest(
-				undeploydocument);
+		Document undeploydocument = (Document) undeployProcessDocument.getDomNode();
+		UndeployProcessRequest undeployProcessRequest = new UndeployProcessRequest(undeploydocument);
 		TransactionalRequestHandler undeployRequestHandler = new TransactionalRequestHandler(
 				undeployProcessRequest);
 		return undeployRequestHandler.handle();
@@ -153,8 +144,7 @@ public class ProfileProcessRequest extends Request implements IRichWPSRequest,
 	private UndeployProcessDocument extractUndeployDocument() {
 		UndeployProcessDocument undeployProcessDocument = UndeployProcessDocument.Factory
 				.newInstance();
-		UndeployProcess undeployProcess = undeployProcessDocument
-				.addNewUndeployProcess();
+		UndeployProcess undeployProcess = undeployProcessDocument.addNewUndeployProcess();
 		ProfileProcess profileProcess = profileDoc.getProfileProcess();
 		undeployProcess.setService(profileProcess.getService());
 		undeployProcess.setVersion(profileProcess.getVersion());
@@ -162,20 +152,15 @@ public class ProfileProcessRequest extends Request implements IRichWPSRequest,
 			undeployProcess.setLanguage(profileProcess.getLanguage());
 		}
 		undeployProcess.addNewProcess();
-		undeployProcess
-				.getProcess()
-				.addNewIdentifier()
-				.setStringValue(
-						processDescription.getIdentifier().getStringValue());
+		undeployProcess.getProcess().addNewIdentifier()
+				.setStringValue(processDescription.getIdentifier().getStringValue());
 		undeployProcess.getProcess().setKeepExecutionUnit(false);
 		return undeployProcessDocument;
 	}
 
 	private DeployProcessDocument extractDeployDocument() {
-		DeployProcessDocument deployProcessDocument = DeployProcessDocument.Factory
-				.newInstance();
-		DeployProcess deployProcess = deployProcessDocument
-				.addNewDeployProcess();
+		DeployProcessDocument deployProcessDocument = DeployProcessDocument.Factory.newInstance();
+		DeployProcess deployProcess = deployProcessDocument.addNewDeployProcess();
 		ProfileProcess profileProcess = profileDoc.getProfileProcess();
 		deployProcess.setService(profileProcess.getService());
 		deployProcess.setVersion(profileProcess.getVersion());
@@ -183,11 +168,9 @@ public class ProfileProcessRequest extends Request implements IRichWPSRequest,
 			deployProcess.setLanguage(profileProcess.getLanguage());
 		}
 		deployProcess.setProcessDescription(processDescription);
-		deployProcess.setExecutionUnit(XmlString.Factory
-				.newValue(executionUnit));
+		deployProcess.setExecutionUnit(XmlString.Factory.newValue(executionUnit));
 		if (profileProcess.getDeploymentProfileName() != null) {
-			deployProcess.setDeploymentProfileName(profileProcess
-					.getDeploymentProfileName());
+			deployProcess.setDeploymentProfileName(profileProcess.getDeploymentProfileName());
 		}
 		return deployProcessDocument;
 	}
@@ -210,8 +193,7 @@ public class ProfileProcessRequest extends Request implements IRichWPSRequest,
 		return executeDocument;
 	}
 
-	private Document extractSubmittedExecuteDocument()
-			throws ParserConfigurationException,
+	private Document extractSubmittedExecuteDocument() throws ParserConfigurationException,
 			TransformerFactoryConfigurationError, TransformerException {
 		execDoc = extractExecuteDocument();
 		return (Document) execDoc.getDomNode();
@@ -280,20 +262,11 @@ public class ProfileProcessRequest extends Request implements IRichWPSRequest,
 		return processDescription;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.n52.wps.server.request.Request#getAttachedResult()
-	 */
+	@Override
 	public Map<String, IData> getAttachedResult() {
 		return returnResults;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.n52.wps.server.request.Request#call()
-	 */
 	@Override
 	public Response call() throws ExceptionReport {
 		IAlgorithm algorithm = null;
@@ -302,76 +275,23 @@ public class ProfileProcessRequest extends Request implements IRichWPSRequest,
 			timeMeasurements = new TimeMeasurements();
 			timeMeasurements.setDeploymentProfileName(deploymentProfileName);
 			timeMeasurements.start("Process "
-					+ profileDoc.getProfileProcess().getProcessDescription()
-							.getIdentifier().getStringValue(), true);
+					+ profileDoc.getProfileProcess().getProcessDescription().getIdentifier()
+							.getStringValue(), true);
 			LOGGER.debug("started with time measuring");
 
 			deployProcess();
-			ExecutionContext context;
+
 			ProfileProcess profileProcess = profileDoc.getProfileProcess();
-			if (profileProcess.isSetResponseForm()) {
-				context = profileProcess.getResponseForm().isSetRawDataOutput() ? new ExecutionContext(
-						profileProcess.getResponseForm().getRawDataOutput())
-						: new ExecutionContext(Arrays.asList(profileProcess
-								.getResponseForm().getResponseDocument()
-								.getOutputArray()));
-			} else {
-				context = new ExecutionContext();
-			}
-
-			// register so that any function that calls
-			// ExecuteContextFactory.getContext() gets the instance registered
-			// with this thread
-			ExecutionContextFactory.registerContext(context);
-
+			registerContext(profileProcess);
 			LOGGER.debug("started with execution");
-
 			updateStatusStarted();
-
-			// parse the input
 			List<Observer> observers = new ArrayList<Observer>();
 			observers.add(timeMeasurements);
+			algorithm = RepositoryManager.getInstance().getAlgorithm(getAlgorithmIdentifier());
 
-			InputType[] inputs = new InputType[0];
-			if (profileProcess.getDataInputs() != null) {
-				inputs = profileProcess.getDataInputs().getInputArray();
-			}
-			InputHandler parser = new InputHandler.Builder(inputs,
-					getAlgorithmIdentifier()).buildWithTimeMeasuring(observers);
+			executeProcess(algorithm, inputMap, profileProcess, observers);
 
-			// we got so far:
-			// get the algorithm, and run it with the clients input
-
-			algorithm = RepositoryManager.getInstance().getAlgorithm(
-					getAlgorithmIdentifier());
-
-			if (algorithm instanceof ISubject) {
-				ISubject subject = (ISubject) algorithm;
-				subject.addObserver(this);
-
-			}
-
-			if (algorithm instanceof AbstractTransactionalAlgorithm) {
-				returnResults = ((AbstractTransactionalAlgorithm) algorithm)
-						.runProfiling(execDoc, observers);
-			} else {
-				// TODO Not verified! Verify!
-				inputMap = parser.getParsedInputData();
-				returnResults = algorithm.run(inputMap);
-			}
-
-			List<String> errorList = algorithm.getErrors();
-			if (errorList != null && !errorList.isEmpty()) {
-				String errorMessage = errorList.get(0);
-				LOGGER.error("Error reported while handling ExecuteRequest for "
-						+ getAlgorithmIdentifier() + ": " + errorMessage);
-				updateStatusError(errorMessage);
-			} else {
-				updateStatusSuccess();
-
-			}
 			undeployProcess();
-
 		} catch (Throwable e) {
 			String errorMessage = null;
 			if (algorithm != null && algorithm.getErrors() != null
@@ -388,20 +308,15 @@ public class ProfileProcessRequest extends Request implements IRichWPSRequest,
 					+ getAlgorithmIdentifier() + ": " + errorMessage);
 			updateStatusError(errorMessage);
 			if (e instanceof Error) {
-				// This is required when catching Error
 				throw (Error) e;
 			}
 			if (e instanceof ExceptionReport) {
 				throw (ExceptionReport) e;
 			} else {
-				throw new ExceptionReport(
-						"Error while executing the embedded process for: "
-								+ getAlgorithmIdentifier(),
-						ExceptionReport.NO_APPLICABLE_CODE, e);
+				throw new ExceptionReport("Error while executing the embedded process for: "
+						+ getAlgorithmIdentifier(), ExceptionReport.NO_APPLICABLE_CODE, e);
 			}
 		} finally {
-			// you ***MUST*** call this or else you will have a PermGen
-			// ClassLoader memory leak due to ThreadLocal use
 			ExecutionContextFactory.unregisterContext();
 			if (algorithm instanceof ISubject) {
 				((ISubject) algorithm).removeObserver(this);
@@ -423,20 +338,58 @@ public class ProfileProcessRequest extends Request implements IRichWPSRequest,
 				}
 			}
 		}
-		ProfileProcessResponse profileProcessResponse = new ProfileProcessResponse(
-				this);
-		return profileProcessResponse;
+
+		return new ProfileProcessResponse(this);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.n52.wps.server.request.Request#validate()
-	 */
+	private void executeProcess(IAlgorithm algorithm, Map<String, List<IData>> inputMap,
+			ProfileProcess profileProcess, List<Observer> observers) throws ExceptionReport {
+		if (algorithm instanceof ISubject) {
+			ISubject subject = (ISubject) algorithm;
+			subject.addObserver(this);
+		}
+		if (algorithm instanceof AbstractTransactionalAlgorithm) {
+			returnResults = ((AbstractTransactionalAlgorithm) algorithm).runProfiling(execDoc,
+					observers);
+		} else {
+			InputType[] inputs = new InputType[0];
+			if (profileProcess.getDataInputs() != null) {
+				inputs = profileProcess.getDataInputs().getInputArray();
+			}
+			InputHandler parser = new InputHandler.Builder(inputs, getAlgorithmIdentifier())
+					.buildWithTimeMeasuring(observers);
+			inputMap = parser.getParsedInputData();
+			returnResults = algorithm.run(inputMap);
+		}
+
+		List<String> errorList = algorithm.getErrors();
+		if (errorList != null && !errorList.isEmpty()) {
+			String errorMessage = errorList.get(0);
+			LOGGER.error("Error reported while handling ExecuteRequest for "
+					+ getAlgorithmIdentifier() + ": " + errorMessage);
+			updateStatusError(errorMessage);
+		} else {
+			updateStatusSuccess();
+		}
+	}
+
+	private void registerContext(ProfileProcess profileProcess) {
+		ExecutionContext context;
+		if (profileProcess.isSetResponseForm()) {
+			context = profileProcess.getResponseForm().isSetRawDataOutput() ? new ExecutionContext(
+					profileProcess.getResponseForm().getRawDataOutput()) : new ExecutionContext(
+					Arrays.asList(profileProcess.getResponseForm().getResponseDocument()
+							.getOutputArray()));
+		} else {
+			context = new ExecutionContext();
+		}
+
+		ExecutionContextFactory.registerContext(context);
+	}
+
 	@Override
 	public boolean validate() throws ExceptionReport {
-		ProfileProcessDocument.ProfileProcess profileProcess = profileDoc
-				.getProfileProcess();
+		ProfileProcessDocument.ProfileProcess profileProcess = profileDoc.getProfileProcess();
 		if (!profileProcess.getVersion().equals(SUPPORTED_VERSION)) {
 			throw new ExceptionReport("Specified version is not supported.",
 					ExceptionReport.INVALID_PARAMETER_VALUE, "version="
@@ -445,61 +398,42 @@ public class ProfileProcessRequest extends Request implements IRichWPSRequest,
 
 		if (processDescription == null) {
 			throw new ExceptionReport("No process description supplied.",
-					ExceptionReport.MISSING_PARAMETER_VALUE,
-					"process description");
+					ExceptionReport.MISSING_PARAMETER_VALUE, "process description");
 		}
 
-		// Get the inputdescriptions of the algorithm
 		if (processDescription.getDataInputs() != null) {
-			InputDescriptionType[] inputDescs = processDescription
-					.getDataInputs().getInputArray();
+			InputDescriptionType[] inputDescs = processDescription.getDataInputs().getInputArray();
 
-			// prevent NullPointerException for zero input values in execute
-			// request (if only default values are used)
 			InputType[] inputs;
 			if (profileProcess.getDataInputs() == null)
 				inputs = new InputType[0];
 			else
 				inputs = profileProcess.getDataInputs().getInputArray();
 
-			// For each input supplied by the client
 			for (InputType input : inputs) {
 				boolean identifierMatched = false;
-				// Try to match the input with one of the descriptions
 				for (InputDescriptionType inputDesc : inputDescs) {
-					// If found, then process:
 					if (inputDesc.getIdentifier().getStringValue()
 							.equals(input.getIdentifier().getStringValue())) {
 						identifierMatched = true;
-						// If it is a literal value,
-						if (input.getData() != null
-								&& input.getData().getLiteralData() != null) {
-							// then check if the desription is also of type
-							// literal
+						if (input.getData() != null && input.getData().getLiteralData() != null) {
 							if (inputDesc.getLiteralData() == null) {
-								throw new ExceptionReport(
-										"Inputtype LiteralData is not supported",
+								throw new ExceptionReport("Inputtype LiteralData is not supported",
 										ExceptionReport.INVALID_PARAMETER_VALUE);
 							}
-							// literalValue.getDataType ist optional
 							if (input.getData().getLiteralData().getDataType() != null) {
 								if (inputDesc.getLiteralData() != null)
-									if (inputDesc.getLiteralData()
-											.getDataType() != null)
-										if (inputDesc.getLiteralData()
-												.getDataType().getReference() != null)
+									if (inputDesc.getLiteralData().getDataType() != null)
+										if (inputDesc.getLiteralData().getDataType().getReference() != null)
 											if (!input
 													.getData()
 													.getLiteralData()
 													.getDataType()
-													.equals(inputDesc
-															.getLiteralData()
-															.getDataType()
-															.getReference())) {
+													.equals(inputDesc.getLiteralData()
+															.getDataType().getReference())) {
 												throw new ExceptionReport(
 														"Specified dataType is not supported "
-																+ input.getData()
-																		.getLiteralData()
+																+ input.getData().getLiteralData()
 																		.getDataType()
 																+ " for input "
 																+ input.getIdentifier()
@@ -511,27 +445,16 @@ public class ProfileProcessRequest extends Request implements IRichWPSRequest,
 						break;
 					}
 				}
-				// if the identifier did not match one of the descriptions, it
-				// is
-				// invalid
 				if (!identifierMatched) {
 					throw new ExceptionReport("Input Identifier is not valid: "
 							+ input.getIdentifier().getStringValue(),
-							ExceptionReport.INVALID_PARAMETER_VALUE,
-							"input identifier");
+							ExceptionReport.INVALID_PARAMETER_VALUE, "input identifier");
 				}
 			}
 		}
 		return true;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.n52.wps.server.observerpattern.IObserver#update(org.n52.wps.server
-	 * .observerpattern.ISubject)
-	 */
 	@Override
 	public void update(ISubject subject) {
 		Object state = subject.getState();
@@ -563,13 +486,11 @@ public class ProfileProcessRequest extends Request implements IRichWPSRequest,
 		try {
 			responseBuilder.update();
 			if (isStoreResponse()) {
-				ProfileProcessResponse profileProcessResponse = new ProfileProcessResponse(
-						this);
+				ProfileProcessResponse profileProcessResponse = new ProfileProcessResponse(this);
 				InputStream is = null;
 				try {
 					is = profileProcessResponse.getAsStream();
-					DatabaseFactory.getDatabase().storeResponse(
-							getUniqueId().toString(), is);
+					DatabaseFactory.getDatabase().storeResponse(getUniqueId().toString(), is);
 				} finally {
 					IOUtils.closeQuietly(is);
 				}
@@ -594,8 +515,7 @@ public class ProfileProcessRequest extends Request implements IRichWPSRequest,
 		if (profileProcess.getResponseForm().getRawDataOutput() != null) {
 			return false;
 		}
-		return profileProcess.getResponseForm().getResponseDocument()
-				.getStoreExecuteResponse();
+		return profileProcess.getResponseForm().getResponseDocument().getStoreExecuteResponse();
 	}
 
 	/**
@@ -604,8 +524,8 @@ public class ProfileProcessRequest extends Request implements IRichWPSRequest,
 	 * @return the identifier of the algorithm.
 	 */
 	public String getAlgorithmIdentifier() {
-		ProcessDescriptionType processDescription = profileDoc
-				.getProfileProcess().getProcessDescription();
+		ProcessDescriptionType processDescription = profileDoc.getProfileProcess()
+				.getProcessDescription();
 		if (processDescription.getIdentifier() != null) {
 			return processDescription.getIdentifier().getStringValue();
 		}

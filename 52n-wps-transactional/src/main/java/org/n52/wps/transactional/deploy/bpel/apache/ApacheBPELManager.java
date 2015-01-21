@@ -73,27 +73,22 @@ public class ApacheBPELManager extends AbstractProcessManager {
 	public ApacheBPELManager(ITransactionalAlgorithmRepository repository) {
 		super(repository);
 
-		Property[] properties = WPSConfig.getInstance()
-				.getPropertiesForRepositoryClass(
-						repository.getClass().getName());
+		Property[] properties = WPSConfig.getInstance().getPropertiesForRepositoryClass(
+				repository.getClass().getName());
 		// TODO think of multiple instance of this class registered (yet not
 		// possible since singleton)
-		Property deployEndpointProperty = WPSConfig.getInstance()
-				.getPropertyForKey(properties, "ODE-Engine_DeploymentEndpoint");
+		Property deployEndpointProperty = WPSConfig.getInstance().getPropertyForKey(properties,
+				"ODE-Engine_DeploymentEndpoint");
 		if (deployEndpointProperty == null) {
-			throw new RuntimeException(
-					"Error. Could not find ODE-Engine_DeploymentEndpoint");
+			throw new RuntimeException("Error. Could not find ODE-Engine_DeploymentEndpoint");
 		}
 		deploymentEndpoint = deployEndpointProperty.getStringValue();
-		Property processManagerEndpointProperty = WPSConfig.getInstance()
-				.getPropertyForKey(properties,
-						"ODE-Engine_ProcessManagerEndpoint");
+		Property processManagerEndpointProperty = WPSConfig.getInstance().getPropertyForKey(
+				properties, "ODE-Engine_ProcessManagerEndpoint");
 		if (processManagerEndpointProperty == null) {
-			throw new RuntimeException(
-					"Error. Could not find ODE-Engine_ProcessManagerEndpoint");
+			throw new RuntimeException("Error. Could not find ODE-Engine_ProcessManagerEndpoint");
 		}
-		processManagerEndpoint = processManagerEndpointProperty
-				.getStringValue();
+		processManagerEndpoint = processManagerEndpointProperty.getStringValue();
 
 		try {
 			_factory = OMAbstractFactory.getOMFactory();
@@ -124,8 +119,8 @@ public class ApacheBPELManager extends AbstractProcessManager {
 		// ODE preparation
 		OMElement result = null;
 		try {
-			OMNamespace pmapi = _factory.createOMNamespace(
-					"http://www.apache.org/ode/pmapi", "pmapi");
+			OMNamespace pmapi = _factory.createOMNamespace("http://www.apache.org/ode/pmapi",
+					"pmapi");
 			OMElement root = _factory.createOMElement("deploy", null); // qualified
 																		// operation
 																		// name
@@ -139,21 +134,18 @@ public class ApacheBPELManager extends AbstractProcessManager {
 
 			File zipFile = File.createTempFile("wpsbpel", ".zip", null);
 
-			int res = ZipCreator.makeZIP(processID, suitcase, workflow,
-					clientWSDL, wsdlList, zipFile);
+			int res = ZipCreator.makeZIP(processID, suitcase, workflow, clientWSDL, wsdlList,
+					zipFile);
 			try {
-				InputStream is = new BufferedInputStream(new FileInputStream(
-						zipFile));
+				InputStream is = new BufferedInputStream(new FileInputStream(zipFile));
 
 				ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 				try {
 					for (int b = is.read(); b >= 0; b = is.read()) {
 						outputStream.write((byte) b);
 					}
-					String base64Enc = Base64
-							.encode(outputStream.toByteArray());
-					OMText zipContent = _factory.createOMText(base64Enc,
-							"application/zip", true);
+					String base64Enc = Base64.encode(outputStream.toByteArray());
+					OMText zipContent = _factory.createOMText(base64Enc, "application/zip", true);
 					root.addChild(namePart);
 					root.addChild(zipPart);
 					zipPart.addChild(zipElmt);
@@ -187,8 +179,7 @@ public class ApacheBPELManager extends AbstractProcessManager {
 
 	public boolean unDeployProcess(String processID) throws Exception {
 		// Prepare undeploy message
-		OMNamespace pmapi = _factory.createOMNamespace(
-				"http://www.apache.org/ode/pmapi", "pmapi");
+		OMNamespace pmapi = _factory.createOMNamespace("http://www.apache.org/ode/pmapi", "pmapi");
 		OMElement root = _factory.createOMElement("undeploy", pmapi); // qualified
 																		// operation
 																		// name
@@ -202,8 +193,7 @@ public class ApacheBPELManager extends AbstractProcessManager {
 		return true;
 	}
 
-	public Map<String, IData> invoke(ExecuteDocument doc, String algorithmID)
-			throws Exception {
+	public Map<String, IData> invoke(ExecuteDocument doc, String algorithmID) throws Exception {
 
 		Node domNode = doc.getDomNode();
 
@@ -222,8 +212,7 @@ public class ApacheBPELManager extends AbstractProcessManager {
 		SOAPEnvelope response = null;
 		try {
 			client = new ServiceClient();
-			OperationClient operationClient = client
-					.createClient(ServiceClient.ANON_OUT_IN_OP);
+			OperationClient operationClient = client.createClient(ServiceClient.ANON_OUT_IN_OP);
 			// creating message context
 			MessageContext outMsgCtx = new MessageContext();
 			// assigning message context's option object into instance variable
@@ -231,8 +220,8 @@ public class ApacheBPELManager extends AbstractProcessManager {
 			// setting properties into option
 
 			// TODO is this correct?
-			opts.setTo(new EndpointReference(deploymentEndpoint.replace(
-					"DeploymentService", algorithmID)));
+			opts.setTo(new EndpointReference(deploymentEndpoint.replace("DeploymentService",
+					algorithmID)));
 			opts.setAction("");
 			outMsgCtx.setEnvelope(createSOAPEnvelope(doc));
 			operationClient.addMessageContext(outMsgCtx);
@@ -288,25 +277,19 @@ public class ApacheBPELManager extends AbstractProcessManager {
 			List<String> allProcesses = new ArrayList<String>();
 
 			// ServiceClient sc = new ServiceClient(null, null);
-			OMElement listRoot = _client.buildMessage("listAllProcesses",
-					new String[] {}, new String[] {});
+			OMElement listRoot = _client.buildMessage("listAllProcesses", new String[] {},
+					new String[] {});
 
 			OMElement result = sendToPM(listRoot);
-			Iterator<OMElement> pi = result
-					.getFirstElement()
-					.getChildrenWithName(
-							new QName(
-									"http://www.apache.org/ode/pmapi/types/2006/08/02/",
-									"process-info"));
+			Iterator<OMElement> pi = result.getFirstElement().getChildrenWithName(
+					new QName("http://www.apache.org/ode/pmapi/types/2006/08/02/", "process-info"));
 
 			while (pi.hasNext()) {
 				OMElement omPID = pi.next();
 
-				String fullName = omPID
-						.getFirstChildWithName(
-								new QName(
-										"http://www.apache.org/ode/pmapi/types/2006/08/02/",
-										"pid")).getText();
+				String fullName = omPID.getFirstChildWithName(
+						new QName("http://www.apache.org/ode/pmapi/types/2006/08/02/", "pid"))
+						.getText();
 
 				/*
 				 * just take the name as defined by the user... whats returned
@@ -332,9 +315,8 @@ public class ApacheBPELManager extends AbstractProcessManager {
 			processID = processID.split("}")[1];
 		}
 		try {
-			OMElement listRoot = _client.buildMessage("listProcesses",
-					new String[] { "filter", "orderKeys" }, new String[] {
-							"name=" + processID + "", "" });
+			OMElement listRoot = _client.buildMessage("listProcesses", new String[] { "filter",
+					"orderKeys" }, new String[] { "name=" + processID + "", "" });
 			OMElement result = sendToPM(listRoot);
 
 			if (result.toString().contains(processID)) {
@@ -352,8 +334,7 @@ public class ApacheBPELManager extends AbstractProcessManager {
 		// throw new UnsupportedOperationException("Not supported yet.");
 	}
 
-	public boolean unDeployProcess(UndeployProcessRequest request)
-			throws Exception {
+	public boolean unDeployProcess(UndeployProcessRequest request) throws Exception {
 		// unDeployProcess(String processID) is implemented though...
 		return unDeployProcess((String) request.getProcessID());
 		// return false;
@@ -371,8 +352,7 @@ public class ApacheBPELManager extends AbstractProcessManager {
 		// return _DEPclient.send(msg,this.deploymentEndpoint,10000);
 	}
 
-	private ByteArrayOutputStream writeXMLToStream(Source source)
-			throws TransformerException {
+	private ByteArrayOutputStream writeXMLToStream(Source source) throws TransformerException {
 		// Prepare the DOM document for writing
 
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -388,14 +368,12 @@ public class ApacheBPELManager extends AbstractProcessManager {
 		return out;
 	}
 
-	private String nodeToString(Node node)
-			throws TransformerFactoryConfigurationError, TransformerException {
+	private String nodeToString(Node node) throws TransformerFactoryConfigurationError,
+			TransformerException {
 		StringWriter stringWriter = new StringWriter();
-		Transformer transformer = TransformerFactory.newInstance()
-				.newTransformer();
+		Transformer transformer = TransformerFactory.newInstance().newTransformer();
 		transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-		transformer.transform(new DOMSource(node), new StreamResult(
-				stringWriter));
+		transformer.transform(new DOMSource(node), new StreamResult(stringWriter));
 
 		return stringWriter.toString();
 	}
@@ -444,8 +422,7 @@ public class ApacheBPELManager extends AbstractProcessManager {
 		}
 		// OMNamespace wpsNs =
 		// fac.createOMNamespace("http://scenz.lcr.co.nz/wpsHelloWorld", "wps");
-		OMNamespace wpsNs = fac.createOMNamespace("http://scenz.lcr.co.nz/"
-				+ identifier, "wps");
+		OMNamespace wpsNs = fac.createOMNamespace("http://scenz.lcr.co.nz/" + identifier, "wps");
 		// creating the payload
 
 		// TODO: parse the domNode to a request doc
@@ -492,8 +469,8 @@ public class ApacheBPELManager extends AbstractProcessManager {
 		_client = new ODEServiceClient();
 		HashMap<String, String> allProcesses = new HashMap<String, String>();
 
-		OMElement listRoot = _client.buildMessage("listAllProcesses",
-				new String[] {}, new String[] {});
+		OMElement listRoot = _client.buildMessage("listAllProcesses", new String[] {},
+				new String[] {});
 
 		OMElement result = null;
 		try {
@@ -503,26 +480,20 @@ public class ApacheBPELManager extends AbstractProcessManager {
 			e.printStackTrace();
 		}
 		Iterator<OMElement> pi = result.getFirstElement().getChildrenWithName(
-				new QName("http://www.apache.org/ode/pmapi/types/2006/08/02/",
-						"process-info"));
+				new QName("http://www.apache.org/ode/pmapi/types/2006/08/02/", "process-info"));
 
 		while (pi.hasNext()) {
 			OMElement omPID = pi.next();
 
-			String fullName = omPID
-					.getFirstChildWithName(
-							new QName(
-									"http://www.apache.org/ode/pmapi/types/2006/08/02/",
-									"pid")).getText();
-			allProcesses.put(
-					fullName.substring(fullName.indexOf("}") + 1,
-							fullName.indexOf("-")),
+			String fullName = omPID.getFirstChildWithName(
+					new QName("http://www.apache.org/ode/pmapi/types/2006/08/02/", "pid"))
+					.getText();
+			allProcesses.put(fullName.substring(fullName.indexOf("}") + 1, fullName.indexOf("-")),
 					fullName.substring(1, fullName.indexOf("}")));
 
 		}
 
-		String identifier = execDoc.getExecute().getIdentifier()
-				.getStringValue();
+		String identifier = execDoc.getExecute().getIdentifier().getStringValue();
 
 		OMNamespace wpsNs = null;
 
@@ -548,10 +519,8 @@ public class ApacheBPELManager extends AbstractProcessManager {
 
 			String inputIdentifier = input1.getIdentifier().getStringValue();
 			OMElement value = fac.createOMElement(inputIdentifier, "", "");
-			if (input1.getData() != null
-					&& input1.getData().getLiteralData() != null) {
-				value.setText(input1.getData().getLiteralData()
-						.getStringValue());
+			if (input1.getData() != null && input1.getData().getLiteralData() != null) {
+				value.setText(input1.getData().getLiteralData().getStringValue());
 			} else {
 				// Node no =
 				// input1.getData().getComplexData().getDomNode().getChildNodes().item(1);
@@ -559,14 +528,13 @@ public class ApacheBPELManager extends AbstractProcessManager {
 				// value.addChild(no);
 				OMElement reference = fac.createOMElement("Reference",
 						"http://www.opengis.net/wps/1.0.0", "wps");
-				OMNamespace xlin = fac.createOMNamespace(
-						"http://www.w3.org/1999/xlink", "xlin");
+				OMNamespace xlin = fac.createOMNamespace("http://www.w3.org/1999/xlink", "xlin");
 
-				OMAttribute attr = fac.createOMAttribute("href", xlin, input1
-						.getReference().getHref());
+				OMAttribute attr = fac.createOMAttribute("href", xlin, input1.getReference()
+						.getHref());
 				reference.addAttribute(attr);
-				reference.addAttribute("schema", input1.getReference()
-						.getSchema(), fac.createOMNamespace("", ""));
+				reference.addAttribute("schema", input1.getReference().getSchema(),
+						fac.createOMNamespace("", ""));
 				value.addChild(reference);
 			}
 			method.addChild(value);
@@ -576,43 +544,16 @@ public class ApacheBPELManager extends AbstractProcessManager {
 
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.n52.wps.transactional.deploy.IProcessManager#invokeTest(net.opengis
-	 * .wps.x100.ExecuteDocument, java.lang.String)
-	 */
 	@Override
-	public Map<String, IData> invokeTest(ExecuteDocument document,
-			String algorithmID) throws Exception {
+	public Map<String, IData> invokeTest(ExecuteDocument document, String algorithmID)
+			throws Exception {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.n52.wps.transactional.deploy.IProcessManager#getReferenceOutputMappings
-	 * ()
-	 */
 	@Override
-	public Object getReferenceOutputMappings() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.n52.wps.transactional.deploy.IProcessManager#invokeProfiling(net.
-	 * opengis.wps.x100.ExecuteDocument, java.lang.String, java.util.List)
-	 */
-	@Override
-	public Map<String, IData> invokeProfiling(ExecuteDocument document,
-			String algorithmID, List<Observer> observers) throws Exception {
+	public Map<String, IData> invokeProfiling(ExecuteDocument document, String algorithmID,
+			List<Observer> observers) throws Exception {
 		// TODO Auto-generated method stub
 		return null;
 	}

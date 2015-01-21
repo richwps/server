@@ -45,16 +45,9 @@ public abstract class AbstractTransactionalAlgorithm implements IAlgorithm {
 	 * @param document
 	 *            the execution document.
 	 * @return the results of the calculations.
+	 * @author faltin
 	 */
 	public abstract Map<String, IData> runTest(ExecuteDocument document);
-
-	/**
-	 * Returns Process-handle with ProcessId, related Outputnames and
-	 * Variablenames in this order.
-	 * 
-	 * @return
-	 */
-	public abstract Object getReferenceOutputMappings();
 
 	/**
 	 * Starts profiling of the given process.
@@ -64,6 +57,7 @@ public abstract class AbstractTransactionalAlgorithm implements IAlgorithm {
 	 * @param observers
 	 *            the observers observing the processing.
 	 * @return the results of the calculations.
+	 * @author faltin
 	 */
 	public abstract Map<String, IData> runProfiling(ExecuteDocument execDoc,
 			List<Observer> observers);

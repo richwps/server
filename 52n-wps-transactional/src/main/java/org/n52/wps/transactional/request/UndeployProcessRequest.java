@@ -34,8 +34,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.opengis.wps.x100.ProcessDescriptionType;
 import net.opengis.wps.x100.UndeployProcessDocument;
+import net.opengis.wps.x100.ProcessDescriptionType;
 
 import org.apache.xmlbeans.XmlException;
 import org.apache.xmlbeans.XmlOptions;
@@ -47,64 +47,68 @@ import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 
 public class UndeployProcessRequest implements ITransactionalRequest {
-	
-	private static Logger LOGGER = LoggerFactory.getLogger(UndeployProcessRequest.class);
-	
+
+	private static Logger LOGGER = LoggerFactory
+			.getLogger(UndeployProcessRequest.class);
+
 	protected UndeployProcessDocument undeployDoc;
 	protected String processId;
 	protected boolean keepExecUnit;
-	
+
 	private UndeployProcessResponseBuilder responseBuilder;
 
 	public UndeployProcessRequest(Document doc) throws ExceptionReport {
-		
+
 		// Create initial response
 		responseBuilder = new UndeployProcessResponseBuilder(this);
-		
+
 		try {
 			XmlOptions option = new XmlOptions();
 			option.setLoadTrimTextBuffer();
-			this.undeployDoc = UndeployProcessDocument.Factory.parse(doc,option);
-			
+			this.undeployDoc = UndeployProcessDocument.Factory.parse(doc,
+					option);
+
 			if (undeployDoc == null) {
 				LOGGER.error("UndeployProcessDocument is null");
 				throw new ExceptionReport("Error while parsing post data",
 						ExceptionReport.MISSING_PARAMETER_VALUE);
 			}
-		}
-		catch (XmlException e){
+		} catch (XmlException e) {
 			throw new ExceptionReport("Error while parsing post data",
 					ExceptionReport.MISSING_PARAMETER_VALUE, e);
 		}
-		
-		processId = undeployDoc.getUndeployProcess().getProcess().getIdentifier().getStringValue().trim();
-		keepExecUnit = undeployDoc.getUndeployProcess().getProcess().getKeepExecutionUnit();
-		
+
+		processId = undeployDoc.getUndeployProcess().getProcess()
+				.getIdentifier().getStringValue().trim();
+		keepExecUnit = undeployDoc.getUndeployProcess().getProcess()
+				.getKeepExecutionUnit();
+
 		responseBuilder.updateUndeployment(true);
-		
+
 		LOGGER.info("Undeployment of process with processId: " + processId);
 	}
 
 	public String getProcessID() {
 		return processId;
 	}
-	
+
 	public boolean getKeepExecutionUnit() {
 		return keepExecUnit;
 	}
-	
-	public void updateResponseProcessDescriptions (ITransactionalAlgorithmRepository repository) {
+
+	public void updateResponseProcessDescriptions(
+			ITransactionalAlgorithmRepository repository) {
 		Map<String, ProcessDescriptionType> processDescriptions = new HashMap<String, ProcessDescriptionType>();
 		Collection<String> identifiers = repository.getAlgorithmNames();
 		ProcessDescriptionType processDescr;
-		
+
 		for (String identifier : identifiers) {
 			processDescr = repository.getProcessDescription(identifier);
 			processDescriptions.put(identifier, processDescr);
 		}
 		this.responseBuilder.updateProcessOfferings(processDescriptions);
 	}
-	
+
 	public UndeployProcessResponseBuilder getUndeployResponseBuilder() {
 		return this.responseBuilder;
 	}

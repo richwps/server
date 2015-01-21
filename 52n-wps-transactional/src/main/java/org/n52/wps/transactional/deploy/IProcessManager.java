@@ -49,8 +49,7 @@ public interface IProcessManager {
 
 	Collection<String> getAllProcesses() throws Exception;
 
-	Map<String, IData> invoke(ExecuteDocument payload, String algorithmID)
-			throws Exception;
+	Map<String, IData> invoke(ExecuteDocument payload, String algorithmID) throws Exception;
 
 	boolean deployProcess(DeployProcessRequest request) throws Exception;
 
@@ -63,16 +62,9 @@ public interface IProcessManager {
 	 *            the process identifier.
 	 * @return the results of the calculation.
 	 * @throws Exception
+	 * @author faltin
 	 */
-	Map<String, IData> invokeTest(ExecuteDocument document, String algorithmID)
-			throws Exception;
-
-	/**
-	 * Returns the output reference on output identifier mappings.
-	 * 
-	 * @return the output reference on output identifier mappings.
-	 */
-	Object getReferenceOutputMappings();
+	Map<String, IData> invokeTest(ExecuteDocument document, String algorithmID) throws Exception;
 
 	/**
 	 * Performs the profiling of the given process.
@@ -85,8 +77,9 @@ public interface IProcessManager {
 	 *            the observers of the calculation process.
 	 * @return the results of the calculation.
 	 * @throws Exception
+	 * @author faltin
 	 */
-	Map<String, IData> invokeProfiling(ExecuteDocument document,
-			String algorithmID, List<Observer> observers) throws Exception;
+	Map<String, IData> invokeProfiling(ExecuteDocument document, String algorithmID,
+			List<Observer> observers) throws Exception;
 
 }

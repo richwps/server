@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import net.disy.wps.richwps.process.binding.IProcessBinding;
+import net.disy.wps.richwps.response.TimeMeasurements;
 import net.opengis.wps.x100.ExecuteDocument;
 
 import org.apache.commons.lang.Validate;

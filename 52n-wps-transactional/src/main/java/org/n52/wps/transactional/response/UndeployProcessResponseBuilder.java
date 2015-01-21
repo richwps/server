@@ -6,17 +6,17 @@ import java.util.Map;
 import javax.xml.XMLConstants;
 import javax.xml.namespace.QName;
 
+import net.opengis.wps.x100.UndeployProcessResponseDocument;
 import net.opengis.wps.x100.ProcessBriefType;
 import net.opengis.wps.x100.ProcessDescriptionType;
-import net.opengis.wps.x100.UndeployProcessResponseDocument;
 
 import org.apache.xmlbeans.XmlCursor;
 import org.n52.wps.transactional.request.UndeployProcessRequest;
 import org.n52.wps.util.XMLBeansHelper;
 
 public class UndeployProcessResponseBuilder {
-protected UndeployProcessResponseDocument doc;
-	
+	protected UndeployProcessResponseDocument doc;
+
 	public UndeployProcessResponseBuilder(UndeployProcessRequest req) {
 		XmlCursor c;
 		// TODO
@@ -25,26 +25,28 @@ protected UndeployProcessResponseDocument doc;
 		c = doc.newCursor();
 		c.toFirstChild();
 		c.toLastAttribute();
-		c.setAttributeText(new QName(XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI, "schemaLocation"), "./wpsUndeployProcess_response.xsd");
-		
+		c.setAttributeText(new QName(
+				XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI, "schemaLocation"),
+				"./wpsUndeployProcess_response.xsd");
+
 		doc.getUndeployProcessResponse().addNewUndeployment();
 		doc.getUndeployProcessResponse().getUndeployment().setDone(true);
 		doc.getUndeployProcessResponse().addNewProcessOfferings();
 	}
-	
+
 	public InputStream getAsStream() {
 		try {
 			return doc.newInputStream(XMLBeansHelper.getXmlOptions());
-		}
-		catch(Exception e) {
+		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
-	
+
 	public void updateUndeployment(boolean deploymentValue) {
-		doc.getUndeployProcessResponse().getUndeployment().setDone(deploymentValue);
+		doc.getUndeployProcessResponse().getUndeployment()
+				.setDone(deploymentValue);
 	}
-	
+
 	public void updateProcessOfferings(
 			Map<String, ProcessDescriptionType> processDescriptions) {
 
