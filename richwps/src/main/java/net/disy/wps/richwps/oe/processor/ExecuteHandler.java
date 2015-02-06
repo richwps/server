@@ -1,5 +1,6 @@
 package net.disy.wps.richwps.oe.processor;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -37,7 +38,7 @@ public class ExecuteHandler implements IOperationHandler {
 
         String processIdToExecute = getProcessIdToExecute(executeOperation, context);
 
-        Map<String, Reference> inputReferenceMapping = createReferenceMapping(executeOperation.getInputnames(), executeOperation.getInputreferences());
+        Map<String, Reference> inputReferenceMapping = createInputReferenceMapping(executeOperation.getInputnames(), executeOperation.getInputreferences());
         Map<String, List<IData>> innerProcessInputData = new HashMap<String, List<IData>>();
 
         for (Map.Entry<String, Reference> inputReferenceMappingEntry : inputReferenceMapping.entrySet()) {
@@ -56,13 +57,13 @@ public class ExecuteHandler implements IOperationHandler {
             throw new RuntimeException("The inner process " + processIdToExecute + " returned no result.");
         }
 
-        Map<String, Reference> outputReferenceMapping = createReferenceMapping(executeOperation.getOutputnames(), executeOperation.getOutputreferences());
-        for (Map.Entry<String, Reference> outputReferenceMappingEntry : outputReferenceMapping.entrySet()) {
-            if (!innerProcessResultData.containsKey(outputReferenceMappingEntry.getKey())) {
-                throw new RuntimeException("No result data found for output identifier " + outputReferenceMappingEntry.getKey());
+        ArrayList<OutputReferenceMap> outputReferenceMapping = createOutputReferenceMapping(executeOperation.getOutputnames(), executeOperation.getOutputreferences());
+        for (OutputReferenceMap outputReferenceMap : outputReferenceMapping) {
+            if (!innerProcessResultData.containsKey(outputReferenceMap.getIdentifier())) {
+                throw new RuntimeException("No result data found for output identifier " + outputReferenceMap.getIdentifier());
             }
-            IData dataForOutputReference = innerProcessResultData.get(outputReferenceMappingEntry.getKey());
-            addOutputReferenceValueToContext(outputReferenceMappingEntry.getValue(), dataForOutputReference, context);
+            IData dataForOutputReference = innerProcessResultData.get(outputReferenceMap.getIdentifier());
+            addOutputReferenceValueToContext(outputReferenceMap.getReference(), dataForOutputReference, context);
         }
 
     }
@@ -111,11 +112,20 @@ public class ExecuteHandler implements IOperationHandler {
         throw new IllegalArgumentException("Unsupported output reference type");
     }
 
-    private Map<String, Reference> createReferenceMapping(List<String> names,
+    private Map<String, Reference> createInputReferenceMapping(List<String> names,
             List<Reference> references) {
         Map<String, Reference> referenceMapping = new HashMap<String, Reference>();
         for (int i = 0; i < names.size(); i++) {
             referenceMapping.put(names.get(i), references.get(i));
+        }
+        return referenceMapping;
+    }
+    
+    private ArrayList<OutputReferenceMap> createOutputReferenceMapping(List<String> names,
+            List<Reference> references) {
+    	ArrayList<OutputReferenceMap> referenceMapping = new ArrayList<OutputReferenceMap>();
+        for (int i = 0; i < names.size(); i++) {
+            referenceMapping.add(new OutputReferenceMap(names.get(i), references.get(i)));
         }
         return referenceMapping;
     }
