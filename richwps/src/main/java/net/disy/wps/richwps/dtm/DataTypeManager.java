@@ -2,6 +2,7 @@ package net.disy.wps.richwps.dtm;
 
 import net.disy.wps.n52.binding.IntegerListBinding;
 import net.disy.wps.n52.binding.IntersectionFeatureCollectionListBinding;
+import net.disy.wps.n52.binding.JasperReportBinding;
 import net.disy.wps.n52.binding.MPBResultBinding;
 import net.disy.wps.n52.binding.ObeservationFeatureCollectionListBinding;
 import net.opengis.wps.x100.ComplexDataDescriptionType;
@@ -206,6 +207,11 @@ public class DataTypeManager {
 				return GTVectorDataBinding.class;
 			}
 			return GenericFileDataBinding.class;
+		}
+		if (mimeType.toLowerCase().contains("pdf")) {
+			if (schema.toLowerCase().contains("pdfreport")) {
+				return JasperReportBinding.class;
+			}
 		}
 		if (mimeType.toLowerCase().contains("json")) {
 			return GTVectorDataBinding.class;

@@ -9,6 +9,7 @@ import java.util.Map.Entry;
 
 import net.disy.wps.n52.binding.IntegerListBinding;
 import net.disy.wps.n52.binding.IntersectionFeatureCollectionListBinding;
+import net.disy.wps.n52.binding.JasperReportBinding;
 import net.disy.wps.n52.binding.MPBResultBinding;
 import net.disy.wps.n52.binding.ObeservationFeatureCollectionListBinding;
 import net.opengis.wps.x100.ComplexDataDescriptionType;
@@ -67,6 +68,7 @@ public class DataTypeManagerTest {
 		
 		// RichWPS LKN types
 		complexOutputTypes.put(new FormatTriplet<String, String, String>("http://richwps.github.io/schemas/MPBResult", "application/xml", "UTF-8"), MPBResultBinding.class);
+		complexOutputTypes.put(new FormatTriplet<String, String, String>("http://richwps.github.io/schemas/PdfReport", "application/pdf", "UTF-8"), JasperReportBinding.class);
 		complexOutputTypes.put(new FormatTriplet<String, String, String>("http://richwps.github.io/schemas/IntegerList", "application/xml", "UTF-8"), IntegerListBinding.class);
 		complexOutputTypes.put(new FormatTriplet<String, String, String>("http://richwps.github.io/schemas/ObservationFeatureCollectionList", "application/xml", "UTF-8"), ObeservationFeatureCollectionListBinding.class);
 		complexOutputTypes.put(new FormatTriplet<String, String, String>("http://richwps.github.io/schemas/IntersectionFeatureCollectionList", "application/xml", "UTF-8"), IntersectionFeatureCollectionListBinding.class);
