@@ -77,11 +77,13 @@ public class ExecuteHandler implements IOperationHandler {
 
         if (reference instanceof InReference) {
             if (!context.getInputData().containsKey(reference.getId())) {
-                throw new IllegalArgumentException("InReference does not exist: " + reference.getId());
+            	LOGGER.warn("InReference is optional or does not exist: " + reference.getId());
             }
-            List<IData> value = context.getInputData().get(reference.getId());
-            System.out.println("Resolved " + reference.getId() + " as" + value);
-            return value;
+            else {
+            	List<IData> value = context.getInputData().get(reference.getId());
+            	LOGGER.debug("Resolved " + reference.getId() + " as " + value);
+            	return value;
+            }
         }
 
         if (reference instanceof VarReference) {
@@ -89,7 +91,7 @@ public class ExecuteHandler implements IOperationHandler {
                 throw new IllegalArgumentException("VarReference does not exist: " + reference.getId());
             }
             IData variableData = context.getVariables().get(reference.getId());
-            System.out.println("Resolved " + reference.getId() + " as" + variableData);
+            LOGGER.debug("Resolved " + reference.getId() + " as " + variableData);
 
             if (variableData == null) {
                 return null;
