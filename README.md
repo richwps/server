@@ -1,4 +1,5 @@
 # RichWPS Server
+Based on the open-geospatial standards RichWPS aims at providing simple orchestration means to domain experts. Therefore, the three components [RichWPS Server](https://github.com/richwps/server), [RichWPS SemanticProxy](https://github.com/richwps/semanticproxy) and [RichWPS ModelBuilder](https://github.com/richwps/modelbuilder) are introduced for faciliating the OWS-compliant creation, description and provision of orchestrated geospatial processes. 
 
 ## What it is
 It is more than just a simple WPS server implementation, especially in the sense of ...
@@ -20,7 +21,11 @@ While the WPS specification does not cover datatypes in detail, it is extremly i
 Not only in the phase of deploying and executing process models, but also in the phase of modelling the server supports a user who composes WPS process models. Therefor it is able to perform a test run in between of a fast deploy- and undeployment. The purpose of profiling a process model, which gives detailed information about the runtimes of the whole model and single processes contained in it, can be performed in a similar way.
 
 ## Why you should make use of it
-*
+* Benefit from the reusability of your geoprocessing units to cover your areas of application
+* WPS is not a set of simple processes any more, in fact it is a whole orchestra.
+* Make use of the modelling support the server provides, such as testing and profiling of workflows
+* Extend the capabilities in data type support to your needs
+
 
 ## How you can use it
 The RichWPS ModelBuilder, as the servers main client, supports all its functionalities on from the perspective of a client and offers them in a user friendly interface.
@@ -28,9 +33,10 @@ The RichWPS ModelBuilder, as the servers main client, supports all its functiona
 Technically the server provides the following capabilities sperarated on two HTTP interfaces:
 
 ### WPS interface
-  * GetCapabilities
-  * DescribeProcess
+  * GetCapabilities ([request](http://schemas.opengis.net/wps/1.0.0/wpsGetCapabilities_request.xsd) / [response](http://schemas.opengis.net/wps/1.0.0/wpsGetCapabilities_response.xsd))
+  * DescribeProcess ([request](http://schemas.opengis.net/wps/1.0.0/wpsDescribeProcess_request.xsd) / [response](http://schemas.opengis.net/wps/1.0.0/wpsDescribeProcess_response.xsd))
   * Execute
+  ([request](http://schemas.opengis.net/wps/1.0.0/wpsExecute_request.xsd) / [response](http://schemas.opengis.net/wps/1.0.0/wpsExecute_response.xsd))
 
 ### RichWPS interface
   * Deploy ([request](https://github.com/richwps/commons/blob/master/common-xml/52n-ogc-schema/src/main/resources/META-INF/xml/wps/1.0.0/wpsDeployProcess_request.xsd) / [response](https://github.com/richwps/commons/blob/master/common-xml/52n-ogc-schema/src/main/resources/META-INF/xml/wps/1.0.0/wpsDeployProcess_response.xsd))
